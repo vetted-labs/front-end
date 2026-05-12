@@ -27,15 +27,17 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
     setMounted(true);
   });
 
-  // Store reference to previously focused element when opening
-  // eslint-disable-next-line no-restricted-syntax -- must capture focus ref synchronously when isOpen changes
-  // We use a ref-tracking pattern: when isOpen transitions to true, save activeElement
+  // Store reference to previously focused element when opening.
+  // Ref-tracking pattern: when isOpen transitions to true, save activeElement
+  // synchronously so we can restore focus on close without a render cycle.
   const prevIsOpenRef = useRef(false);
+  /* eslint-disable react-hooks/refs, react-hooks/immutability -- focus capture must happen synchronously on the open transition; deferring to an effect would lose the document.activeElement before any focus moves into the dialog */
   if (isOpen && !prevIsOpenRef.current) {
     previousFocusRef.current = document.activeElement;
     document.body.style.overflow = "hidden";
   }
   prevIsOpenRef.current = isOpen;
+  /* eslint-enable react-hooks/refs, react-hooks/immutability */
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -117,13 +119,13 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
           />
 
           {/* Modal */}
-          <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+          <div className="flex min-h-full items-center justify-center p-3 sm:p-6 lg:p-8">
             <motion.div
               ref={contentRef}
               role="dialog"
               aria-modal="true"
               {...(title ? { "aria-label": title } : {})}
-              className={`relative bg-card rounded-xl shadow-lg border border-border w-full ${sizeStyles[size]} max-h-[90vh] flex flex-col overflow-hidden`}
+              className={`relative bg-card rounded-xl shadow-lg border border-border w-full ${sizeStyles[size]} max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col overflow-hidden`}
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
