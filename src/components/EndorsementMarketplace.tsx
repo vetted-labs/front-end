@@ -14,7 +14,7 @@ import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransactio
 import { blockchainApi, expertApi, extractApiError } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
 import { useFetch } from "@/lib/hooks/useFetch";
-import type { EndorsementApplication, GuildRecord, EarningsBreakdownResponse } from "@/types";
+import type { EndorsementApplication, GuildRecord, EarningsBreakdownResponse, TokenBalance, StakeBalance } from "@/types";
 
 import {
   Card,
@@ -156,6 +156,19 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const blockchainGuildId = blockchainGuildIdProp ?? (guildId ? hashToBytes32(guildId) : undefined);
   const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
 
+  // DB-cached balances. Renders instantly on mount and survives RPC outages
+  // (rate-limited Infura, dead public RPC, etc.) — the chain reads above are
+  // authoritative when they resolve, but until then we show the indexer's
+  // last-known value instead of falsely rendering "0".
+  const { data: tokenBalanceDb } = useFetch<TokenBalance>(
+    () => blockchainApi.getTokenBalance(address!),
+    { skip: !address },
+  );
+  const { data: stakeBalanceDb } = useFetch<StakeBalance>(
+    () => blockchainApi.getStakeBalance(address!, blockchainGuildId),
+    { skip: !address || !blockchainGuildId },
+  );
+
   // Filter endorsements for current guild
   const userEndorsements = allUserEndorsements.filter((e) => e.guild?.id === guildId);
 
@@ -281,13 +294,29 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     );
   }
 
-  const userStake = stakeInfo ? formatEther(stakeInfo[0]) : "0";
+  // Hybrid resolution: prefer the chain read (authoritative), fall back to
+  // the DB-cached value when the chain hasn't responded yet — survives RPC
+  // outages instead of rendering "0" when reads silently return undefined.
+  const effectiveStakeWei: bigint | undefined =
+    stakeInfo
+      ? stakeInfo[0]
+      : stakeBalanceDb?.stakedAmount
+        ? BigInt(stakeBalanceDb.stakedAmount)
+        : undefined;
+  const effectiveBalanceWei: bigint | undefined =
+    balance !== undefined
+      ? balance
+      : tokenBalanceDb?.balance
+        ? BigInt(tokenBalanceDb.balance)
+        : undefined;
+
+  const userStake = effectiveStakeWei !== undefined ? formatEther(effectiveStakeWei) : "0";
   const requiredStake = minimumStake ? formatEther(minimumStake) : "0";
   const meetsMinimumStake = parseFloat(userStake) >= parseFloat(requiredStake);
   const shortAddress = address ? `${address.substring(0, 6)}...${address.substring(38)}` : "";
   const formattedBalance =
-    balance !== undefined
-      ? parseFloat(formatEther(balance)).toLocaleString("en-US", {
+    effectiveBalanceWei !== undefined
+      ? parseFloat(formatEther(effectiveBalanceWei)).toLocaleString("en-US", {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         })

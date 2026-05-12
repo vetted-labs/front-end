@@ -1,4 +1,5 @@
 import { http, cookieStorage, createStorage, createConnector } from "wagmi";
+import { fallback } from "viem";
 import { injected } from "wagmi/connectors";
 import { sepolia, foundry } from "wagmi/chains";
 import { getDefaultConfig, type Wallet } from "@rainbow-me/rainbowkit";
@@ -28,14 +29,28 @@ if (process.env.NODE_ENV === "production" && isE2E) {
   );
 }
 
-const sepoliaTransport = http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL, {
-  batch: {
-    batchSize: 50,
-    wait: 50,
-  },
+// Sepolia transport stack. Primary is whatever the operator configures via
+// NEXT_PUBLIC_SEPOLIA_RPC_URL (typically a paid Infura/Alchemy key); public
+// RPCs back it up so that an exhausted Infura quota or transient outage
+// doesn't make every on-chain read silently return `undefined` (which the UI
+// then renders as "0" — see `useReadContract` callers in
+// `src/lib/hooks/useVettedContracts.ts`).
+const sepoliaRpcOptions = {
+  batch: { batchSize: 50, wait: 50 },
   retryCount: 2,
   timeout: 10_000,
-});
+} as const;
+
+const sepoliaTransport = fallback(
+  [
+    ...(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL
+      ? [http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL, sepoliaRpcOptions)]
+      : []),
+    http("https://ethereum-sepolia-rpc.publicnode.com", sepoliaRpcOptions),
+    http("https://sepolia.drpc.org", sepoliaRpcOptions),
+  ],
+  { rank: false },
+);
 
 const foundryTransport = http(
   process.env.NEXT_PUBLIC_ANVIL_RPC_URL ?? "http://localhost:8545",
