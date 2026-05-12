@@ -128,14 +128,14 @@ export function GuildMembersTab({
                         <TrendingUp className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-muted-foreground text-xs">Reviews</p>
-                          <p className="font-medium text-foreground">{expert.totalReviews}</p>
+                          <p className="font-medium text-foreground">{expert.totalReviews ?? expert.reviewsCompleted ?? 0}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-muted-foreground text-xs">Success</p>
-                          <p className="font-medium text-foreground">{expert.successRate}%</p>
+                          <p className="font-medium text-foreground">{expert.successRate ?? 0}%</p>
                         </div>
                       </div>
                     </div>

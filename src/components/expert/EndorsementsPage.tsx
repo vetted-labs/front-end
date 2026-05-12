@@ -6,10 +6,14 @@ import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Button } from "@/components/ui/button";
 import { HelpLink } from "@/components/ui/HelpLink";
 import { DOC_LINKS } from "@/config/docLinks";
+import { expertApi } from "@/lib/api";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { withStoryLabGuildRecords } from "@/components/expert/story-lab/storyLabFixtures";
 import { getGuildIdentity } from "@/lib/guildIdentity";
+import type { GuildRecord } from "@/types";
 
 export default function EndorsementsPage() {
   const router = useRouter();
@@ -17,10 +21,31 @@ export default function EndorsementsPage() {
   const applicationIdParam = searchParams.get("applicationId");
   const guildIdParam = searchParams.get("guildId");
   const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const { address } = useExpertAccount();
   const { guilds: realGuildRecords } = useGuilds();
+  const { data: expertProfile } = useFetch(
+    () => expertApi.getProfile(address!),
+    { skip: !address },
+  );
+
+  const expertGuildRecords = useMemo<GuildRecord[]>(() => {
+    const expertGuilds = expertProfile?.guilds ?? [];
+    if (expertGuilds.length === 0) return realGuildRecords;
+
+    return expertGuilds.map((guild) => {
+      const guildWithChain = guild as typeof guild & { blockchainGuildId?: string };
+      const publicRecord = realGuildRecords.find((record) => record.id === guild.id);
+      return {
+        id: guild.id,
+        name: guild.name,
+        blockchainGuildId: guildWithChain.blockchainGuildId ?? publicRecord?.blockchainGuildId,
+      };
+    });
+  }, [expertProfile, realGuildRecords]);
+
   const guildRecords = isStoryLabPreview
-    ? withStoryLabGuildRecords(realGuildRecords)
-    : realGuildRecords;
+    ? withStoryLabGuildRecords(expertGuildRecords)
+    : expertGuildRecords;
 
   const [manualGuildId, setManualGuildId] = useState<string | null>(null);
 
@@ -39,8 +64,8 @@ export default function EndorsementsPage() {
       if (match) return match;
     }
 
-    // Default to Engineering Guild, or first guild
-    const eng = guildRecords.find(g => g.name === "Engineering Guild");
+    // Default to Engineering when present, otherwise the first guild this expert belongs to.
+    const eng = guildRecords.find(g => g.name === "Engineering" || g.name === "Engineering Guild");
     return eng || guildRecords[0];
   }, [guildRecords, guildIdParam, manualGuildId]);
 

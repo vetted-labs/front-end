@@ -8,11 +8,11 @@ export function getReviewApplicantType(app: Pick<GuildApplication, "item_type">)
 
 export function getGuildReviewUrl(guildId: string, applicationId: string, applicantType: ReviewApplicantType): string {
   const params = new URLSearchParams({
-    tab: "membershipApplications",
-    applicationId,
-    applicantType,
+    reviewAppId: applicationId,
+    reviewType: applicantType,
+    guildId,
   });
-  return `/expert/guild/${encodeURIComponent(guildId)}?${params.toString()}`;
+  return `/expert/voting?${params.toString()}`;
 }
 
 export function getReviewQueueUrl(app: GuildApplication): string {

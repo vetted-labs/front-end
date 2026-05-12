@@ -2,6 +2,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { parseEther } from 'viem';
 import { hashToBytes32 } from '@/lib/blockchain';
 import { blockchainApi } from '@/lib/api';
+import { useAuthContext } from '@/hooks/useAuthContext';
 import { useFetch } from '@/lib/hooks/useFetch';
 import type { ActiveEndorsement } from '@/types';
 import {
@@ -577,16 +578,20 @@ export function useTransactionConfirmation(hash: `0x${string}` | undefined) {
  * Hook to fetch user's active endorsements from backend API
  * Shows full endorsement details including job title, candidate name, etc.
  */
-export function useMyActiveEndorsements() {
+export function useMyActiveEndorsements(params?: { status?: "active" | "all"; limit?: number }) {
   const { address, isConnected } = useAccount();
+  const auth = useAuthContext();
+  const effectiveAddress = address ?? auth.walletAddress;
+  const status = params?.status ?? "active";
+  const limit = params?.limit ?? 50;
 
   const { data: endorsements, isLoading, error, refetch } = useFetch<ActiveEndorsement[]>(
     async () => {
-      const data = await blockchainApi.getExpertEndorsements(address!, { status: 'active', limit: 50 });
+      const data = await blockchainApi.getExpertEndorsements(effectiveAddress!, { status, limit });
       if (!Array.isArray(data)) throw new Error('Invalid response format from API');
       return data;
     },
-    { skip: !isConnected || !address }
+    { skip: (!isConnected && !effectiveAddress) || !effectiveAddress }
   );
 
   return {

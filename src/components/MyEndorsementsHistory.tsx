@@ -348,7 +348,7 @@ function EndorsementRow({
 
 export function MyEndorsementsHistory() {
   const { address, isConnected } = useAccount();
-  const { endorsements, isLoading, error } = useMyActiveEndorsements();
+  const { endorsements, isLoading, error } = useMyActiveEndorsements({ status: "all" });
   const { withdrawRefund } = useEndorsementBidding();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");

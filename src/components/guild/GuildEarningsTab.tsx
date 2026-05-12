@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Coins, DollarSign, TrendingUp, FileText, Award, ChevronDown } from "lucide-react";
 import { formatVetd } from "@/lib/utils";
-import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildEarningsOverview } from "@/types/guild";
 
 const EARNINGS_PER_PAGE = 10;
@@ -59,12 +59,11 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
               <Coins className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">
-              No Earnings Yet
+              No recent earnings yet
             </h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Start reviewing applications and endorsing candidates to earn rewards.
-              Your earnings will appear here once you participate in guild
-              activities.
+              New review rewards and endorsement payouts will appear here as
+              they are posted.
             </p>
           </div>
         ) : (

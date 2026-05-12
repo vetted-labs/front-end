@@ -24,6 +24,9 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import type { Address } from "viem";
 import {
   createAnvilHandle,
   makeWallet,
@@ -39,6 +42,10 @@ import {
 import { testApi } from "./helpers/backend";
 import { signupCandidate } from "../helpers/auth";
 import { attachWallet, type InjectedWalletHandle } from "./helpers/wallet-injection";
+
+const BACKEND_ENV_PATH = path.resolve(__dirname, "../../../backend/.env");
+const JOB_CREATOR_ETH_BALANCE = 100n * 10n ** 18n;
+const JOB_CREATOR_TOKEN_FLOAT = 100n * 10n ** 18n;
 
 export type Expert = Wallet & { id: string; guildId: string };
 export type Candidate = {
@@ -71,6 +78,45 @@ type TestFixtures = {
     attach: (page: Page, privateKey: `0x${string}`) => Promise<InjectedWalletHandle>;
   };
 };
+
+function parseBackendEnv(): Record<string, string> {
+  if (!fs.existsSync(BACKEND_ENV_PATH)) return {};
+
+  return fs
+    .readFileSync(BACKEND_ENV_PATH, "utf-8")
+    .split(/\r?\n/)
+    .reduce<Record<string, string>>((acc, line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) return acc;
+
+      const separator = trimmed.indexOf("=");
+      if (separator === -1) return acc;
+
+      const key = trimmed.slice(0, separator).trim();
+      const rawValue = trimmed.slice(separator + 1).trim();
+      acc[key] = rawValue.replace(/^['"]|['"]$/g, "");
+      return acc;
+    }, {});
+}
+
+function isAddress(value: string | undefined): value is Address {
+  return /^0x[a-fA-F0-9]{40}$/.test(value ?? "");
+}
+
+function resolveJobCreatorAddress(): Address {
+  const env = parseBackendEnv();
+
+  if (isAddress(env.JOB_CREATOR_WALLET_ADDRESS)) {
+    return env.JOB_CREATOR_WALLET_ADDRESS;
+  }
+
+  const privateKey = env.JOB_CREATOR_WALLET_PRIVATE_KEY;
+  if (privateKey?.startsWith("0x") && privateKey.length === 66) {
+    return makeWallet(privateKey as `0x${string}`).address;
+  }
+
+  return makeWallet(ANVIL_KEYS[5]).address;
+}
 
 /**
  * Seeds the BE guild and returns its handle. Reset of the BE DB happens here
@@ -226,8 +272,22 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // rather than reusing a worker-scoped id. After revert we reset the BE
   // DB and drain the BE blockchain-ops queue so DB <-> chain stay aligned.
   cleanState: [
-    async ({ anvil, request }, use) => {
+    async ({ anvil, contracts, request }, use) => {
       const snapshotId = await anvil.snapshot();
+      const jobCreatorAddress = resolveJobCreatorAddress();
+      const tokenTreasury = makeWallet(ANVIL_KEYS[1]);
+      const balanceResult = await contracts.vettedToken.read.balanceOf([jobCreatorAddress]);
+      if (typeof balanceResult !== "bigint") {
+        throw new Error("Expected VETD balanceOf to return a bigint");
+      }
+
+      await anvil.setBalance(jobCreatorAddress, JOB_CREATOR_ETH_BALANCE);
+      if (balanceResult < JOB_CREATOR_TOKEN_FLOAT) {
+        await contracts.vettedToken.write.transfer(
+          [jobCreatorAddress, JOB_CREATOR_TOKEN_FLOAT - balanceResult],
+          { account: tokenTreasury.client.account },
+        );
+      }
       await use();
       // Order matters: revert chain first, then reset DB, then drain BE
       // queues so any in-flight ops referencing the now-reverted chain
@@ -246,6 +306,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // wipes the freshly created candidate row.
   candidate: [
     async ({ page, experts: _experts }, use) => {
+      void _experts;
       const creds = await signupCandidate(page);
       await use({ ...creds, page });
     },

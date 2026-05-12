@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSwitchChain } from "wagmi";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
-import { formatEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
 import { sepolia } from "wagmi/chains";
 import {
@@ -51,6 +51,23 @@ function isBiddingExpired(app: EndorsementApplication): boolean {
     ? new Date(app.bidding_deadline).getTime()
     : new Date(app.applied_at).getTime() + 24 * 60 * 60 * 1000;
   return Date.now() >= deadline;
+}
+
+function tokenAmountToWei(value?: string | number | bigint | null): bigint | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === "bigint") return value;
+
+  const raw = String(value).trim();
+  if (!raw) return undefined;
+
+  try {
+    if (/^\d+$/.test(raw) && raw.length > 15) {
+      return BigInt(raw);
+    }
+    return parseEther(raw);
+  } catch {
+    return undefined;
+  }
 }
 
 interface EndorsementMarketplaceProps {
@@ -300,15 +317,11 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const effectiveStakeWei: bigint | undefined =
     stakeInfo
       ? stakeInfo[0]
-      : stakeBalanceDb?.stakedAmount
-        ? BigInt(stakeBalanceDb.stakedAmount)
-        : undefined;
+      : tokenAmountToWei(stakeBalanceDb?.stakedAmount);
   const effectiveBalanceWei: bigint | undefined =
     balance !== undefined
       ? balance
-      : tokenBalanceDb?.balance
-        ? BigInt(tokenBalanceDb.balance)
-        : undefined;
+      : tokenAmountToWei(tokenBalanceDb?.balance);
 
   const userStake = effectiveStakeWei !== undefined ? formatEther(effectiveStakeWei) : "0";
   const requiredStake = minimumStake ? formatEther(minimumStake) : "0";

@@ -2,8 +2,11 @@ import { useAccount, useChainId, useReadContract, useSignTypedData } from "wagmi
 import { useCallback } from "react";
 import { VETTED_TOKEN_ABI, CONTRACT_ADDRESSES } from "@/contracts/abis";
 
-/** Deadline for permit signatures — 30 minutes from now */
-const PERMIT_DEADLINE_SECONDS = 30 * 60;
+/** Deadline for permit signatures — 30 minutes in normal use, longer in E2E where Anvil time may be advanced. */
+const PERMIT_DEADLINE_SECONDS =
+  process.env.NEXT_PUBLIC_E2E_MODE === "true"
+    ? 30 * 24 * 60 * 60
+    : 30 * 60;
 
 /** Result of a successful permit signing */
 export interface PermitSignature {

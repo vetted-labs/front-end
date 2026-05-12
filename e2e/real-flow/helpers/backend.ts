@@ -26,17 +26,107 @@ export const testApi = {
   drain: (req: APIRequestContext) => postJson<void>(req, "/api/test/drain"),
   seedGuild: (req: APIRequestContext, body: { name: string; slug: string; onChainGuildId: number }) =>
     postJson<{ id: string; slug: string; on_chain_guild_id: number }>(req, "/api/test/seed/guild", body),
+  seedCompany: (
+    req: APIRequestContext,
+    body: { name: string; email?: string; walletAddress?: string },
+  ) => postJson<{ id: string; name: string; email: string; wallet_address: string | null; token: string }>(
+    req,
+    "/api/test/seed/company",
+    body,
+  ),
+  seedJob: (
+    req: APIRequestContext,
+    body: { companyId: string; title: string; guild: string; status?: string },
+  ) => postJson<{ jobId: string }>(req, "/api/test/seed/job", body),
   seedExpert: (
     req: APIRequestContext,
     body: { walletAddress: string; fullName: string; email: string; status?: string; guildId?: string; stakeAmount?: string },
   ) => postJson<{ id: string }>(req, "/api/test/seed/expert", body),
+  seedExpertToken: (
+    req: APIRequestContext,
+    body: { expertId: string },
+  ) => postJson<{ id: string; wallet_address: string; token: string }>(
+    req,
+    "/api/test/seed/expert-token",
+    body,
+  ),
   endorsement: {
     processRetention: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/process-retention"),
+    markRetentionReady: (req: APIRequestContext, body: { applicationId: string }) =>
+      postJson<{ id: string; application_id: string; retention_deadline: string }>(
+        req,
+        "/api/test/endorsement/retention-ready",
+        body,
+      ),
     expireDisputes: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/expire-disputes"),
     drainBlockchainOps: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/drain-blockchain-ops"),
+    rewardDistributorAdmin: async (req: APIRequestContext) => {
+      const res = await req.get(`${BACKEND_URL}/api/test/endorsement/reward-distributor-admin`);
+      if (!res.ok()) {
+        throw new Error(`GET /api/test/endorsement/reward-distributor-admin failed: ${res.status()} ${await res.text()}`);
+      }
+      const body = (await res.json()) as {
+        data: {
+          backendWallet: `0x${string}`;
+          owner: `0x${string}`;
+          pendingOwner: `0x${string}`;
+        };
+      };
+      return body.data;
+    },
+    acceptRewardDistributorOwnership: (req: APIRequestContext) =>
+      postJson<{ owner: `0x${string}`; txHash: `0x${string}` | null }>(
+        req,
+        "/api/test/endorsement/reward-distributor-admin/accept-ownership",
+      ),
+    slashingRecords: async (
+      req: APIRequestContext,
+      params: { applicationId?: string; expertId?: string },
+    ) => {
+      const q = new URLSearchParams();
+      if (params.applicationId) q.set("applicationId", params.applicationId);
+      if (params.expertId) q.set("expertId", params.expertId);
+      const res = await req.get(`${BACKEND_URL}/api/test/endorsement/slashing-records?${q.toString()}`);
+      if (!res.ok()) {
+        throw new Error(`GET /api/test/endorsement/slashing-records failed: ${res.status()} ${await res.text()}`);
+      }
+      const body = (await res.json()) as {
+        data: Array<{
+          id: string;
+          expert_id: string;
+          wallet_address: string;
+          slash_amount: string;
+          slash_percentage: number;
+          reason: string;
+          related_id: string;
+          related_type: string;
+        }>;
+      };
+      return body.data;
+    },
+  },
+  candidateReviews: {
+    expireAndFinalize: (req: APIRequestContext, applicationId: string) =>
+      postJson<{
+        finalization: { processed: number; succeeded: number; failed: number };
+        application: { id: string; status: string; review_count: number };
+        assignments: Array<{
+          reviewer_id: string;
+          has_reviewed: boolean;
+          forfeited: boolean;
+          wallet_address: string;
+          reputation_score: number;
+        }>;
+        reputationLog: Array<{
+          expert_id: string;
+          event_type: string;
+          amount: number;
+          reason: string;
+        }>;
+      }>(req, `/api/test/candidate-reviews/${applicationId}/expire-and-finalize`),
   },
 };
 

@@ -104,6 +104,7 @@ export function ChipMultiSelect({
     if (values.length >= max) return;
     onChange([...values, v]);
     setInput("");
+    setOpen(false);
   };
 
   const removeValue = (v: string) => {

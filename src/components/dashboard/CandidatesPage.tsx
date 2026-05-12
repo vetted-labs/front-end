@@ -15,6 +15,7 @@ import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
 import { CandidateOverviewPanel } from "./candidates/CandidateOverviewPanel";
 import { CandidateKpiRow } from "./candidates/CandidateKpiRow";
 import { DataSection } from "@/lib/motion";
+import type { StatusAdvanceMetadata } from "./candidates/StatusActions";
 import type {
   CompanyApplication,
   EndorsementStats,
@@ -342,7 +343,8 @@ export default function CandidatesPage() {
   const handleStatusChange = async (
     applicationId: string,
     newStatus: ApplicationStatus,
-    note?: string
+    note?: string,
+    metadata?: StatusAdvanceMetadata
   ) => {
     const app = allApplications.find((a) => a.id === applicationId);
     if (!app) {
@@ -358,6 +360,7 @@ export default function CandidatesPage() {
         currentStatus: app.status,
         newStatus,
         note,
+        finalCompensation: metadata?.finalCompensation,
       },
       {
         onSuccess: () => {
@@ -395,11 +398,11 @@ export default function CandidatesPage() {
             Workspace
           </p>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight mt-1.5">
-            Candidates
+            Candidate Applications
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
-            Review applicants across all your roles. Endorsements, match scores, and guild
-            reports surface the strongest signal — surface to the top.
+            Review applications across all your roles. Endorsements, match scores, and guild
+            reports surface the strongest signal.
           </p>
         </div>
 
@@ -427,6 +430,7 @@ export default function CandidatesPage() {
               }`}
             >
               <CandidateListPanel
+                key={`${searchQuery}:${filterStatus}:${filterGuild}:${sortBy}:${viewMode}`}
                 groupedJobs={filteredJobs}
                 selectedApplicationId={selectedApplication?.id ?? null}
                 onSelectApplication={setSelectedApplication}

@@ -120,7 +120,7 @@ export function GuildGovernanceTab({ guildId: _guildId, proposals }: GuildGovern
             going to vote.
           </p>
           <Link
-            href="/expert/governance/new"
+            href="/expert/governance/create"
             className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ListChecks className="h-3.5 w-3.5" />

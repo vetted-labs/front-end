@@ -62,7 +62,7 @@ export function CandidateKpiRow({
 }: CandidateKpiRowProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <KpiTile icon={Users} label="Total candidates" value={total} tone="primary" />
+      <KpiTile icon={Users} label="Total applications" value={total} tone="primary" />
       <KpiTile
         icon={Sparkles}
         label="New this week"

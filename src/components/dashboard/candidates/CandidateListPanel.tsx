@@ -80,13 +80,6 @@ export function CandidateListPanel({
   // Per-group visible candidate counts
   const [groupVisibleCounts, setGroupVisibleCounts] = useState<Record<string, number>>({});
 
-  // Reset visible counts when filters change
-  // eslint-disable-next-line no-restricted-syntax -- resets pagination when filtered dataset changes
-  useEffect(() => {
-    setVisibleCount(GROUPS_PER_PAGE);
-    setGroupVisibleCounts({});
-  }, [groupedJobs]);
-
   const hasMore = visibleCount < groupedJobs.length;
 
   const loadMore = useCallback(() => {
@@ -224,7 +217,9 @@ export function CandidateListPanel({
             </select>
 
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications} candidates</span>
+              <span className="text-xs text-muted-foreground/40 tabular-nums">
+                {totalApplications} applications
+              </span>
               <button
                 type="button"
                 onClick={expandedJobIds.size === groupedJobs.length ? onCollapseAll : onExpandAll}
@@ -240,7 +235,9 @@ export function CandidateListPanel({
         {/* Candidate count (Priority only) */}
         {viewMode === "priority" && (
           <div className="flex items-center pb-2.5 border-b border-border/20 dark:border-border">
-            <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications} candidates</span>
+            <span className="text-xs text-muted-foreground/40 tabular-nums">
+              {totalApplications} applications
+            </span>
           </div>
         )}
       </div>
@@ -266,7 +263,7 @@ export function CandidateListPanel({
         ) : groupedJobs.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No candidates found"
+            title="No applications found"
             description="Try adjusting your search or filters"
           />
         ) : (

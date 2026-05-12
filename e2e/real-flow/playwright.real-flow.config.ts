@@ -37,6 +37,11 @@ export default defineConfig({
       testMatch: /__tests__\/.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "platform",
+      testMatch: /scenarios\/(candidate|company|cross-role|expert|protocol)\/.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: {
     // E2E flags:
@@ -49,6 +54,7 @@ export default defineConfig({
     //    src/contracts/abis.ts point at real sepolia addresses, which don't
     //    exist on local anvil and silently swallow tx attempts).
     command: [
+      "cd ../.. && npx dotenv -e .env.local -- env",
       "NEXT_PUBLIC_E2E_MODE=true",
       "NEXT_PUBLIC_EXPERT_ONBOARDING_TOUR=false",
       // FE wagmi reads (`useReadContract`, etc.) need to hit local anvil,
@@ -64,7 +70,7 @@ export default defineConfig({
       "NEXT_PUBLIC_CONTRACT_SLASHING=0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
       "NEXT_PUBLIC_CONTRACT_GUILD_REGISTRY=0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
       "NEXT_PUBLIC_CONTRACT_VETTING=0xE68a768Cc18039b50382d64405Fb4C7700966054",
-      "npx dotenv -e .env.local -- npx next dev --turbopack --port 3030",
+      "npx next dev --turbopack --port 3030",
     ].join(" "),
     url: baseURL,
     reuseExistingServer: true,

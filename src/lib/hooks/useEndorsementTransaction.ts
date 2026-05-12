@@ -4,15 +4,12 @@ import { useAccount } from "wagmi";
 import {
   useTokenBalance,
   useEndorsementBidding,
-  useTransactionConfirmation,
 } from "@/lib/hooks/useVettedContracts";
 import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi } from "@/lib/api";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-import { retryWithBackoff } from "@/lib/utils";
-import { getTransactionErrorMessage } from "@/lib/blockchain";
 
 /** Shape expected by the hook for the application being endorsed. */
 export interface EndorsableApplication {
@@ -57,6 +54,54 @@ interface UseEndorsementTransactionReturn {
   refetchTokenData: () => void;
 }
 
+async function syncEndorsementWithRetry(
+  app: EndorsableApplication,
+  walletAddress: `0x${string}`,
+  delays: number[] = [1000, 2000, 4000, 6000],
+): Promise<boolean> {
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    try {
+      await blockchainApi.syncEndorsement(
+        app.application_id,
+        walletAddress,
+        app.job_id,
+        app.candidate_id,
+      );
+      return true;
+    } catch (error) {
+      if (attempt >= delays.length - 1) {
+        logger.warn("Endorsement sync retry exhausted", error, { silent: true });
+        return false;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+    }
+  }
+  return false;
+}
+
+async function waitForInjectedReceipt(hash: `0x${string}`): Promise<void> {
+  const provider = typeof window !== "undefined" ? window.ethereum : undefined;
+  if (!provider?.request) return;
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const receipt = await provider.request({
+      method: "eth_getTransactionReceipt",
+      params: [hash],
+    }) as { status?: string } | null;
+
+    if (receipt) {
+      if (receipt.status === "0x0") {
+        throw new Error(`Endorsement transaction reverted: ${hash}`);
+      }
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error(`Endorsement transaction was not confirmed: ${hash}`);
+}
+
 /**
  * Manages the full endorsement transaction lifecycle with EIP-2612 permit:
  *
@@ -77,88 +122,12 @@ export function useEndorsementTransaction(
   const [txError, setTxError] = useState<string | null>(null);
   const [bidTxHash, setBidTxHash] = useState<`0x${string}` | undefined>();
   const [endorsing, setEndorsing] = useState(false);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-  // Pending bid data for the confirmation handler
-  const [pendingApp, setPendingApp] = useState<EndorsableApplication | null>(null);
-
-  // Refs to avoid stale closures in transaction confirmation effects
-  const addressRef = useRef(address);
-  const pendingAppRef = useRef(pendingApp);
   const refetchCallbacksRef = useRef(refetchCallbacks);
-  const errorShownRef = useRef(false);
   // eslint-disable-next-line no-restricted-syntax
   useEffect(() => {
-    addressRef.current = address;
-    pendingAppRef.current = pendingApp;
     refetchCallbacksRef.current = refetchCallbacks;
   });
-
-  const { data: txReceipt, isSuccess: txSuccess, isError: txFailed, error: txFailDetails } = useTransactionConfirmation(txHash);
-
-  // ── Handle on-chain transaction failure ──
-  // eslint-disable-next-line no-restricted-syntax -- reacts to blockchain confirmation state
-  useEffect(() => {
-    if (!txFailed || !txHash) return;
-    if (errorShownRef.current) return;
-    errorShownRef.current = true;
-
-    const errorMessage = getTransactionErrorMessage(txFailDetails, "Transaction failed on blockchain");
-    setTxStep("error");
-    setTxError(errorMessage);
-    toast.error(errorMessage);
-    setEndorsing(false);
-    logger.error("On-chain transaction failed", txFailDetails, { silent: true });
-  }, [txFailed, txHash, txFailDetails]);
-
-  // ── Handle transaction confirmations ──
-  // eslint-disable-next-line no-restricted-syntax -- reacts to blockchain confirmation state
-  useEffect(() => {
-    if (!txSuccess || !txReceipt) return;
-
-    // Guard against reverted transactions that still return a receipt
-    if (txReceipt.status === "reverted") {
-      setTxStep("error");
-      setTxError("Transaction was reverted on-chain");
-      toast.error("Transaction was reverted on-chain");
-      setEndorsing(false);
-      return;
-    }
-
-    const currentAddress = addressRef.current;
-    const currentPendingApp = pendingAppRef.current;
-    const callbacks = refetchCallbacksRef.current;
-
-    if (endorsing && currentPendingApp) {
-      // Bid confirmed
-      setTxStep("success");
-      toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
-      setEndorsing(false);
-
-      // Sync endorsement to backend DB with retry + warning toast
-      if (currentAddress) {
-        retryWithBackoff(
-          async () => {
-            await blockchainApi.syncEndorsement(
-              currentPendingApp.application_id, currentAddress, currentPendingApp.job_id, currentPendingApp.candidate_id
-            );
-            callbacks.refetchEndorsements();
-          },
-          [2000, 4000, 6000],
-          () => toast.warning(
-            "Your endorsement is confirmed on-chain but could not be synced to the server. It will sync automatically within a few minutes."
-          ),
-        );
-      }
-
-      // Refresh on-chain + backend data after blockchain state settles
-      setTimeout(() => {
-        callbacks.reloadApplications();
-        callbacks.refetchEndorsements();
-        refetchBalance();
-      }, 2000);
-    }
-  }, [txSuccess, txReceipt, endorsing, refetchBalance]);
 
   // ── Public: submit an endorsement via permit (1 signature + 1 TX) ──
   const submitEndorsement = useCallback(
@@ -181,9 +150,6 @@ export function useEndorsementTransaction(
           `Insufficient VETD balance. You have ${parseFloat(currentBalance).toFixed(2)} VETD but need ${amount} VETD`
         );
       }
-
-      // Stash pending data for the confirmation handler
-      setPendingApp(app);
 
       setTxError(null);
       setTxStep("signing");
@@ -216,10 +182,33 @@ export function useEndorsementTransaction(
       setTxStep("bidding");
       setEndorsing(true);
       setBidTxHash(hash);
-      setTxHash(hash);
       toast.success("Endorsement submitted! Waiting for confirmation...");
+
+      await waitForInjectedReceipt(hash);
+
+      const callbacks = refetchCallbacksRef.current;
+      if (address) {
+        const synced = await syncEndorsementWithRetry(app, address);
+        if (synced) {
+          callbacks.refetchEndorsements();
+        } else {
+          toast.warning(
+            "Your endorsement is confirmed on-chain but could not be synced to the server. It will sync automatically within a few minutes."
+          );
+        }
+      }
+
+      setTxStep("success");
+      setEndorsing(false);
+      toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
+
+      setTimeout(() => {
+        callbacks.reloadApplications();
+        callbacks.refetchEndorsements();
+        refetchBalance();
+      }, 2000);
     },
-    [minimumBid, balance, executeWithPermit, placeBidWithPermit]
+    [minimumBid, balance, address, executeWithPermit, placeBidWithPermit, refetchBalance]
   );
 
   // ── Public: reset state (e.g. when closing the modal) ──
@@ -228,9 +217,6 @@ export function useEndorsementTransaction(
     setTxError(null);
     setBidTxHash(undefined);
     setEndorsing(false);
-    setTxHash(undefined);
-    setPendingApp(null);
-    errorShownRef.current = false;
   }, []);
 
   const refetchTokenData = useCallback(() => {

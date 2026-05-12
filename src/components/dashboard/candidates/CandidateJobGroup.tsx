@@ -169,7 +169,7 @@ export function CandidateJobGroup({
               onClick={onShowMore}
               className="w-full py-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors border-b border-border/20"
             >
-              Show {remaining <= 10 ? `all ${remaining}` : "10 more"} candidates
+              Show {remaining <= 10 ? `all ${remaining}` : "10 more"} applications
             </button>
           )}
         </>

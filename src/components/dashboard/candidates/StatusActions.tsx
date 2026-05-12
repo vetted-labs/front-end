@@ -2,16 +2,25 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { getNextStatuses, isTerminalStatus } from "@/lib/statusTransitions";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ApplicationStatus } from "@/types";
 
+export interface StatusAdvanceMetadata {
+  finalCompensation?: number;
+}
+
 interface StatusActionsProps {
   currentStatus: ApplicationStatus;
   isUpdating: boolean;
-  onAdvance: (newStatus: ApplicationStatus, note?: string) => void;
+  onAdvance: (
+    newStatus: ApplicationStatus,
+    note?: string,
+    metadata?: StatusAdvanceMetadata
+  ) => void;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -28,6 +37,8 @@ export function StatusActions({
 }: StatusActionsProps) {
   const [confirmStatus, setConfirmStatus] = useState<ApplicationStatus | null>(null);
   const [note, setNote] = useState("");
+  const [finalCompensation, setFinalCompensation] = useState("");
+  const [finalCompensationError, setFinalCompensationError] = useState<string | null>(null);
 
   const nextStatuses = getNextStatuses(currentStatus);
   const statusConfig = APPLICATION_STATUS_CONFIG[currentStatus];
@@ -35,14 +46,31 @@ export function StatusActions({
 
   const handleConfirm = () => {
     if (!confirmStatus) return;
-    onAdvance(confirmStatus, note.trim() || undefined);
+
+    if (confirmStatus === "accepted") {
+      const parsedCompensation = Number(finalCompensation);
+      if (!Number.isFinite(parsedCompensation) || parsedCompensation <= 0) {
+        setFinalCompensationError("Enter a positive final compensation amount.");
+        return;
+      }
+      onAdvance(confirmStatus, note.trim() || undefined, {
+        finalCompensation: parsedCompensation,
+      });
+    } else {
+      onAdvance(confirmStatus, note.trim() || undefined);
+    }
+
     setConfirmStatus(null);
     setNote("");
+    setFinalCompensation("");
+    setFinalCompensationError(null);
   };
 
   const handleCancel = () => {
     setConfirmStatus(null);
     setNote("");
+    setFinalCompensation("");
+    setFinalCompensationError(null);
   };
 
   const needsConfirmation = (status: ApplicationStatus) =>
@@ -100,9 +128,28 @@ export function StatusActions({
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {confirmStatus === "accepted"
-              ? "This will permanently mark the candidate as accepted. This action cannot be undone."
+              ? "This will permanently mark the candidate as accepted and record the hired outcome for endorsement rewards. This action cannot be undone."
               : "This will permanently reject the candidate. This action cannot be undone."}
           </p>
+          {confirmStatus === "accepted" && (
+            <Input
+              id="final-compensation"
+              type="number"
+              inputMode="decimal"
+              min="1"
+              step="1000"
+              required
+              label="Final compensation"
+              description="Annualized compensation used for endorsement reward calculations."
+              value={finalCompensation}
+              onChange={(event) => {
+                setFinalCompensation(event.target.value);
+                if (finalCompensationError) setFinalCompensationError(null);
+              }}
+              placeholder="100000"
+              error={finalCompensationError ?? undefined}
+            />
+          )}
           <div>
             <label
               htmlFor="transition-note"

@@ -86,7 +86,13 @@ export class HeadlessWallet extends EventEmitter {
     if (this.debug) console.log("[hw] →", req.method, JSON.stringify(req.params)?.slice(0, 200));
     try {
       const result = await this.handle(req);
-      if (this.debug) console.log("[hw] ←", req.method);
+      if (this.debug) {
+        if (req.method === "eth_getTransactionReceipt") {
+          console.log("[hw] ←", req.method, result);
+        } else {
+          console.log("[hw] ←", req.method);
+        }
+      }
       return result;
     } catch (err) {
       if (this.debug) console.log("[hw] ✗", req.method, err);
@@ -137,10 +143,30 @@ export class HeadlessWallet extends EventEmitter {
 
       case "eth_sendTransaction": {
         const [tx] = params as [Record<string, unknown>];
-        return this.walletClient.sendTransaction({
+        const txWithoutNonce = { ...tx };
+        delete txWithoutNonce.nonce;
+        const nonce = await this.publicClient.getTransactionCount({
+          address: this.activeAddress,
+          blockTag: "latest",
+        });
+        if (this.debug) {
+          console.log("[hw] eth_sendTransaction nonce", {
+            supplied: tx.nonce,
+            using: nonce,
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            dataSelector: typeof tx.data === "string" ? tx.data.slice(0, 10) : undefined,
+            active: this.activeAddress,
+          });
+        }
+        const hash = await this.walletClient.sendTransaction({
+          ...(txWithoutNonce as object),
           account: this.walletClient.account!,
-          ...(tx as object),
+          nonce,
         } as Parameters<WalletClient["sendTransaction"]>[0]);
+        if (this.debug) console.log("[hw] eth_sendTransaction hash", hash);
+        return hash;
       }
 
       case "wallet_switchEthereumChain":

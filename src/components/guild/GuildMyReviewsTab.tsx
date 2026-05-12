@@ -44,12 +44,11 @@ function buildReviewHref(
   subjectId: string,
   guildId: string,
 ): string {
-  const base = `/expert/guild/${encodeURIComponent(guildId)}`;
   if (itemType === "guild_application") {
-    return `${base}?tab=membershipApplications&candidateApplicationId=${encodeURIComponent(subjectId)}`;
+    return `/expert/voting?reviewAppId=${encodeURIComponent(subjectId)}&reviewType=candidate&guildId=${encodeURIComponent(guildId)}`;
   }
   if (itemType === "expert_application") {
-    return `${base}?tab=membershipApplications&applicationId=${encodeURIComponent(subjectId)}`;
+    return `/expert/voting?reviewAppId=${encodeURIComponent(subjectId)}&reviewType=expert&guildId=${encodeURIComponent(guildId)}`;
   }
   return `/expert/voting/applications/${encodeURIComponent(subjectId)}`;
 }

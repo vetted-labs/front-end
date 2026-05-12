@@ -29,7 +29,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { GuildBadge } from "@/components/ui/guild";
 import { MatchScoreBreakdown } from "@/components/ui/match-score-breakdown";
 import { PillTabs } from "@/components/ui/pill-tabs";
-import { StatusActions } from "./StatusActions";
+import { StatusActions, type StatusAdvanceMetadata } from "./StatusActions";
 import { PipelineStepper } from "./PipelineStepper";
 import { StatusTimeline } from "./StatusTimeline";
 import { truncateAddress } from "@/lib/utils";
@@ -48,7 +48,12 @@ const tabs: { value: TabValue; label: string }[] = [
 
 interface CandidateDetailPanelProps {
   application: CompanyApplication;
-  onStatusChange: (applicationId: string, newStatus: ApplicationStatus, note?: string) => void;
+  onStatusChange: (
+    applicationId: string,
+    newStatus: ApplicationStatus,
+    note?: string,
+    metadata?: StatusAdvanceMetadata
+  ) => void;
   isUpdatingStatus?: boolean;
   onBack?: () => void;
   showBackButton?: boolean;
@@ -106,8 +111,12 @@ export function CandidateDetailPanel({
     { skip: endorserWallets.length === 0 },
   );
 
-  const handleStatusAdvance = async (newStatus: ApplicationStatus, note?: string) => {
-    await onStatusChange(application.id, newStatus, note);
+  const handleStatusAdvance = async (
+    newStatus: ApplicationStatus,
+    note?: string,
+    metadata?: StatusAdvanceMetadata
+  ) => {
+    await onStatusChange(application.id, newStatus, note, metadata);
     refetchHistory();
   };
 

@@ -14,6 +14,7 @@ interface StatusUpdateParams {
   currentStatus: ApplicationStatus;
   newStatus: ApplicationStatus;
   note?: string;
+  finalCompensation?: number;
 }
 
 export function useApplicationStatusUpdate() {
@@ -27,11 +28,26 @@ export function useApplicationStatusUpdate() {
         onError?: (error: string) => void;
       }
     ) => {
-      const { applicationId, candidateId, jobId, currentStatus, newStatus, note } = params;
+      const {
+        applicationId,
+        candidateId,
+        jobId,
+        currentStatus,
+        newStatus,
+        note,
+        finalCompensation,
+      } = params;
 
       // Client-side validation (backend also validates)
       if (!canTransition(currentStatus, newStatus)) {
         const msg = `Cannot transition from "${currentStatus}" to "${newStatus}"`;
+        toast.error(msg);
+        options?.onError?.(msg);
+        return null;
+      }
+
+      if (newStatus === "accepted" && (!finalCompensation || finalCompensation <= 0)) {
+        const msg = "Final compensation is required to record a hired outcome.";
         toast.error(msg);
         options?.onError?.(msg);
         return null;
@@ -50,13 +66,15 @@ export function useApplicationStatusUpdate() {
         }
       );
 
-      if (result && newStatus === "accepted") {
+      if (result && (newStatus === "accepted" || newStatus === "rejected")) {
         try {
           await endorsementAccountabilityApi.recordHireOutcome({
             applicationId,
             candidateId,
             jobId,
-            outcome: "hired",
+            ...(newStatus === "accepted"
+              ? { outcome: "hired" as const, finalCompensation }
+              : { outcome: "not_hired" as const }),
           });
           // Dispatch events for immediate UI refresh across the app
           window.dispatchEvent(new Event("vetted:notification-refresh"));
@@ -64,7 +82,9 @@ export function useApplicationStatusUpdate() {
           window.dispatchEvent(new Event("vetted:endorsement-refresh"));
         } catch {
           toast.warning(
-            "Candidate accepted but hire outcome recording failed. Expert rewards may need manual processing."
+            newStatus === "accepted"
+              ? "Candidate accepted but hire outcome recording failed. Expert rewards may need manual processing."
+              : "Candidate rejected but not-hired outcome recording failed. Endorsement slashing may need manual processing."
           );
         }
       }

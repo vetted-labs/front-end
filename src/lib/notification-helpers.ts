@@ -9,6 +9,7 @@ import {
 import type { Notification } from "@/types";
 import { logger } from "@/lib/logger";
 import { getNotificationPriority, NOTIFICATION_COLORS, STATUS_COLORS } from "@/config/colors";
+import { getGuildReviewUrl, type ReviewApplicantType } from "@/lib/review-routing";
 
 export type { Notification };
 
@@ -122,19 +123,37 @@ const NOTIFICATION_FALLBACK_URL = "/expert/notifications";
 
 /**
  * Build a navigation URL from a notification, enriching guild application links
- * with the membership applications tab and applicationId.
+ * with the review modal route that `/expert/voting` consumes.
  */
 export function buildNotificationUrl(notification: Notification): string {
   try {
-    if (!notification.link) return NOTIFICATION_FALLBACK_URL;
+    const rawUrl = notification.link || (
+      notification.guildId
+        ? `/expert/guild/${encodeURIComponent(notification.guildId)}`
+        : ""
+    );
+    if (!rawUrl) return NOTIFICATION_FALLBACK_URL;
 
-    const url = new URL(notification.link, window.location.origin);
+    const url = new URL(rawUrl, window.location.origin);
     if (notification.type === "guild_application") {
-      if (!url.searchParams.has("tab")) {
-        url.searchParams.set("tab", "membershipApplications");
-      }
-      if (notification.applicationId && !url.searchParams.has("applicationId")) {
-        url.searchParams.set("applicationId", notification.applicationId);
+      const applicationId =
+        notification.applicationId ||
+        url.searchParams.get("applicationId") ||
+        url.searchParams.get("candidateApplicationId");
+      const guildId =
+        notification.guildId ||
+        url.pathname.match(/^\/expert\/guild\/([^/]+)/)?.[1];
+      const queryApplicantType = url.searchParams.get("applicantType");
+      const applicantType: ReviewApplicantType =
+        notification.applicantType ??
+        (queryApplicantType === "candidate" || queryApplicantType === "expert"
+          ? queryApplicantType
+          : url.searchParams.has("candidateApplicationId")
+            ? "candidate"
+            : "expert");
+
+      if (applicationId && guildId) {
+        return getGuildReviewUrl(guildId, applicationId, applicantType);
       }
     }
     return url.pathname + url.search;

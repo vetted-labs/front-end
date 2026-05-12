@@ -13,7 +13,7 @@ describe("review flow routing helpers", () => {
     } as GuildApplication;
 
     expect(getReviewQueueUrl(app)).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=expert-app-1&applicantType=expert"
+      "/expert/voting?reviewAppId=expert-app-1&reviewType=expert&guildId=guild-1"
     );
   });
 
@@ -25,7 +25,7 @@ describe("review flow routing helpers", () => {
     } as GuildApplication;
 
     expect(getReviewQueueUrl(app)).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=candidate-app-1&applicantType=candidate"
+      "/expert/voting?reviewAppId=candidate-app-1&reviewType=candidate&guildId=guild-1"
     );
   });
 
@@ -56,7 +56,7 @@ describe("notification deep links", () => {
     });
 
     expect(url).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=candidate-app-1&applicantType=candidate"
+      "/expert/voting?reviewAppId=candidate-app-1&reviewType=candidate&guildId=guild-1"
     );
   });
 
@@ -73,7 +73,7 @@ describe("notification deep links", () => {
     } as Parameters<typeof buildNotificationUrl>[0] & { candidateApplicationId?: string });
 
     expect(url).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=candidate-app-2&applicantType=candidate"
+      "/expert/voting?reviewAppId=candidate-app-2&reviewType=candidate&guildId=guild-1"
     );
   });
 
@@ -93,7 +93,7 @@ describe("notification deep links", () => {
     });
 
     expect(url).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=expert-app-1&applicantType=expert"
+      "/expert/voting?reviewAppId=expert-app-1&reviewType=expert&guildId=guild-1"
     );
   });
 
@@ -112,7 +112,7 @@ describe("notification deep links", () => {
     });
 
     expect(url).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=application-1"
+      "/expert/voting?reviewAppId=application-1&reviewType=expert&guildId=guild-1"
     );
   });
 
@@ -132,7 +132,7 @@ describe("notification deep links", () => {
     });
 
     expect(url).toBe(
-      "/expert/guild/guild-1?tab=membershipApplications&applicationId=expert-app-2&applicantType=expert"
+      "/expert/voting?reviewAppId=expert-app-2&reviewType=expert&guildId=guild-1"
     );
   });
 });

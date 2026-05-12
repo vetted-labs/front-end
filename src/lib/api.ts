@@ -1426,8 +1426,22 @@ export const blockchainApi = {
   getAllEndorsements: (jobId: string, candidateId: string) =>
     apiRequest<import("@/types").EndorsementInfo[]>(`/api/blockchain/endorsements/all/${jobId}/${candidateId}`),
 
-  getEndorsementStats: (jobId: string, candidateId: string) =>
-    apiRequest<import("@/types").EndorsementStats>(`/api/blockchain/endorsements/stats/${jobId}/${candidateId}`),
+  getEndorsementStats: async (jobId: string, candidateId: string) => {
+    const stats = await apiRequest<
+      import("@/types").EndorsementStats & {
+        totalBids?: number;
+        totalStaked?: string;
+        averageBid?: string;
+      }
+    >(`/api/blockchain/endorsements/stats/${jobId}/${candidateId}`);
+
+    return {
+      ...stats,
+      totalEndorsements: Number(stats.totalEndorsements ?? stats.totalBids ?? 0),
+      totalAmount: String(stats.totalAmount ?? stats.totalStaked ?? "0"),
+      averageAmount: stats.averageAmount ?? stats.averageBid,
+    };
+  },
 
   syncEndorsement: (applicationId: string, walletAddress: string, jobId: string, candidateId: string) =>
     apiRequest<{ success: boolean }>("/api/blockchain/endorsements/sync", {
@@ -1438,7 +1452,7 @@ export const blockchainApi = {
 
   getApplicationsForEndorsement: async (guildId: string, expertAddress?: string, page?: number, limit?: number) => {
     const params = new URLSearchParams();
-    if (expertAddress) params.append('expert_address', expertAddress);
+    if (expertAddress) params.append("wallet", expertAddress);
     if (page) params.append('page', String(page));
     if (limit) params.append('limit', String(limit));
     const query = params.toString() ? `?${params.toString()}` : '';
@@ -1559,7 +1573,7 @@ function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/
     my_reward_amount: raw.myRewardAmount != null || raw.my_reward_amount != null
       ? Number(raw.myRewardAmount ?? raw.my_reward_amount) : undefined,
     // Item type
-    item_type: (raw.itemType ?? raw.item_type) as "proposal" | "guild_application" | undefined,
+    item_type: (raw.itemType ?? raw.item_type) as "proposal" | "guild_application" | "expert_application" | undefined,
     // Consensus failure / tiebreaker fields
     consensus_failed: Boolean(raw.consensusFailed ?? raw.consensus_failed ?? false),
     tiebreaker_required: Boolean(raw.tiebreakerRequired ?? raw.tiebreaker_required ?? false),
@@ -1820,7 +1834,13 @@ export const governanceApi = {
 
 // Endorsement Accountability API
 export const endorsementAccountabilityApi = {
-  recordHireOutcome: (data: { applicationId: string; candidateId: string; jobId: string; outcome: "hired" | "not_hired" }) =>
+  recordHireOutcome: (data: {
+    applicationId: string;
+    candidateId: string;
+    jobId: string;
+    outcome: "hired" | "not_hired";
+    finalCompensation?: number;
+  }) =>
     apiRequest<{ success: boolean }>("/api/endorsements/hire-outcome", {
       method: "POST",
       body: JSON.stringify(data),

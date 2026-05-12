@@ -14,9 +14,12 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { MotionProvider } from "@/lib/motion";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { installBrowserHeadlessWallet } from "@/lib/e2e/browser-headless-wallet";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { sepolia } from "wagmi/chains";
+
+installBrowserHeadlessWallet();
 
 // E2E-only escape hatch: expose wagmi config + actions on window so the
 // headless-wallet Playwright suite can drive wagmi directly via the injected
