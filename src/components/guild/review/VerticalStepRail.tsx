@@ -1,6 +1,6 @@
 "use client";
 
-import { STATUS_COLORS } from "@/config/colors";
+import { WizardRail, type WizardRailStep } from "@/components/wizard/WizardRail";
 
 export interface StepDef {
   number: number;
@@ -23,30 +23,12 @@ export interface VerticalStepRailProps {
   currentStep: number;
   completedSteps?: ReadonlyArray<number>;
   incompleteSteps?: ReadonlyArray<number>;
-  /**
-   * Highest step number the reviewer can jump to. Steps beyond this render
-   * locked and are not clickable.
-   */
   maxUnlockedStep?: number;
   onStepClick?: (step: number) => void;
-  /**
-   * Whether the modal is in the commit phase. When true, the commit-reveal
-   * section is shown with the first sub-step ("Sign commit") highlighted.
-   */
   isCommitPhase?: boolean;
-  /** Renders sponsor-vouch hint label on the expert applicant variant. */
   variant?: "candidate" | "expert";
-  /**
-   * Optional step list override. Defaults to the review-flow REVIEW_STEPS.
-   * Pass a flow-specific list (e.g. endorse modal) to reuse the rail.
-   */
   steps?: ReadonlyArray<StepDef>;
-  /** Header label above the primary section. Defaults to "Review". */
   sectionLabel?: string;
-  /**
-   * When false, the commit-reveal sub-section is hidden entirely. Defaults
-   * to true so the review modal keeps its current layout untouched.
-   */
   showCommitReveal?: boolean;
 }
 
@@ -62,120 +44,25 @@ export function VerticalStepRail({
   sectionLabel = "Review",
   showCommitReveal = true,
 }: VerticalStepRailProps) {
-  const completedSet = new Set(completedSteps ?? []);
-  const incompleteSet = new Set(incompleteSteps ?? []);
-  const lockBoundary =
-    typeof maxUnlockedStep === "number" ? maxUnlockedStep : Number.POSITIVE_INFINITY;
   const stepList = steps ?? REVIEW_STEPS;
 
-  const stepLabel = (step: StepDef): string => {
+  const labelOverride = (step: WizardRailStep): string => {
     if (variant === "expert" && step.number === 2) return "Sponsor vouch";
     if (variant === "expert" && step.number === 3) return "Membership rubric";
     return step.label;
   };
 
   return (
-    <nav
-      aria-label={`${sectionLabel} steps`}
-      className="flex flex-col gap-1 px-3 py-5 text-sm select-none"
+    <WizardRail
+      sectionLabel={sectionLabel}
+      steps={stepList}
+      currentStep={currentStep}
+      completedSteps={completedSteps}
+      incompleteSteps={incompleteSteps}
+      maxUnlockedStep={maxUnlockedStep}
+      onStepClick={onStepClick}
+      labelOverride={labelOverride}
     >
-      <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
-        {sectionLabel}
-      </p>
-
-      {stepList.map((step) => {
-        const isActive = currentStep === step.number;
-        const isCompleted =
-          completedSet.has(step.number) ||
-          (!completedSteps && currentStep > step.number);
-        const isIncomplete = incompleteSet.has(step.number) && !isCompleted;
-        const isLocked = step.number > lockBoundary && !isCompleted;
-        const clickable = !!onStepClick && !isLocked;
-        const tooltip = isLocked
-          ? "Complete prior steps first"
-          : isIncomplete
-            ? "Unfinished required fields"
-            : undefined;
-
-        const circleClass = isCompleted
-          ? `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}`
-          : isActive
-            ? "bg-primary border-primary text-primary-foreground"
-            : isIncomplete
-              ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`
-              : "bg-muted/40 border-border text-muted-foreground";
-
-        const rowClass = isActive
-          ? "bg-primary/10 text-foreground"
-          : "text-muted-foreground hover:bg-muted/40 hover:text-foreground";
-
-        const lockedClass = isLocked ? "opacity-50 cursor-not-allowed" : "";
-
-        const inner = (
-          <span className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
-            <span
-              className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] font-semibold ${circleClass}`}
-              aria-hidden="true"
-            >
-              {isCompleted ? (
-                <svg
-                  className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`}
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 8l3.5 3.5L13 5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : isIncomplete ? (
-                <span className={STATUS_COLORS.warning.text}>!</span>
-              ) : (
-                step.number
-              )}
-            </span>
-            <span
-              className={`text-[13px] font-medium ${
-                isActive ? "text-foreground" : ""
-              }`}
-            >
-              {stepLabel(step)}
-            </span>
-          </span>
-        );
-
-        if (clickable) {
-          return (
-            <button
-              key={step.number}
-              type="button"
-              onClick={() => onStepClick?.(step.number)}
-              title={tooltip}
-              aria-current={isActive ? "step" : undefined}
-              aria-label={`${stepLabel(step)}${isCompleted ? " (complete)" : isIncomplete ? " (incomplete)" : ""}`}
-              className={`text-left rounded-lg transition-colors ${rowClass} ${lockedClass} focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
-            >
-              {inner}
-            </button>
-          );
-        }
-
-        return (
-          <div
-            key={step.number}
-            title={tooltip}
-            aria-current={isActive ? "step" : undefined}
-            className={`rounded-lg ${rowClass} ${lockedClass}`}
-          >
-            {inner}
-          </div>
-        );
-      })}
-
       {showCommitReveal && (
         <>
           <p className="mt-5 px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
@@ -213,6 +100,6 @@ export function VerticalStepRail({
           })}
         </>
       )}
-    </nav>
+    </WizardRail>
   );
 }
