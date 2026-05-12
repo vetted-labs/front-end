@@ -1,11 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, Eye, Users } from 'lucide-react';
+import { ChevronRight, Clock, Eye, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
-import { getMatchScoreColors, getUrgencyColors } from "@/config/colors";
+import { getMatchScoreColors } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
 import { MatchScoreBadge as MatchScoreBadgeUI } from "@/components/ui/match-score-badge";
 import type { EndorsementApplication } from "@/types";
@@ -13,7 +13,7 @@ import type { EndorsementApplication } from "@/types";
 interface ApplicationCardProps {
   application: EndorsementApplication;
   onViewDetails: (application: EndorsementApplication) => void;
-  onQuickEndorse?: (application: EndorsementApplication) => void;
+  onViewExistingBid?: (application: EndorsementApplication) => void;
   /**
    * Extra DOM attributes (e.g. `data-tour-target`) to spread on the card's
    * outer element. Used by story-lab/onboarding to mark a specific card.
@@ -21,7 +21,7 @@ interface ApplicationCardProps {
   rootProps?: Record<string, string>;
   /**
    * Extra DOM attributes (e.g. `data-tour-target`) to spread on the primary
-   * Endorse CTA. Used by story-lab/onboarding to anchor the bid CTA marker.
+   * Review CTA. Used by story-lab/onboarding to anchor the marker.
    */
   ctaProps?: Record<string, string>;
 }
@@ -94,7 +94,7 @@ function MatchScoreBadge({ score }: { score: number | null }) {
   );
 }
 
-export function ApplicationCard({ application, onViewDetails, onQuickEndorse, rootProps, ctaProps }: ApplicationCardProps) {
+export function ApplicationCard({ application, onViewDetails, onViewExistingBid, rootProps, ctaProps }: ApplicationCardProps) {
   const { label: countdownLabel, isExpired, remaining } = useCountdown(
     application.bidding_deadline,
     { fallbackStart: application.applied_at, expiredLabel: "Bidding closed" },
@@ -123,13 +123,11 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse, ro
   // Countdown urgency
   const hoursLeft = isExpired ? 0 : Math.floor(remaining / (1000 * 60 * 60));
   const isBlindBidding = !isExpired && hoursLeft > 24;
-  const countdownStyles = isExpired
-    ? 'bg-muted/50 text-muted-foreground border-border'
-    : getUrgencyColors(hoursLeft);
-
   const salaryDisplay = (application.salary_min || application.salary_max)
     ? formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })
     : null;
+
+  const viewerHasEndorsed = !!application.current_bid;
 
   return (
     <div
@@ -238,34 +236,42 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse, ro
         </span>
       </div>
 
-      {/* Action buttons */}
-      <div className="px-5 py-3.5 flex gap-3 mt-auto">
-        <Button
-          variant="ghost"
-          className="flex-1 h-10 rounded-lg border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetails(application);
-          }}
-        >
-          View Details
-        </Button>
+      {/* Single CTA — opens the unified review/endorse modal at step 1 */}
+      <div className="px-5 py-3.5 mt-auto">
         {isExpired ? (
-          <div className="flex-1 h-10 rounded-lg bg-muted/20 border border-border/50 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 font-medium">
-            <Clock className="w-3 h-3" />
-            Bidding Closed
-          </div>
+          <Button
+            variant="ghost"
+            className="w-full h-10 rounded-lg border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(application);
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1.5" />
+            Review (bidding closed)
+          </Button>
+        ) : viewerHasEndorsed ? (
+          <Button
+            variant="ghost"
+            className="w-full h-10 rounded-lg text-sm font-medium text-muted-foreground hover:bg-transparent hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
+              (onViewExistingBid ?? onViewDetails)(application);
+            }}
+          >
+            View your bid
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         ) : (
           <Button
             {...(ctaProps ?? {})}
-            className="flex-1 h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
-            disabled={!onQuickEndorse}
+            className="w-full h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
             onClick={(e) => {
               e.stopPropagation();
-              onQuickEndorse?.(application);
+              onViewDetails(application);
             }}
           >
-            Endorse
+            Review
           </Button>
         )}
       </div>

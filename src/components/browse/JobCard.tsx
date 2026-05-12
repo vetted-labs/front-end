@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   MapPin,
   CheckCircle2,
@@ -14,6 +15,7 @@ import { getAssetUrl } from "@/lib/api";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { STATUS_COLORS } from "@/config/colors";
 import { GuildBadge } from "@/components/ui/guild";
+import { useGuilds } from "@/lib/hooks/useGuilds";
 import { getTimeAgo, formatSalaryRange, cn } from "@/lib/utils";
 import { MatchScoreBadge } from "@/components/ui/match-score-badge";
 import type { Job } from "@/types";
@@ -26,6 +28,8 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCardProps) {
+  const router = useRouter();
+  const { resolveGuildId } = useGuilds();
   const heroUrl = job.heroImageUrl ? getAssetUrl(job.heroImageUrl) : null;
   const questionCount = job.applicationQuestions?.length ?? 0;
 
@@ -66,6 +70,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCa
       <div className="flex items-start justify-between mb-3.5 relative">
         <div className="flex items-center gap-3">
           {/* Company Logo */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={job.companyLogo ? getAssetUrl(job.companyLogo) : getCompanyAvatar(job.companyName)}
             alt={job.companyName || "Company"}
@@ -104,7 +109,21 @@ export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCa
 
       {/* Meta Tags: Guild badge, location, job type */}
       <div className="flex items-center gap-2 flex-wrap mb-3.5">
-        {job.guild && <GuildBadge guild={job.guild} size="sm" />}
+        {job.guild && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const guildUuid = resolveGuildId(job.guild!);
+              if (guildUuid) router.push(`/guilds/${guildUuid}`);
+            }}
+            className="rounded-full hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/50"
+            aria-label={`Open ${job.guild} guild`}
+          >
+            <GuildBadge guild={job.guild} size="sm" />
+          </button>
+        )}
         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <MapPin className="w-3 h-3 opacity-60" />
           {job.locationType || job.location}

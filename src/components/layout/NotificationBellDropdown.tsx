@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { extractApiError } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import type { BaseNotification } from "@/types";
@@ -34,6 +36,7 @@ export function NotificationBellDropdown<T extends BaseNotification>({
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -43,10 +46,13 @@ export function NotificationBellDropdown<T extends BaseNotification>({
   // eslint-disable-next-line no-restricted-syntax -- fetches on dropdown open
   useEffect(() => {
     if (!isOpen) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- intentional loading-state synchronisation on dropdown open; setState calls are guarded by the early return above */
     setIsLoading(true);
+    setErrorMessage(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
     fetchRecent()
       .then(setNotifications)
-      .catch(() => {})
+      .catch((err) => setErrorMessage(extractApiError(err, "Couldn't load notifications")))
       .finally(() => setIsLoading(false));
   }, [isOpen, fetchRecent]);
 
@@ -101,6 +107,11 @@ export function NotificationBellDropdown<T extends BaseNotification>({
               <div className="flex items-center justify-center py-8" role="status">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 <span className="sr-only">Loading notifications</span>
+              </div>
+            ) : errorMessage ? (
+              <div className="py-8 text-center">
+                <Bell className={cn("mx-auto mb-2 h-8 w-8", STATUS_COLORS.negative.text)} />
+                <p className={cn("text-sm", STATUS_COLORS.negative.text)}>{errorMessage}</p>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-8 text-center">

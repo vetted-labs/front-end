@@ -11,7 +11,7 @@ import {
 } from "@/lib/hooks/useVettedContracts";
 import { useEndorsementTransaction } from "@/lib/hooks/useEndorsementTransaction";
 import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransaction";
-import { blockchainApi, expertApi } from "@/lib/api";
+import { blockchainApi, expertApi, extractApiError } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
 import { useFetch } from "@/lib/hooks/useFetch";
 import type { EndorsementApplication, GuildRecord, EarningsBreakdownResponse } from "@/types";
@@ -30,18 +30,14 @@ import dynamic from "next/dynamic";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 
-const CandidateDetailsModal = dynamic(
-  () => import("./endorsements/CandidateDetailsModal").then(m => ({ default: m.CandidateDetailsModal })),
-  { ssr: false }
-);
-const EndorsementTransactionModal = dynamic(
-  () => import("./endorsements/EndorsementTransactionModal").then(m => ({ default: m.EndorsementTransactionModal })),
+const EndorseCandidateModal = dynamic(
+  () => import("./endorsements/endorse/EndorseCandidateModal").then(m => ({ default: m.EndorseCandidateModal })),
   { ssr: false }
 );
 import { EndorsementHeader } from "./endorsements/EndorsementHeader";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 import { STATUS_COLORS } from "@/config/colors";
-import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -80,8 +76,9 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     activeSubStopId !== null &&
     STORY_LAB_OPEN_MODAL_SUBSTOPS.has(activeSubStopId);
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"endorse" | "view">("endorse");
+  const [modalInitialStep, setModalInitialStep] = useState<1 | 2 | 3 | 4>(1);
   const [applicationFilter, setApplicationFilter] = useState<'active' | 'closed'>('active');
   const [search, setSearch] = useState("");
 
@@ -94,7 +91,10 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   // Fetch real earnings data for the stats cards
   const { data: earningsData } = useFetch<EarningsBreakdownResponse>(
     () => expertApi.getEarningsBreakdown(address!, { limit: 100 }) as Promise<EarningsBreakdownResponse>,
-    { skip: !address }
+    {
+      skip: !address,
+      onError: (err) => toast.error(extractApiError(err, "Couldn't load earnings")),
+    }
   );
 
   // Load applications with server-side pagination
@@ -189,8 +189,9 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         hasAutoOpened.current = true;
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: open the matching application's modal once it finishes loading
         setSelectedApp(targetApp);
-
-        setTransactionModalOpen(true);
+        setModalMode("endorse");
+        setModalInitialStep(4);
+        setModalOpen(true);
       }
     }
   }, [initialApplicationId, applications, loading]);
@@ -209,9 +210,11 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     if (shouldStoryLabOpenModal) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs story-lab modal open state from URL params
       setSelectedApp(storyApp);
-      setTransactionModalOpen(true);
+      setModalMode("endorse");
+      setModalInitialStep(4);
+      setModalOpen(true);
     } else {
-      setTransactionModalOpen(false);
+      setModalOpen(false);
     }
   }, [isStoryLabPreview, shouldStoryLabOpenModal, applications]);
 
@@ -219,23 +222,21 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
 
   const handleViewDetails = (application: EndorsementApplication) => {
     setSelectedApp(application);
-    setDetailsModalOpen(true);
+    setModalMode("endorse");
+    setModalInitialStep(1);
+    setModalOpen(true);
   };
 
-  const handleQuickEndorse = (application: EndorsementApplication) => {
+  const handleViewEndorsement = (application: EndorsementApplication) => {
     setSelectedApp(application);
-    setTransactionModalOpen(true);
+    setModalMode("view");
+    setModalInitialStep(1);
+    setModalOpen(true);
   };
 
-  const handleEndorseFromDetails = (application: EndorsementApplication) => {
-    setDetailsModalOpen(false);
-    setSelectedApp(application);
-    setTransactionModalOpen(true);
-  };
-
-  const handleCloseTransactionModal = () => {
-    if (txStep !== "approving" && txStep !== "bidding") {
-      setTransactionModalOpen(false);
+  const handleCloseModal = () => {
+    if (txStep !== "signing" && txStep !== "approving" && txStep !== "bidding") {
+      setModalOpen(false);
       setSelectedApp(null);
       resetTransaction();
     }
@@ -348,10 +349,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           userEndorsements={userEndorsements}
           allUserEndorsements={allUserEndorsements}
           guildName={guildName}
-          onSelectEndorsement={(applicationForModal) => {
-            setSelectedApp(applicationForModal);
-            setDetailsModalOpen(true);
-          }}
+          onSelectEndorsement={handleViewEndorsement}
         />
       </DataSection>
 
@@ -403,7 +401,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           applications={filteredApplications}
           loading={loading}
           onSelectApplication={handleViewDetails}
-          onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
+          onViewExistingBid={handleViewEndorsement}
           emptyTitle={applicationFilter === 'active' ? 'No Active Applications' : 'No Closed Applications'}
           emptyDescription={applicationFilter === 'active'
             ? 'All applications on this page have closed bidding, or there are no applications yet.'
@@ -422,30 +420,24 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         )}
       </div>
 
-      {/* Candidate Details Modal */}
-      <CandidateDetailsModal
+      {/* Unified Endorse Candidate Modal — single 4-step wizard for both
+          "endorse" (place a new bid) and "view" (review an existing
+          endorsement from MyActiveEndorsements). */}
+      <EndorseCandidateModal
         application={selectedApp}
-        isOpen={detailsModalOpen}
-        onClose={() => {
-          setDetailsModalOpen(false);
-          setSelectedApp(null);
-        }}
-        onEndorseCandidate={meetsMinimumStake ? handleEndorseFromDetails : undefined}
-      />
-
-      {/* Endorsement Transaction Modal */}
-      <EndorsementTransactionModal
-        application={selectedApp}
-        isOpen={transactionModalOpen}
-        onClose={handleCloseTransactionModal}
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        mode={modalMode}
+        initialStep={modalInitialStep}
         userBalance={balance ? formatEther(balance) : "0"}
         userStake={userStake}
         minimumBid={minimumBidFormatted}
-        onPlaceEndorsement={handlePlaceEndorsement}
+        onPlaceEndorsement={modalMode === "endorse" && meetsMinimumStake ? handlePlaceEndorsement : undefined}
         txStep={txStep}
         txError={txError}
         approvalTxHash={approvalTxHash}
         bidTxHash={bidTxHash}
+        existingBid={selectedApp?.current_bid}
       />
     </div>
   );

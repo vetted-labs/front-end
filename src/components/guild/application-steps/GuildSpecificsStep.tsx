@@ -1,11 +1,9 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
-import type {
-  GuildApplicationTemplate,
-  GuildDomainLevel,
-} from "@/types";
+import { Check, ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
+import type { GuildApplicationTemplate, GuildDomainLevel } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
+import { cn } from "@/lib/utils";
 
 interface GuildSpecificsStepProps {
   template: GuildApplicationTemplate;
@@ -39,145 +37,216 @@ export default function GuildSpecificsStep({
     : null;
 
   return (
-    <div className="space-y-8">
-      {/* Experience Level Selection */}
+    <div className="space-y-10">
+      {/* Experience Level */}
       {template.levels && template.levels.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-8">
-          <h2 className="text-xl font-bold text-foreground mb-1">
-            Experience Level <span className="text-destructive">*</span>
-          </h2>
-          {requiredLevel ? (
-            <p className="text-sm text-muted-foreground mb-4">
-              The experience level is determined by the job you&apos;re applying
-              for.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground mb-4">
-              Select the level that best matches your experience. This determines
-              the domain-specific questions you&apos;ll answer.
-            </p>
-          )}
+        <section>
+          <SectionHeader
+            title={
+              <>
+                Experience level <span className="text-destructive">*</span>
+              </>
+            }
+            description={
+              requiredLevel
+                ? "Locked to the level the role requires."
+                : "Pick the level that matches your craft. This determines which domain prompts you'll answer next."
+            }
+          />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {template.levels.map((level) => (
-              <button
-                key={level.id}
-                type="button"
-                onClick={() => !requiredLevel && onLevelChange(level.id)}
-                disabled={!!requiredLevel && level.id !== requiredLevel}
-                className={`p-4 rounded-lg border-2 text-left transition-all ${
-                  selectedLevel === level.id
-                    ? "border-primary bg-primary/10"
-                    : requiredLevel && level.id !== requiredLevel
-                      ? "border-border opacity-40 cursor-not-allowed"
-                      : "border-border hover:border-primary/40"
-                }`}
-              >
-                <p className="font-medium text-foreground">{level.label}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {level.description}
-                </p>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {template.levels.map((level) => {
+              const isSelected = selectedLevel === level.id;
+              const isLocked = !!requiredLevel && level.id !== requiredLevel;
+              return (
+                <button
+                  key={level.id}
+                  type="button"
+                  onClick={() => !requiredLevel && onLevelChange(level.id)}
+                  disabled={isLocked}
+                  className={cn(
+                    "relative p-4 rounded-xl border text-left transition-all",
+                    isSelected &&
+                      "border-primary bg-primary/[0.06] ring-1 ring-primary/30",
+                    !isSelected &&
+                      !isLocked &&
+                      "border-border hover:border-primary/40 hover:bg-muted/30",
+                    isLocked && "border-border opacity-40 cursor-not-allowed",
+                  )}
+                >
+                  {isSelected && (
+                    <span className="absolute top-3 right-3 grid place-items-center w-4 h-4 rounded-full bg-primary text-background">
+                      <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                    </span>
+                  )}
+                  <p className="font-semibold text-foreground tracking-tight">
+                    {level.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    {level.description}
+                  </p>
+                </button>
+              );
+            })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Domain Questions */}
       {currentDomainLevel && currentDomainLevel.topics.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-8 space-y-6">
-          <div>
-            <h2 className="text-xl font-bold text-foreground mb-1">
-              {currentDomainLevel.templateName}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {currentDomainLevel.description}
-            </p>
-          </div>
+        <section>
+          <SectionHeader
+            title={currentDomainLevel.templateName}
+            description={currentDomainLevel.description}
+          />
 
-          {currentDomainLevel.topics.map((topic, tIndex) => {
-            const isExpanded = expandedDomain === topic.id;
-            const answerKey = `domain.${topic.id}`;
-            const answerValue = domainAnswers[answerKey] || "";
-
-            return (
-              <div
-                key={topic.id}
-                className="border border-border rounded-lg overflow-hidden"
-              >
-                <button
-                  type="button"
-                  onClick={() =>
-                    onExpandDomain(isExpanded ? null : topic.id)
-                  }
-                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-                      {tIndex + 1}
-                    </span>
-                    <div>
-                      <span className="font-medium text-foreground">
-                        {topic.title}
-                      </span>
-                      {answerValue.trim() && (
-                        <span className={`ml-2 text-xs ${STATUS_COLORS.positive.text}`}>
-                          Answered
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+          <div className="space-y-2">
+            {currentDomainLevel.topics.map((topic, tIndex) => {
+              const isExpanded = expandedDomain === topic.id;
+              const answerKey = `domain.${topic.id}`;
+              const answerValue = domainAnswers[answerKey] || "";
+              const answered = answerValue.trim().length >= 50;
+              return (
+                <div
+                  key={topic.id}
+                  className={cn(
+                    "rounded-xl border overflow-hidden transition-colors",
+                    isExpanded
+                      ? "border-primary/30 bg-primary/[0.03]"
+                      : "border-border bg-background/30 hover:bg-muted/20",
                   )}
-                </button>
-
-                {isExpanded && (
-                  <div className="px-4 pb-4 space-y-3">
-                    <div className="text-sm text-muted-foreground whitespace-pre-line bg-muted/30 rounded-lg p-4">
-                      {topic.prompt}
-                    </div>
-                    <textarea
-                      value={answerValue}
-                      onChange={(e) =>
-                        onDomainAnswerChange(answerKey, e.target.value)
-                      }
-                      placeholder="Your answer..."
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                      rows={8}
-                    />
-                    <div className="flex justify-end">
-                      <span className={`text-xs ${answerValue.trim().length < 50 ? "text-muted-foreground" : STATUS_COLORS.positive.text}`}>
-                        {answerValue.trim().length}/50 min characters
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onExpandDomain(isExpanded ? null : topic.id)
+                    }
+                    className="w-full flex items-center justify-between px-4 py-3.5 text-left"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "flex-shrink-0 grid place-items-center w-7 h-7 rounded-full text-[11px] font-bold border",
+                          answered
+                            ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                            : isExpanded
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : "bg-muted text-muted-foreground border-border",
+                        )}
+                      >
+                        {answered ? <Check className="w-3.5 h-3.5" /> : tIndex + 1}
                       </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground text-sm truncate">
+                          {topic.title}
+                        </p>
+                        <p className="text-[11.5px] text-muted-foreground mt-0.5">
+                          {answered
+                            ? `${answerValue.trim().length} characters · answered`
+                            : answerValue.trim()
+                              ? `${answerValue.trim().length} characters · needs ${50 - answerValue.trim().length} more`
+                              : "Tap to answer"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    )}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-3">
+                      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                        {topic.prompt}
+                      </div>
+                      <textarea
+                        value={answerValue}
+                        onChange={(e) =>
+                          onDomainAnswerChange(answerKey, e.target.value)
+                        }
+                        placeholder="Your answer…"
+                        className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 resize-none transition-shadow"
+                        rows={8}
+                      />
+                      <div className="flex justify-end">
+                        <span
+                          className={cn(
+                            "text-[11px] font-medium tabular-nums",
+                            answered
+                              ? STATUS_COLORS.positive.text
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {answerValue.trim().length} / 50 min characters
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* No-AI Declaration */}
       {template.noAiDeclarationText && (
-        <div className="bg-card rounded-xl border border-border p-6">
+        <section className="rounded-xl border border-border bg-muted/20 p-5">
           <label className="flex items-start gap-3 cursor-pointer">
+            <span className="flex-shrink-0 mt-0.5">
+              <span
+                className={cn(
+                  "grid place-items-center w-5 h-5 rounded-md border-2 transition-colors",
+                  noAiDeclaration
+                    ? "bg-primary border-primary"
+                    : "border-border bg-background",
+                )}
+              >
+                {noAiDeclaration && (
+                  <Check className="w-3 h-3 text-background" strokeWidth={3} />
+                )}
+              </span>
+            </span>
             <input
               type="checkbox"
               checked={noAiDeclaration}
               onChange={(e) => onNoAiDeclarationChange(e.target.checked)}
-              className="mt-1 w-5 h-5 text-primary border-border rounded focus:ring-primary"
+              className="sr-only"
             />
-            <span className="text-sm text-foreground">
-              {template.noAiDeclarationText}{" "}
-              <span className="text-destructive">*</span>
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1 inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-3 h-3" />
+                Attestation
+                <span className="text-destructive">·  required</span>
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">
+                {template.noAiDeclarationText}
+              </p>
+            </div>
           </label>
-        </div>
+        </section>
       )}
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  description,
+}: {
+  title: React.ReactNode;
+  description: string;
+}) {
+  return (
+    <div className="mb-4">
+      <h3 className="font-display text-lg font-bold text-foreground tracking-tight leading-tight">
+        {title}
+      </h3>
+      <p className="text-sm text-muted-foreground mt-1 leading-relaxed max-w-xl">
+        {description}
+      </p>
     </div>
   );
 }

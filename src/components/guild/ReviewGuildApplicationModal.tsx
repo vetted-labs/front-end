@@ -429,11 +429,22 @@ export function ReviewGuildApplicationModal({
     latestSessionStatus !== "created" &&
     latestSessionStatus !== "failed" &&
     latestSessionStatus !== "abandoned";
+  // The /review/state endpoint is shared by candidate and expert flows but
+  // hardcodes `context: 'expert_application'` server-side, so its assignment
+  // check queries the wrong table for candidate reviews and always reports
+  // `isAssignedReviewer: false`. Candidate reviews don't use commit-reveal,
+  // drafts, or on-chain sessions either — the only correct authority is the
+  // submit endpoint's own assignment check. Skip the state fetch entirely.
+  const skipReviewState =
+    !application?.id ||
+    isPracticeMode ||
+    isStoryLabPreview ||
+    reviewTypeProp === "candidate";
   const reviewState = useReviewState(
     "guildApplication",
     application?.id ?? "",
     {
-      skip: !application?.id || isPracticeMode || isStoryLabPreview,
+      skip: skipReviewState,
       pollIntervalMs: shouldPollSession ? SESSION_POLL_INTERVAL_MS : null,
     }
   );
@@ -527,6 +538,7 @@ export function ReviewGuildApplicationModal({
     conflictCycleRef.current = 0;
     // The mount-clock used for the >180s session-slow warning is reset by a
     // dedicated effect keyed on (isOpen, application.id) — see above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on application.id only; reacting to the full `application` object would reset form state on every server-state update mid-review
   }, [application?.id, isOpen]);
 
   // eslint-disable-next-line no-restricted-syntax -- sync stake from parent prop
@@ -925,7 +937,10 @@ export function ReviewGuildApplicationModal({
     ? generalTemplate.generalQuestions
     : FALLBACK_GENERAL_QUESTIONS;
   const generalRubric = generalTemplate?.rubric;
-  const generalRubricQuestions: Record<string, RubricQuestionEntry> = generalRubric?.questions || {};
+  const generalRubricQuestions: Record<string, RubricQuestionEntry> = useMemo(
+    () => generalRubric?.questions ?? {},
+    [generalRubric]
+  );
   const generalRedFlags: RubricRedFlag[] = Array.isArray(generalRubric?.redFlags) ? generalRubric.redFlags : [];
   const interpretationGuide: RubricInterpretationGuideItem[] = Array.isArray(generalRubric?.interpretationGuide)
     ? generalRubric.interpretationGuide

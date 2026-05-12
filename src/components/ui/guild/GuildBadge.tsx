@@ -9,11 +9,18 @@ export interface GuildBadgeProps {
   /** Visual size — default `"sm"`. */
   size?: "xs" | "sm" | "md";
   /**
-   * When true the badge renders as a `next/link` to `/guilds/<slug>` so users
-   * can drill into the guild from any chip. Unknown guilds always render as
-   * a non-link span.
+   * When true the badge renders as a `next/link` to the guild's detail page
+   * so users can drill in from any chip. Unknown guilds render as a
+   * non-link span.
+   *
+   * Prefers (in order): `guildId` → `/guilds/<guildId>`, then the slug
+   * derived from the guild name → `/guilds/<slug>`. Pass `guildId` whenever
+   * you have the real backend ID — the backend's public detail route is
+   * keyed by id, not slug, so slug-only links can 404.
    */
   asLink?: boolean;
+  /** Real backend guild id (UUID). When present, takes precedence over slug. */
+  guildId?: string;
   className?: string;
 }
 
@@ -42,6 +49,7 @@ export function GuildBadge({
   guild,
   size = "sm",
   asLink = false,
+  guildId,
   className,
 }: GuildBadgeProps) {
   const identity = getGuildIdentity(guild);
@@ -61,10 +69,16 @@ export function GuildBadge({
     </>
   );
 
-  if (asLink && identity.slug !== "unknown") {
+  const linkTarget = guildId
+    ? `/guilds/${encodeURIComponent(guildId)}`
+    : identity.slug !== "unknown"
+      ? `/guilds/${identity.slug}`
+      : null;
+
+  if (asLink && linkTarget) {
     return (
       <Link
-        href={`/guilds/${identity.slug}`}
+        href={linkTarget}
         className={cn(classes, "transition-colors hover:opacity-90")}
         aria-label={`${identity.displayName} guild`}
       >

@@ -243,7 +243,7 @@ export default function GuildDetailPage() {
       router.push(`/auth/login?type=candidate&redirect=/guilds/${guildId}/apply`);
       return;
     }
-    if (isConnected) {
+    if (auth.userType === "expert") {
       router.push(`/expert/apply?guild=${encodeURIComponent(guildId)}`);
       return;
     }

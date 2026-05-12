@@ -274,7 +274,14 @@ export default function ApplicationsPage() {
       if (data.activeTab !== "candidate") data.setActiveTab("candidate");
       const match = data.candidateApps.find((a) => a.id === autoOpenAppId);
       if (match) {
-        handleReviewCandidate(match);
+        // If the expert already reviewed this candidate, open the read-only
+        // view-review modal instead of silently no-oping (handleReviewCandidate
+        // early-returns when expertHasReviewed is true).
+        if (match.expertHasReviewed) {
+          handleViewCandidateReview(match);
+        } else {
+          handleReviewCandidate(match);
+        }
         opened = true;
       }
     }

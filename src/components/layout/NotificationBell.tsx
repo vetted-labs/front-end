@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Bell, Check } from "lucide-react";
-import { notificationsApi } from "@/lib/api";
+import { toast } from "sonner";
+import { notificationsApi, extractApiError } from "@/lib/api";
 import { useNotificationCount, NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
 import {
   type Notification,
@@ -67,19 +68,20 @@ export function NotificationBell() {
   const handleNotificationClick = async (notification: Notification) => {
     if (!address) return;
 
-    try {
-      if (!notification.isRead) {
+    if (!notification.isRead) {
+      const snapshot = notifications;
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
+        )
+      );
+      try {
         await notificationsApi.markAsRead(notification.id, address);
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notification.id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
-          )
-        );
         window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
+      } catch (err) {
+        setNotifications(snapshot);
+        toast.error(extractApiError(err, "Couldn't mark as read"));
       }
-    } catch (err) {
-      // Don't block navigation, but log the failure
-      console.warn('Failed to mark notification as read:', err);
     }
 
     setIsOpen(false);

@@ -2,12 +2,17 @@
 
 import { STATUS_COLORS } from "@/config/colors";
 
-const STEPS = [
+export interface StepIndicatorStep {
+  number: number;
+  label: string;
+}
+
+const DEFAULT_STEPS: ReadonlyArray<StepIndicatorStep> = [
   { number: 1, label: "Profile" },
   { number: 2, label: "General" },
   { number: 3, label: "Domain" },
   { number: 4, label: "Submit" },
-] as const;
+];
 
 export interface StepIndicatorProps {
   currentStep: number;
@@ -32,6 +37,10 @@ export interface StepIndicatorProps {
    * this are rendered locked with a "Complete prior steps first" tooltip.
    */
   maxUnlockedStep?: number;
+  /**
+   * Optional step list override. Defaults to the review-flow steps.
+   */
+  steps?: ReadonlyArray<StepIndicatorStep>;
 }
 
 export function StepIndicator({
@@ -40,24 +49,26 @@ export function StepIndicator({
   incompleteSteps,
   onStepClick,
   maxUnlockedStep,
+  steps,
 }: StepIndicatorProps) {
   const completedSet = new Set(completedSteps ?? []);
   const incompleteSet = new Set(incompleteSteps ?? []);
   const lockBoundary =
     typeof maxUnlockedStep === "number" ? maxUnlockedStep : Number.POSITIVE_INFINITY;
+  const stepList = steps ?? DEFAULT_STEPS;
 
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
-      {STEPS.map((step, idx) => {
+      {stepList.map((step, idx) => {
         const isActive = currentStep === step.number;
         const isCompleted =
           completedSet.has(step.number) || (!completedSteps && currentStep > step.number);
         const isIncomplete = incompleteSet.has(step.number) && !isCompleted;
         const isLocked = step.number > lockBoundary && !isCompleted;
         const previousCompleted =
-          STEPS[idx - 1] &&
-          (completedSet.has(STEPS[idx - 1]!.number) ||
-            (!completedSteps && currentStep > STEPS[idx - 1]!.number));
+          stepList[idx - 1] &&
+          (completedSet.has(stepList[idx - 1]!.number) ||
+            (!completedSteps && currentStep > stepList[idx - 1]!.number));
 
         const interactive = Boolean(onStepClick);
         const tooltip = isLocked

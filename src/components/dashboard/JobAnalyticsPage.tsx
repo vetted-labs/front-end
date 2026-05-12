@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   BarChart3,
@@ -16,6 +17,7 @@ import { jobsApi, applicationsApi, analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert } from "@/components/ui/alert";
 import { GuildBadge } from "@/components/ui/guild";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
@@ -76,15 +78,25 @@ function LegacyJobAnalyticsPage() {
   const params = useParams();
   const jobId = typeof params?.jobId === "string" ? params.jobId : "";
 
-  const { data: job, isLoading: loadingJob } = useFetch(
+  const { data: job, isLoading: loadingJob, error: jobError } = useFetch(
     () => jobsApi.getById(jobId),
-    { skip: !jobId }
+    {
+      skip: !jobId,
+      onError: (err) => toast.error(err || "Couldn't load job details"),
+    }
   );
 
-  const { data: appsResult, isLoading: loadingApps } = useFetch(
+  const { data: appsResult, isLoading: loadingApps, error: appsError } = useFetch(
     () => applicationsApi.getJobApplications(jobId, {}),
-    { skip: !jobId }
+    {
+      skip: !jobId,
+      onError: (err) => toast.error(err || "Couldn't load analytics"),
+    }
   );
+
+  // Persistent banner — toast fades, but the funnel below would still render
+  // a misleading "0 applicants" if a fetch failed. Surface the error inline.
+  const fetchError = jobError ?? appsError;
 
   const isLoading = loadingJob || loadingApps;
 
@@ -173,6 +185,11 @@ function LegacyJobAnalyticsPage() {
   return (
     <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {fetchError && (
+          <Alert variant="error" className="mb-6">
+            {fetchError}
+          </Alert>
+        )}
         {/* Back + Header */}
         <div className="mb-8">
           <Button

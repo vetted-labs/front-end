@@ -1,13 +1,12 @@
 import { ApplicationCard } from './ApplicationCard';
 import { Users } from 'lucide-react';
-import { SkeletonCard } from "@/components/ui/skeleton";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationsGridProps {
   applications: EndorsementApplication[];
   loading: boolean;
   onSelectApplication: (app: EndorsementApplication) => void;
-  onQuickEndorse?: (app: EndorsementApplication) => void;
+  onViewExistingBid?: (app: EndorsementApplication) => void;
   emptyTitle?: string;
   emptyDescription?: string;
   /**
@@ -21,7 +20,7 @@ interface ApplicationsGridProps {
   markedCtaProps?: Record<string, string>;
 }
 
-export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription, markedApplicationId, markedCardProps, markedCtaProps }: ApplicationsGridProps) {
+export function ApplicationsGrid({ applications, loading, onSelectApplication, onViewExistingBid, emptyTitle, emptyDescription, markedApplicationId, markedCardProps, markedCtaProps }: ApplicationsGridProps) {
   if (loading) {
     return null;
   }
@@ -57,7 +56,7 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
           key={app.application_id}
           application={app}
           onViewDetails={onSelectApplication}
-          onQuickEndorse={onQuickEndorse}
+          onViewExistingBid={onViewExistingBid}
           rootProps={idx === markedIdx ? markedCardProps : undefined}
           ctaProps={idx === markedIdx ? markedCtaProps : undefined}
         />

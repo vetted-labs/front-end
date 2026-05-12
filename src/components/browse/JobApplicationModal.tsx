@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   HelpCircle,
@@ -13,13 +13,19 @@ import {
   Link2,
 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
-import { Modal, Button, Alert, Textarea } from "@/components/ui";
+import { Modal, Button, Alert, Input, Textarea } from "@/components/ui";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { STATUS_COLORS } from "@/config/colors";
 import { candidateApi, applicationsApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
-import type { Job, CandidateApplication, CandidateUserProfile, SocialLink } from "@/types";
+import type {
+  ApplicationQuestion,
+  Job,
+  CandidateApplication,
+  CandidateUserProfile,
+  SocialLink,
+} from "@/types";
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -41,12 +47,25 @@ export default function JobApplicationModal({
   onSubmitSuccess,
 }: JobApplicationModalProps) {
   const router = useRouter();
+
+  const questions: ApplicationQuestion[] = useMemo(() => {
+    if (job.applicationQuestions?.length) return job.applicationQuestions;
+    if (job.screeningQuestions?.length) {
+      return job.screeningQuestions.map((q, i) => ({
+        id: `legacy-${i}`,
+        type: "long_text" as const,
+        label: q,
+        required: true,
+      }));
+    }
+    return [];
+  }, [job.applicationQuestions, job.screeningQuestions]);
+
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [useProfileResume, setUseProfileResume] = useState(true);
-  const [screeningAnswers, setScreeningAnswers] = useState<string[]>(
-    () => new Array(job.screeningQuestions?.length || 0).fill("")
-  );
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [multiAnswers, setMultiAnswers] = useState<Record<string, string[]>>({});
   const [applicationError, setApplicationError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { execute: submitApplication, isLoading: isSubmitting } = useApi();
@@ -55,8 +74,17 @@ export default function JobApplicationModal({
     setCoverLetter("");
     setResumeFile(null);
     setUseProfileResume(true);
-    setScreeningAnswers(new Array(job.screeningQuestions?.length || 0).fill(""));
+    setAnswers({});
+    setMultiAnswers({});
     setApplicationError("");
+  };
+
+  const getAnswerValue = (q: ApplicationQuestion): string => {
+    if (q.type === "multi_choice") {
+      const selected = multiAnswers[q.id] ?? [];
+      return selected.join(", ");
+    }
+    return answers[q.id] ?? "";
   };
 
   const handleClose = () => {
@@ -110,12 +138,15 @@ export default function JobApplicationModal({
       return;
     }
 
-    if (job.screeningQuestions && job.screeningQuestions.length > 0) {
-      const allAnswered = screeningAnswers.every((answer) => answer.trim() !== "");
-      if (!allAnswered) {
-        setApplicationError("Please answer all screening questions");
-        return;
-      }
+    const answerValues = questions.map(getAnswerValue);
+    const firstMissingRequired = questions.findIndex(
+      (q, i) => q.required && !answerValues[i].trim(),
+    );
+    if (firstMissingRequired >= 0) {
+      setApplicationError(
+        `Please answer: "${questions[firstMissingRequired].label}"`,
+      );
+      return;
     }
 
     await submitApplication(
@@ -132,7 +163,7 @@ export default function JobApplicationModal({
           candidateId,
           coverLetter,
           resumeUrl,
-          screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
+          screeningAnswers: answerValues.length > 0 ? answerValues : undefined,
           socialLinks: profileSocialLinks.length > 0 ? profileSocialLinks : undefined,
         });
       },
@@ -343,26 +374,121 @@ export default function JobApplicationModal({
           )}
 
           {/* Screening Questions */}
-          {job.screeningQuestions && job.screeningQuestions.length > 0 && (
+          {questions.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2">
                 <HelpCircle className="w-5 h-5" />
                 Screening Questions
               </h3>
-              {job.screeningQuestions.map((question, index) => (
-                <Textarea
-                  key={index}
-                  label={`${index + 1}. ${question}`}
-                  value={screeningAnswers[index] || ""}
-                  onChange={(e) => {
-                    const newAnswers = [...screeningAnswers];
-                    newAnswers[index] = e.target.value;
-                    setScreeningAnswers(newAnswers);
-                  }}
-                  rows={3}
-                  placeholder="Your answer..."
-                />
-              ))}
+              {questions.map((question, index) => {
+                const label = `${index + 1}. ${question.label}${question.required ? " *" : ""}`;
+                const value = answers[question.id] ?? "";
+                const setValue = (next: string) =>
+                  setAnswers((prev) => ({ ...prev, [question.id]: next }));
+
+                if (question.type === "long_text") {
+                  return (
+                    <Textarea
+                      key={question.id}
+                      label={label}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      rows={3}
+                      maxLength={question.maxLength}
+                      placeholder={question.helpText || "Your answer..."}
+                    />
+                  );
+                }
+
+                if (question.type === "short_text" || question.type === "url") {
+                  return (
+                    <Input
+                      key={question.id}
+                      label={label}
+                      type={question.type === "url" ? "url" : "text"}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      maxLength={question.maxLength}
+                      placeholder={question.helpText || "Your answer..."}
+                    />
+                  );
+                }
+
+                if (question.type === "single_choice") {
+                  return (
+                    <div key={question.id}>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        {label}
+                      </label>
+                      <div className="space-y-2">
+                        {(question.options ?? []).map((option) => (
+                          <label
+                            key={option}
+                            className="flex items-center gap-2 cursor-pointer text-sm text-foreground"
+                          >
+                            <input
+                              type="radio"
+                              name={question.id}
+                              value={option}
+                              checked={value === option}
+                              onChange={() => setValue(option)}
+                              className="accent-primary"
+                            />
+                            {option}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (question.type === "multi_choice") {
+                  const selected = multiAnswers[question.id] ?? [];
+                  const toggle = (option: string) =>
+                    setMultiAnswers((prev) => {
+                      const current = prev[question.id] ?? [];
+                      const next = current.includes(option)
+                        ? current.filter((o) => o !== option)
+                        : [...current, option];
+                      return { ...prev, [question.id]: next };
+                    });
+                  return (
+                    <div key={question.id}>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        {label}
+                      </label>
+                      <div className="space-y-2">
+                        {(question.options ?? []).map((option) => (
+                          <label
+                            key={option}
+                            className="flex items-center gap-2 cursor-pointer text-sm text-foreground"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(option)}
+                              onChange={() => toggle(option)}
+                              className="accent-primary"
+                            />
+                            {option}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                // file_upload — fall back to a URL input asking for a link to the file.
+                return (
+                  <Input
+                    key={question.id}
+                    label={`${label} (paste a link)`}
+                    type="url"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder={question.helpText || "https://..."}
+                  />
+                );
+              })}
             </div>
           )}
 

@@ -108,7 +108,7 @@ export function HeroSection({
       {!isLoadingGuilds && guilds.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">
           {guilds.slice(0, 6).map((g) => (
-            <GuildBadge key={g.id} guild={g.name} size="sm" asLink />
+            <GuildBadge key={g.id} guild={g.name} guildId={g.id} size="sm" asLink />
           ))}
         </div>
       )}

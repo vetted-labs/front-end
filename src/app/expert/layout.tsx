@@ -237,11 +237,21 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     profileStatusRef.current = profileVerification.status;
   }, [profileVerification.status]);
 
-  // Auth guard — redirect disconnected wallets or restricted experts
+  // Auth guard — redirect disconnected wallets, non-expert sessions, or restricted experts
   // eslint-disable-next-line no-restricted-syntax -- guards route access based on wagmi + expert status
   useEffect(() => {
     if (!isHydrated) return;
     if (status === "reconnecting" || status === "connecting") return;
+
+    // A user authenticated as a candidate or company should never see the
+    // expert shell, even if their wallet happens to be connected. Bounce them
+    // to their own dashboard rather than the expert login.
+    if (auth.isAuthenticated && auth.userType && auth.userType !== "expert") {
+      router.replace(
+        auth.userType === "company" ? "/dashboard" : "/candidate/dashboard",
+      );
+      return;
+    }
 
     if (!isConnected && !address && !isE2E) {
       // If the user just clicked a logout/disconnect button, skip the debounce
@@ -261,7 +271,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
       // eslint-disable-next-line react-hooks/set-state-in-effect -- auth guard releases the shell after wallet/status checks settle
       setChecked(true);
     }
-  }, [pathname, router, shouldEnforceRestrictedStatus, isHydrated, status, isConnected, address, isE2E]);
+  }, [pathname, router, shouldEnforceRestrictedStatus, isHydrated, status, isConnected, address, isE2E, auth.isAuthenticated, auth.userType]);
 
   // Reset verification when wallet address changes
   // eslint-disable-next-line no-restricted-syntax -- resets verification when wallet changes

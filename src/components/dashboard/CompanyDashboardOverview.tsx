@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Briefcase,
   Users,
@@ -101,22 +102,6 @@ function buildPipeline(apps: CompanyApplication[]): Record<ApplicationStatus, Co
   return pipeline as Record<ApplicationStatus, CompanyApplication[]>;
 }
 
-/** Deterministic avatar color based on name */
-function getAvatarBg(name: string): string {
-  const colors = [
-    "bg-primary/20 text-primary",
-    "bg-info-blue/20 text-info-blue",
-    "bg-positive/20 text-positive",
-    "bg-rank-officer/20 text-rank-officer",
-    "bg-rank-craftsman/20 text-rank-craftsman",
-    "bg-warning/20 text-warning",
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
 
 import { getPersonAvatar, getCompanyAvatar } from "@/lib/avatars";
 
@@ -164,7 +149,11 @@ export function CompanyDashboardOverview() {
     messagingApi.getUnreadCounts().then((counts) => {
       setUnreadCount((counts as { total: number }).total ?? 0);
     }).catch((err) => {
-      logger.debug("Failed to load unread counts", extractApiError(err));
+      const msg = extractApiError(err, "Couldn't load unread message count");
+      logger.debug("Failed to load unread counts", msg);
+      // Badge stays at 0 on failure — surface that to the user so they don't
+      // assume an empty inbox.
+      toast.error(msg);
     });
 
     // Meetings — heavier fetch (conversations + details)
@@ -226,6 +215,7 @@ export function CompanyDashboardOverview() {
         {/* ═══ HEADER ═══ */}
         <div className="flex items-center justify-between mb-8 pb-5 border-b border-border/30 dark:border-border">
           <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={getCompanyAvatar(companyName)}
               alt={companyName || "Company"}
@@ -327,6 +317,7 @@ export function CompanyDashboardOverview() {
                             href="/dashboard/candidates"
                             className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/10 border border-border/15 dark:border-border hover:bg-muted/20 dark:hover:bg-muted/20 hover:border-border/30 transition-all group"
                           >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={getPersonAvatar(app.candidate.fullName)}
                               alt={app.candidate.fullName}
@@ -430,6 +421,7 @@ export function CompanyDashboardOverview() {
                       href="/dashboard/candidates"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getPersonAvatar(app.candidate.fullName)}
                         alt={app.candidate.fullName}

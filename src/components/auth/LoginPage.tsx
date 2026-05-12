@@ -262,11 +262,17 @@ function LoginForm() {
       async () => {
         if (userType === "candidate") {
           const data = await candidateApi.login(email, password);
-          auth.login(data.token, "candidate", data.candidate!.id, data.candidate!.email, undefined, data.refreshToken);
+          if (!data.candidate) {
+            throw new Error("Login response missing candidate profile");
+          }
+          auth.login(data.token, "candidate", data.candidate.id, data.candidate.email, undefined, data.refreshToken);
           router.push(redirectUrl || "/candidate/dashboard");
         } else {
           const data = await companyApi.login(email, password);
-          auth.login(data.token, "company", data.company!.id, data.company!.email, undefined, data.refreshToken);
+          if (!data.company) {
+            throw new Error("Login response missing company profile");
+          }
+          auth.login(data.token, "company", data.company.id, data.company.email, undefined, data.refreshToken);
           router.push(redirectUrl || "/dashboard");
         }
         return null;

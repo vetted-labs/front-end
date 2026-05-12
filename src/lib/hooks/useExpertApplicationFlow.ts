@@ -881,9 +881,17 @@ export function useExpertApplicationFlow(
 
       const expertId = (result as { id?: string; expertId?: string })?.expertId ?? (result as { id?: string })?.id;
 
-      // Submit the pre-signed SIWE signature now that the expert row exists
+      // Submit the pre-signed SIWE signature now that the expert row exists.
+      // Don't block the application — if verification fails server-side, the
+      // applicant can retry from the dashboard. Surface a soft warning instead
+      // of letting the success UI imply verification completed.
       if (address && pendingSignature) {
-        await submitVerification(address);
+        const verified = await submitVerification(address);
+        if (!verified) {
+          toast.warning(
+            "Application submitted, but wallet verification didn't complete. You can retry from your dashboard."
+          );
+        }
       }
 
       // Resume upload is required for the application to enter review. Treat

@@ -312,6 +312,9 @@ export default function JobDetailPage({
       );
       return;
     }
+    // Non-approved guild members go through the combined guild+job apply
+    // wizard (candidate-side `GuildApplicationFlow`), which handles joining
+    // the guild and submitting the job application in one flow.
     if (guildMembershipStatus !== "approved") {
       if (job?.guild) {
         const guildUuid = resolveGuildId(job.guild);
@@ -1260,7 +1263,8 @@ function PublicApplySidebar({
                     <p
                       className={`text-[11px] ${STATUS_COLORS.warning.text} opacity-70 mt-0.5`}
                     >
-                      Join <strong>{job.guild}</strong> to apply.
+                      Join <strong>{job.guild}</strong> to apply — you&apos;ll
+                      fill the guild and job application in one flow.
                     </p>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import {
   blockchainApi,
   commitRevealApi,
   candidateApi,
+  extractApiError,
 } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ interface VotingApplicationData {
   isStakedInGuild: boolean;
   crPhase: CommitRevealPhase | null;
   voteHistory: VoteHistoryItem[];
+  votesError: string | null;
   loading: boolean;
   loadPhaseStatus: () => Promise<void>;
   loadApplication: () => Promise<void>;
@@ -50,6 +52,7 @@ export function useVotingApplicationData(
   const [application, setApplication] = useState<GuildApplication | null>(null);
   const [crPhase, setCrPhase] = useState<CommitRevealPhase | null>(null);
   const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
+  const [votesError, setVotesError] = useState<string | null>(null);
 
   /* -- initial data fetching (cascade) -- */
   const { data: initialData, isLoading: loading } = useFetch(
@@ -72,23 +75,34 @@ export function useVotingApplicationData(
       );
 
       // 3. Fetch candidate profile + vote history in parallel (depend on application)
-      const [candidate, votes] = await Promise.all([
+      const shouldFetchVotes = app.status === "approved" || app.status === "rejected";
+      const [candidate, votesResult] = await Promise.all([
         app.candidateId
           ? candidateApi.getById(app.candidateId).catch(() => null)
           : Promise.resolve(null),
-        app.status === "approved" || app.status === "rejected"
-          ? guildApplicationsApi.getVotes(applicationId).catch(() => [])
-          : Promise.resolve([]),
+        shouldFetchVotes
+          ? guildApplicationsApi
+              .getVotes(applicationId)
+              .then((votes) => ({ votes, error: null as string | null }))
+              .catch((err: unknown) => ({
+                votes: [] as VoteHistoryItem[],
+                error: extractApiError(err, "Couldn't load vote history"),
+              }))
+          : Promise.resolve({ votes: [] as VoteHistoryItem[], error: null as string | null }),
       ]);
 
-      return { expert, guildStakes, phase, app, candidate, votes };
+      return { expert, guildStakes, phase, app, candidate, votesResult };
     },
     {
       onSuccess: (result) => {
         if (!result) return;
         setApplication(result.app as unknown as GuildApplication);
         setCrPhase(result.phase as CommitRevealPhase | null);
-        setVoteHistory(result.votes);
+        setVoteHistory(result.votesResult.votes);
+        setVotesError(result.votesResult.error);
+        if (result.votesResult.error) {
+          toast.error(result.votesResult.error);
+        }
       },
       onError: (error) => {
         toast.error(error || "Failed to load application");
@@ -125,17 +139,22 @@ export function useVotingApplicationData(
       );
       setApplication(response as unknown as GuildApplication);
       if (response.status === "approved" || response.status === "rejected") {
-        const votes = await guildApplicationsApi
-          .getVotes(applicationId)
-          .catch(() => []);
-        setVoteHistory(votes);
+        try {
+          const votes = await guildApplicationsApi.getVotes(applicationId);
+          setVoteHistory(votes);
+          setVotesError(null);
+        } catch (votesErr: unknown) {
+          const message = extractApiError(votesErr, "Couldn't load vote history");
+          setVotesError(message);
+          toast.error(message);
+        }
       }
     } catch (error: unknown) {
       toast.error(
         error instanceof Error ? error.message : "Failed to load application"
       );
     }
-  }, [applicationId, expertData?.id]);
+  }, [applicationId, expertData]);
 
   return {
     application,
@@ -144,6 +163,7 @@ export function useVotingApplicationData(
     isStakedInGuild,
     crPhase,
     voteHistory,
+    votesError,
     loading,
     loadPhaseStatus,
     loadApplication,

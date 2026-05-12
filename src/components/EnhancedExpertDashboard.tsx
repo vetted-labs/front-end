@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
-import { expertApi, guildApplicationsApi, blockchainApi, governanceApi } from "@/lib/api";
+import { expertApi, guildApplicationsApi, blockchainApi, governanceApi, extractApiError } from "@/lib/api";
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
 import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
 import { RankProgress } from "@/components/dashboard/RankProgress";
@@ -157,7 +157,10 @@ export function EnhancedExpertDashboard() {
 
       const [data, earningsResult, onboardingState] = await Promise.all([
         expertApi.getProfile(address),
-        expertApi.getEarningsBreakdown(address, { limit: 1 }).catch(() => null),
+        expertApi.getEarningsBreakdown(address, { limit: 1 }).catch((err) => {
+          toast.error(extractApiError(err, "Couldn't load earnings"));
+          return null;
+        }),
         expertApi.getOnboardingState(address).catch(() => null),
       ]);
 

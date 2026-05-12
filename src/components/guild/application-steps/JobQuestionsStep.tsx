@@ -21,74 +21,102 @@ export default function JobQuestionsStep({
   onScreeningAnswerChange,
 }: JobQuestionsStepProps) {
   return (
-    <div className="space-y-8">
-      {/* Job context header */}
-      <div className="bg-primary/5 rounded-xl border border-border p-6">
+    <div className="space-y-10">
+      {/* Job context */}
+      <section className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-primary" />
+          <div className="grid place-items-center w-9 h-9 rounded-lg bg-primary/15 flex-shrink-0">
+            <Briefcase className="w-4 h-4 text-primary" />
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-primary/80 mb-0.5">
               Applying for
             </p>
-            <p className="font-medium text-foreground">{jobTitle}</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {jobTitle}
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Cover Letter */}
-      <div className="bg-card rounded-xl border border-border p-8">
-        <h2 className="text-xl font-bold text-foreground mb-1">
-          Cover Letter <span className="text-destructive">*</span>
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Tell the hiring team why you&apos;re a great fit for this role. Minimum
-          50 characters.
-        </p>
+      {/* Cover letter */}
+      <section>
+        <SectionHeader
+          title={
+            <>
+              Cover letter <span className="text-destructive">*</span>
+            </>
+          }
+          description="A short note to the hiring team about why this role and what you'd bring. Minimum 50 characters."
+        />
         <Textarea
           value={coverLetter}
           onChange={(e) => onCoverLetterChange(e.target.value)}
           rows={6}
-          placeholder="Tell us why you're a great fit for this role..."
+          placeholder="Tell them why you're a great fit for this role…"
           showCounter
           minLength={50}
           maxLength={5000}
         />
-      </div>
+      </section>
 
-      {/* Screening Questions */}
+      {/* Screening questions */}
       {screeningQuestions.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-8 space-y-6">
-          <div>
-            <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
-              <HelpCircle className="w-5 h-5" />
-              Screening Questions
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Answer these questions from the hiring team.
-            </p>
-          </div>
+        <section>
+          <SectionHeader
+            title={
+              <span className="inline-flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                Screening questions
+              </span>
+            }
+            description="Custom questions from the hiring team. Be specific — these answers go directly to recruiters."
+          />
 
-          {screeningQuestions.map((question, index) => (
-            <div
-              key={index}
-              className="space-y-2 pt-4 first:pt-0 border-t first:border-t-0 border-border"
-            >
-              <Textarea
-                label={`${index + 1}. ${question}`}
-                required
-                value={screeningAnswers[index] || ""}
-                onChange={(e) =>
-                  onScreeningAnswerChange(index, e.target.value)
-                }
-                rows={3}
-                placeholder="Your answer..."
-              />
-            </div>
-          ))}
-        </div>
+          <div className="space-y-8">
+            {screeningQuestions.map((question, index) => (
+              <div key={index} className="space-y-3">
+                <div>
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1.5">
+                    Question {String(index + 1).padStart(2, "0")}{" "}
+                    <span className="text-destructive">·  required</span>
+                  </p>
+                  <p className="text-[15px] font-semibold text-foreground leading-snug">
+                    {question}
+                  </p>
+                </div>
+                <Textarea
+                  value={screeningAnswers[index] || ""}
+                  onChange={(e) =>
+                    onScreeningAnswerChange(index, e.target.value)
+                  }
+                  rows={4}
+                  placeholder="Your answer…"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
       )}
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  description,
+}: {
+  title: React.ReactNode;
+  description: string;
+}) {
+  return (
+    <div className="mb-4">
+      <h3 className="font-display text-lg font-bold text-foreground tracking-tight leading-tight">
+        {title}
+      </h3>
+      <p className="text-sm text-muted-foreground mt-1 leading-relaxed max-w-xl">
+        {description}
+      </p>
     </div>
   );
 }
