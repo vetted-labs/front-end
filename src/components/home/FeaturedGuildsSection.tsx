@@ -43,7 +43,7 @@ export function FeaturedGuildsSection({ guilds }: FeaturedGuildsSectionProps) {
               className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-border bg-card hover:border-border/60 transition-colors text-center"
             >
               <span
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-muted/40 border border-border text-muted-foreground group-hover:text-foreground transition-colors"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/[0.08] border border-primary/20 text-primary transition-colors"
                 aria-label={`${g.name} guild`}
               >
                 <VettedIcon name={getGuildIconName(g.name)} className="w-7 h-7" />
