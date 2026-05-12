@@ -165,13 +165,13 @@ function FeaturedJobCard({ job, onClick }: { job: Job; onClick: () => void }) {
           {job.title}.
         </h3>
 
-        {/* Tags */}
+        {/* Tags — single-row, clipped on overflow to keep card heights uniform */}
         {tags.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap mb-4">
+          <div className="flex gap-1.5 flex-nowrap overflow-hidden mb-4">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="font-mono text-[9.5px] uppercase tracking-[0.12em] px-2 py-1 rounded bg-muted/40 text-muted-foreground border border-border"
+                className="font-mono text-[9.5px] uppercase tracking-[0.12em] px-2 py-1 rounded bg-muted/40 text-muted-foreground border border-border shrink-0 whitespace-nowrap"
               >
                 {tag}
               </span>
