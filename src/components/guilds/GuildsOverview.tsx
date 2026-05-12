@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { Shield, Search, ArrowRight, Zap, AlertCircle, Plus, Users, Loader2 } from "lucide-react";
 import { expertApi, guildsApi } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
@@ -10,9 +11,9 @@ import { DataSection } from "@/lib/motion";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Alert } from "../ui/alert";
 import { Modal } from "../ui/modal";
-import { GuildCard } from "../GuildCard";
+import { GuildCard } from "@/components/guild/card";
 import LeaderboardPage from "../leaderboard/LeaderboardPage";
-import { getGuildDetailedInfo, getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { getGuildDetailedInfo, getGuildIconName } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -24,6 +25,7 @@ type TabType = "guilds" | "leaderboard";
 export function GuildsOverview() {
   const router = useRouter();
   const { address, isConnected } = useExpertAccount();
+  const { userId: currentUserId } = useAuthContext();
   const [activeTab, setActiveTab] = useState<TabType>("guilds");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -269,15 +271,15 @@ export function GuildsOverview() {
                 {...dataTourTarget(TOUR_TARGETS.guildDirectory)}
               >
                 {sortedGuilds.map((guild, index) => (
-                  <GuildCard
-                    key={guild.id}
-                    guild={guild}
-                    variant="browse"
-                    showDescription={true}
-                    onViewDetails={handleGuildClick}
-                    tourMarkerProps={index === 0 ? dataTourTarget(TOUR_TARGETS.guildCardItem) : undefined}
-                    isStoryLabFirstCard={index === 0}
-                  />
+                  <div key={guild.id} {...(index === 0 ? dataTourTarget(TOUR_TARGETS.guildCardItem) : {})}>
+                    <GuildCard
+                      variant="workspace"
+                      guild={guild}
+                      catalogueIndex={index + 1}
+                      currentUserId={currentUserId ?? undefined}
+                      onClick={() => handleGuildClick(guild.id)}
+                    />
+                  </div>
                 ))}
               </div>
             )}
