@@ -37,14 +37,15 @@
 import { test, expect } from "../fixtures";
 import {
   applyToGuildViaUI,
-  expertCommit,
-  expertReveal,
   advanceTime,
   fireExpertTransitions,
   finalize,
 } from "../helpers/scenario";
 import { SESSION_PHASE, REVIEW_OUTCOMES } from "../helpers/expectations";
 import type { Hex } from "viem";
+import { type InjectedWalletHandle } from "../helpers/wallet-injection";
+import { connectWalletViaUI, switchAccountUI } from "../helpers/ui-auth";
+import { commitVoteViaUI, revealVoteViaUI, gotoExpertReview } from "../helpers/ui-voting";
 
 // One day + 1 second. The on-chain commit window in `Deploy.s.sol` is 1 day;
 // reveal window is the same. Pushing past it (and mining) flips the session
@@ -72,6 +73,7 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
   experts,
   anvil,
   contracts,
+  wallet,
   cleanState: _cleanState,
 }) => {
   // Hoisted bindings so later steps can read what step 1 produced. We resolve
@@ -80,11 +82,13 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
   let applicationId!: string;
   let sessionId!: Hex;
 
-  const scores = [8, 9, 8] as const;
+  // Scores on the UI's 0-100 scale ("approve" range). The contract treats
+  // the value as a raw uint8, so any number in [0,255] works on-chain — what
+  // matters for the test outcome is that the BE's aggregate logic classifies
+  // 85+ as "approve". If outcome assertions fail with these values, see
+  // BE proposals-service consensus thresholds and adjust.
+  const scores = [85, 90, 85] as const;
   const panel = experts.slice(0, 3);
-  // Track nonces in a parallel array — `Expert` is intentionally narrow and
-  // does not carry per-test commit state.
-  const nonces: Hex[] = [];
 
   await test.step("apply to guild via UI", async () => {
     const result = await applyToGuildViaUI(page, candidate, guild.id);
@@ -92,15 +96,16 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
     sessionId = result.sessionId;
   });
 
-  await test.step("3 commits", async () => {
+  let walletHandle!: InjectedWalletHandle;
+  await test.step("3 commits (UI)", async () => {
+    walletHandle = await wallet.attach(page, panel[0].privateKey);
     for (let i = 0; i < panel.length; i++) {
-      const { nonce } = await expertCommit(
-        panel[i],
-        contracts,
-        sessionId,
-        scores[i],
-      );
-      nonces[i] = nonce;
+      if (i > 0) {
+        await switchAccountUI(page, walletHandle, panel[i].privateKey);
+      }
+      await gotoExpertReview(page, applicationId);
+      await connectWalletViaUI(page);
+      await commitVoteViaUI(page, { score: scores[i] });
     }
   });
 
@@ -109,15 +114,11 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
     await fireExpertTransitions(page.request);
   });
 
-  await test.step("3 reveals", async () => {
+  await test.step("3 reveals (UI)", async () => {
     for (let i = 0; i < panel.length; i++) {
-      await expertReveal(
-        panel[i],
-        contracts,
-        sessionId,
-        scores[i],
-        nonces[i],
-      );
+      await switchAccountUI(page, walletHandle, panel[i].privateKey);
+      await gotoExpertReview(page, applicationId);
+      await revealVoteViaUI(page);
     }
   });
 
