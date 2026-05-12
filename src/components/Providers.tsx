@@ -3,7 +3,13 @@
 import { useMemo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, cookieToInitialState } from "wagmi";
-import { connect, disconnect, signMessage, getAccount } from "wagmi/actions";
+import {
+  connect,
+  disconnect,
+  signMessage,
+  getAccount,
+  readContract,
+} from "wagmi/actions";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { MotionProvider } from "@/lib/motion";
@@ -27,6 +33,7 @@ if (
     disconnect,
     signMessage,
     getAccount,
+    readContract,
   };
 }
 

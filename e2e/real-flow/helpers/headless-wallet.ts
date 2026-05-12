@@ -146,7 +146,17 @@ export class HeadlessWallet extends EventEmitter {
       case "wallet_switchEthereumChain":
       case "wallet_addEthereumChain":
       case "wallet_watchAsset":
+      case "wallet_revokePermissions":
         return null;
+
+      case "wallet_requestPermissions":
+        // Mimic MetaMask: granting `eth_accounts` returns a single permission
+        // entry. Wagmi v2's injected connector uses this on (re)connect; if
+        // we return null/throw, it can swallow downstream wallet events.
+        return [{ parentCapability: "eth_accounts" }];
+
+      case "wallet_getPermissions":
+        return [{ parentCapability: "eth_accounts" }];
 
       default:
         return this.publicClient.request({
