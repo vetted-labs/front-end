@@ -182,12 +182,12 @@ export function EndorseCandidateModal({
             transition={{ duration: DURATIONS.fast }}
           />
 
-          <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+          <div className="flex min-h-full items-center justify-center p-3 sm:p-6 lg:p-8">
             <motion.div
               role="dialog"
               aria-modal="true"
               aria-label="Endorse candidate"
-              className="relative w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+              className="relative w-full max-w-6xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -199,7 +199,7 @@ export function EndorseCandidateModal({
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.06),transparent_50%)]" />
 
               {/* Header */}
-              <div className="relative flex items-center justify-between px-6 py-4 border-b border-border">
+              <div className="relative flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border shrink-0">
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                     {mode === "view" ? "Your endorsement" : "Endorse candidate"}
@@ -247,10 +247,10 @@ export function EndorseCandidateModal({
                     )}
                   </div>
                 ) : (
-                  // Standard 3-column step layout
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_320px] h-full">
+                  // Standard 3-column step layout (3-col only at xl+)
+                  <div className="grid grid-cols-1 xl:grid-cols-[200px_1fr_320px] h-full">
                     {/* LEFT — rail */}
-                    <aside className="hidden lg:block border-r border-border bg-muted/[0.02] overflow-hidden min-h-0">
+                    <aside className="hidden xl:block border-r border-border bg-muted/[0.02] overflow-hidden min-h-0">
                       <VerticalStepRail
                         currentStep={renderStep}
                         steps={steps}
@@ -261,8 +261,8 @@ export function EndorseCandidateModal({
                     </aside>
 
                     {/* CENTER */}
-                    <section className="overflow-y-auto px-6 py-5 border-r border-border min-h-0">
-                      <div className="lg:hidden mb-4">
+                    <section className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 xl:border-r xl:border-border min-h-0">
+                      <div className="xl:hidden mb-4">
                         <StepIndicator
                           currentStep={renderStep}
                           steps={steps}
@@ -324,7 +324,7 @@ export function EndorseCandidateModal({
                     </section>
 
                     {/* RIGHT — snapshot */}
-                    <aside className="hidden lg:block overflow-y-auto px-5 py-5 bg-muted/[0.02]">
+                    <aside className="hidden xl:block overflow-y-auto px-5 py-5 bg-muted/[0.02]">
                       <EndorsementSnapshotCard application={application} />
                     </aside>
                   </div>
@@ -333,7 +333,7 @@ export function EndorseCandidateModal({
 
               {/* Footer */}
               {isSuccess ? (
-                <div className="flex gap-3 px-6 py-4 border-t border-border bg-card">
+                <div className="flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
                   <button
                     onClick={onClose}
                     className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all"
@@ -342,7 +342,7 @@ export function EndorseCandidateModal({
                   </button>
                 </div>
               ) : isTransacting ? (
-                <div className="px-6 py-4 border-t border-border bg-card">
+                <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
                   <p className="text-xs text-center text-muted-foreground">
                     Please complete the transaction in your wallet. Closing this window won&apos;t
                     cancel the request.

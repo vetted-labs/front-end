@@ -34,7 +34,7 @@ export function EndorseNavigation({
 }: EndorseNavigationProps) {
   if (currentStep === 1) {
     return (
-      <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
+      <div className="relative flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
         <button
           onClick={onClose}
           disabled={locked}
@@ -56,7 +56,7 @@ export function EndorseNavigation({
 
   if (currentStep === 3 && mode === "view") {
     return (
-      <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
+      <div className="relative flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
         <button
           onClick={onBack}
           disabled={locked}
@@ -78,7 +78,7 @@ export function EndorseNavigation({
   if (currentStep === 4) {
     // StakeStep owns its own submit affordance. Footer just renders Back.
     return (
-      <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
+      <div className="relative flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
         <button
           onClick={onBack}
           disabled={locked}
@@ -93,7 +93,7 @@ export function EndorseNavigation({
 
   // step 2 or step 3 in endorse mode
   return (
-    <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
+    <div className="relative flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-border bg-card shrink-0">
       <button
         onClick={onBack}
         disabled={locked}
