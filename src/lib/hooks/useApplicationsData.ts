@@ -83,31 +83,49 @@ export function useApplicationsData() {
   };
   const hasAnyStake = stakedGuildIds.size > 0;
 
-  // Expert membership applications (across all guilds)
-  const { data: expertAppsRaw, isLoading: expertAppsLoading, refetch: refetchExpertApps } = useFetch<ExpertMembershipApplication[]>(
+  // Expert membership applications (across all guilds).
+  //
+  // The BE response splits this into two arrays — `guildApplications` (active,
+  // status='pending') and `historyGuildApplications` (finalized, this reviewer
+  // voted on). We fetch both in a single getGuildDetails call to avoid a
+  // round-trip per guild, then expose them as separate `*Raw` shapes below.
+  const { data: expertAppsData, isLoading: expertAppsLoading, refetch: refetchExpertApps } = useFetch<{
+    active: ExpertMembershipApplication[];
+    history: ExpertMembershipApplication[];
+  }>(
     async () => {
-      if (!address || guildRecords.length === 0) return [];
+      const empty = { active: [], history: [] };
+      if (!address || guildRecords.length === 0) return empty;
       const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
       const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
             const data = await expertApi.getGuildDetails(g.id, address);
-            const apps = Array.isArray(data.guildApplications) ? data.guildApplications : [];
-            return apps.map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
+            const active = Array.isArray(data.guildApplications) ? data.guildApplications : [];
+            const history = Array.isArray(data.historyGuildApplications) ? data.historyGuildApplications : [];
+            return {
+              active: active.map((a) => ({ ...a, guildId: g.id, guildName: g.name })),
+              history: history.map((a) => ({ ...a, guildId: g.id, guildName: g.name })),
+            };
           } catch {
             failedGuilds.push(g.name);
-            return [];
+            return { active: [], history: [] };
           }
         }),
       );
       if (failedGuilds.length > 0) {
         toast.warning(`Could not load expert apps from: ${failedGuilds.join(", ")}`);
       }
-      return results.flat();
+      return {
+        active: results.flatMap((r) => r.active),
+        history: results.flatMap((r) => r.history),
+      };
     },
     { onError: (err) => toast.error(err) },
   );
+  const expertAppsRaw = expertAppsData?.active;
+  const historyExpertAppsRaw = expertAppsData?.history;
 
   // Candidate guild applications (across all guilds)
   const { data: candidateAppsRaw, isLoading: candidateAppsLoading, refetch: refetchCandidateApps } = useFetch<CandidateGuildApplication[]>(
@@ -227,8 +245,17 @@ export function useApplicationsData() {
   const proposals = proposalsRaw ?? [];
 
   const historyExpertApps = useMemo(() => {
-    return (expertAppsRaw ?? []).filter((a) => a.finalized && a.expertHasReviewed);
-  }, [expertAppsRaw]);
+    // Source is now the BE-side `historyGuildApplications` array, which
+    // already filters to apps the current reviewer voted on and that have
+    // been finalized. Falling back to the active list (filtered the same
+    // way) keeps behaviour correct if a pending app slips through with
+    // finalized=true mid-render.
+    const history = historyExpertAppsRaw ?? [];
+    const stragglers = (expertAppsRaw ?? []).filter((a) => a.finalized && a.expertHasReviewed);
+    if (stragglers.length === 0) return history;
+    const seen = new Set(history.map((h) => h.id));
+    return [...history, ...stragglers.filter((s) => !seen.has(s.id))];
+  }, [historyExpertAppsRaw, expertAppsRaw]);
 
   const historyItems = useMemo(() => {
     const finalized = historyProposalsRaw ?? [];

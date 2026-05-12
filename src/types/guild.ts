@@ -100,6 +100,7 @@ export interface ExpertGuildDetail extends ExpertGuild {
   candidates?: import("./candidate").CandidateMember[];
   recentJobs?: import("./job").Job[];
   guildApplications?: import("./review").ExpertMembershipApplication[];
+  historyGuildApplications?: import("./review").ExpertMembershipApplication[];
   applications?: import("./application").GuildJobApplication[];
   recentActivity?: Array<{ id: string; type: string; actor: string; target?: string; details: string; timestamp: string }>;
   earnings?: {
