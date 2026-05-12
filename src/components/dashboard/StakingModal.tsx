@@ -337,11 +337,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
     : "VETD";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in p-3 sm:p-6 lg:p-8 overflow-y-auto">
       {/* Gradient border glow wrapper — matches endorsement modal */}
-      <div className="max-w-[480px] w-full mx-4 rounded-xl border border-border p-px animate-modal-scale-in">
+      <div className="max-w-[480px] w-full rounded-xl border border-border p-px animate-modal-scale-in">
         <div
-          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-xl shadow-2xl bg-card"
+          className="relative w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col overflow-hidden rounded-xl shadow-2xl bg-card"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
