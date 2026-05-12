@@ -196,7 +196,7 @@ export function GuildCard(props: GuildCardProps) {
               tone: "accent",
             },
             {
-              value: `$${formatVetd(guild.totalEarnings ?? 0)}`,
+              value: formatVetd(guild.totalEarnings ?? 0),
               label: "Earned",
               tone: "positive",
             },
@@ -288,7 +288,7 @@ export function GuildCard(props: GuildCardProps) {
               tone: "accent",
             },
             {
-              value: `$${formatVetd(guild.totalEarnings ?? 0)}`,
+              value: formatVetd(guild.totalEarnings ?? 0),
               label: "Earned",
               tone: "positive",
             },
@@ -346,7 +346,7 @@ export function GuildCard(props: GuildCardProps) {
               tone: "accent",
             },
             {
-              value: `$${formatVetd(guild.totalEarnings ?? 0)}`,
+              value: formatVetd(guild.totalEarnings ?? 0),
               label: "Earned",
               tone: "positive",
             },
