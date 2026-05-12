@@ -137,6 +137,35 @@ export async function switchAccountUI(
 }
 
 /**
+ * Drive the expert SIWE login flow through the real UI:
+ *   1. Navigate to /auth/login?type=expert
+ *   2. Click the in-app "Connect Wallet" button to open RainbowKit's modal
+ *   3. Click "Headless E2E Wallet" — wagmi connects via the injected
+ *      connector through our shim, fires useAccountEffect.onConnect, which
+ *      triggers handleExpertLogin → expertApi.getProfile → router.push
+ *   4. Wait for the redirect to /expert/dashboard
+ *
+ * NOTE: We deliberately use the modal click flow (not the programmatic
+ * `connect()` action) here because LoginPage's `useAccountEffect.onConnect`
+ * only fires on the React-driven status transition, which a click triggers
+ * cleanly. Programmatic `connect()` updates the wagmi store but the React
+ * effect hook can miss the edge.
+ */
+export async function loginAsExpertViaUI(
+  page: Page,
+  opts: { timeoutMs?: number } = {},
+): Promise<void> {
+  const timeoutMs = opts.timeoutMs ?? 30_000;
+  await page.goto("/auth/login?type=expert");
+  await page.getByRole("button", { name: /connect wallet/i }).first().click();
+  await page
+    .getByRole("button", { name: /headless e2e wallet/i })
+    .first()
+    .click();
+  await page.waitForURL(/\/expert\/dashboard/, { timeout: timeoutMs });
+}
+
+/**
  * Disconnect the wagmi-side wallet. Safe to call regardless of state.
  */
 export async function disconnectWalletUI(page: Page): Promise<void> {
