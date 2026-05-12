@@ -2,6 +2,8 @@
 
 Cross-stack Playwright suites that exercise the full candidate-review flow (Suite A) and endorsement flow (Suite B) against a real local stack — anvil + local backend + local frontend, no mocks.
 
+> **Phased roadmap:** see [`TESTING_PHASES.md`](./TESTING_PHASES.md) for the staged plan covering the wallet-shim foundation, the completed phases (1, 2, 4) and the pending phases (2B, 3, 5, 6, 7).
+
 ## Prerequisites
 
 1. **Anvil** running on `:8545`:
