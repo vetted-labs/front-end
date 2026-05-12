@@ -1,6 +1,7 @@
-import { http, cookieStorage, createStorage } from "wagmi";
+import { http, cookieStorage, createStorage, createConnector } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { sepolia, foundry } from "wagmi/chains";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { getDefaultConfig, type Wallet } from "@rainbow-me/rainbowkit";
 
 // RainbowKit's getDefaultConfig wires up WalletConnect v2 + mobile deep-linking
 // for 300+ wallets (MetaMask, Coinbase, Rainbow, Trust, Zerion, Ledger, Safe, etc.)
@@ -40,6 +41,29 @@ const foundryTransport = http(
   process.env.NEXT_PUBLIC_ANVIL_RPC_URL ?? "http://localhost:8545",
 );
 
+// E2E-only custom RainbowKit wallet. Wraps wagmi's `injected()` connector so
+// it reads from `window.ethereum` — which the Playwright real-flow harness
+// mounts as a headless EIP-1193 shim (see `e2e/real-flow/helpers/headless-
+// wallet.ts`). RainbowKit's default `getDefaultConfig` only registers
+// SDK-style connectors (`metaMaskSDK`, `coinbaseWalletSDK`, `walletConnect`)
+// none of which read `window.ethereum`, so the shim has nothing to talk to
+// without this entry. The pattern follows the re-nft / rombrom dApp-E2E
+// testing recipe (custom RK wallet + injected connector + anvil).
+const headlessE2eWallet = (): Wallet => ({
+  id: "headless-e2e",
+  name: "Headless E2E Wallet",
+  iconUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E",
+  iconBackground: "#111",
+  installed: true,
+  createConnector: (walletDetails) => {
+    const factory = injected({ shimDisconnect: true });
+    return createConnector((cfg) => ({
+      ...factory(cfg),
+      ...walletDetails,
+    }));
+  },
+});
+
 // cookieStorage + ssr:true enables the SSR hydration pattern required by
 // Next.js App Router. Combined with cookieToInitialState() in layout.tsx and
 // <WagmiProvider initialState={...}>, this guarantees that useConnectModal(),
@@ -54,6 +78,14 @@ export const config = isE2E
         [sepolia.id]: sepoliaTransport,
         [foundry.id]: foundryTransport,
       },
+      // E2E: append a "Testing" group with our headless wallet. The default
+      // Popular wallets stay so the prod-style UI still renders if needed.
+      wallets: [
+        {
+          groupName: "Testing",
+          wallets: [headlessE2eWallet],
+        },
+      ],
       ssr: true,
       storage: createStorage({
         storage: cookieStorage,

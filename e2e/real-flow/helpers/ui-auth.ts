@@ -1,90 +1,210 @@
 // e2e/real-flow/helpers/ui-auth.ts
 //
-// Playwright helpers for the wallet-auth surfaces in Vetted's UI:
-//   - connectWalletViaUI: drives the RainbowKit modal end-to-end
-//   - switchAccountUI:   swaps the active account and waits for re-render
-//   - disconnectWalletUI: clears the connection (used between scenarios)
+// Wallet-auth helpers for Playwright real-flow.
 //
-// Selectors target RainbowKit's stable data-testids where possible; the
-// connect-button trigger uses role-based queries against the in-app
-// "Connect Wallet" button (currently rendered by ConnectButton.Custom in
-// the app shell).
+// IMPORTANT: These helpers bypass RainbowKit's modal and drive wagmi
+// directly through `window.__wagmiTest` (exposed by `src/components/Providers.tsx`
+// only when NEXT_PUBLIC_E2E_MODE=true). Rationale: RainbowKit's EIP-6963
+// detection has timing quirks against a Playwright-injected provider — the
+// shim ends up on `window.ethereum` correctly but doesn't always appear in
+// the modal's "Installed" section. The shim itself is functionally complete
+// at the EIP-1193 layer; using wagmi's `connect()` action directly lets us
+// exercise the real wagmi connection pipeline (the same one a click would
+// drive) without fighting modal-rendering timing. The MetaMask popup UX is
+// out of scope per project intent.
 
 import { expect, type Page } from "@playwright/test";
 import type { Hex } from "viem";
 import type { InjectedWalletHandle } from "./wallet-injection";
 
-const CONNECT_BUTTON_TEXT = /connect wallet/i;
-
 /**
- * Open the RainbowKit modal, pick MetaMask (our headless shim advertises
- * isMetaMask: true), and wait for wagmi to surface the connected state.
+ * Connect the page-side wagmi store to the injected wallet (our shim).
  *
- * Idempotent: if a wallet is already connected, returns immediately.
+ * Uses `window.__wagmiTest.connect(config, { connector: injected })` which
+ * is the same call path RainbowKit takes when a user clicks a wallet in the
+ * modal — it just skips the modal-rendering step. Idempotent: returns
+ * immediately if a wallet is already connected.
+ *
+ * Throws a clear error if `window.__wagmiTest` is missing — that means the
+ * app wasn't built with NEXT_PUBLIC_E2E_MODE=true.
  */
 export async function connectWalletViaUI(page: Page): Promise<void> {
-  // Fast path: if the address chip is already visible, we're connected.
-  const accountChip = page.getByTestId("rk-account-button");
-  if (await accountChip.isVisible().catch(() => false)) return;
+  // Wait for wagmi to be ready on the page (Providers must have mounted).
+  await page.waitForFunction(
+    () => typeof (window as unknown as { __wagmiTest?: unknown }).__wagmiTest !== "undefined",
+    null,
+    { timeout: 10_000 },
+  );
 
-  // Trigger modal — the in-app "Connect Wallet" button.
-  await page.getByRole("button", { name: CONNECT_BUTTON_TEXT }).first().click();
+  const result = (await page.evaluate(async () => {
+    const harness = (
+      window as unknown as {
+        __wagmiTest?: {
+          config: { connectors: { id: string; uid?: string }[] };
+          connect: (
+            config: unknown,
+            args: { connector: unknown },
+          ) => Promise<{ accounts: readonly string[]; chainId: number }>;
+          getAccount: (
+            config: unknown,
+          ) => { isConnected: boolean; address?: string };
+        };
+      }
+    ).__wagmiTest;
+    if (!harness) return { ok: false, error: "wagmi test harness missing" };
 
-  // RainbowKit modal: pick the MetaMask entry. The shim sets isMetaMask: true
-  // + announces via EIP-6963, so wagmi labels it "MetaMask".
-  await page
-    .getByTestId("rk-wallet-option-metaMask")
-    .or(page.getByTestId("rk-wallet-option-io.metamask"))
-    .first()
-    .click({ timeout: 10_000 });
+    // Already connected? Bail.
+    const current = harness.getAccount(harness.config);
+    if (current.isConnected && current.address) {
+      return { ok: true, address: current.address, alreadyConnected: true };
+    }
 
-  // Wait for the account-button chip to appear (= wagmi.useAccount.isConnected).
-  await expect(accountChip).toBeVisible({ timeout: 15_000 });
+    // Find the headless E2E connector registered in `wagmi-config.ts` under
+    // a custom RainbowKit wallet. It wraps wagmi's `injected()` connector
+    // which reads from `window.ethereum` (= our shim). Fall back to plain
+    // `injected` or `metaMask` ids in case the project later switches to a
+    // different wallet registration pattern.
+    const injected =
+      harness.config.connectors.find((c) => c.id === "headless-e2e") ??
+      harness.config.connectors.find((c) => c.id === "injected") ??
+      harness.config.connectors.find((c) => c.id === "metaMask");
+    if (!injected) {
+      return {
+        ok: false,
+        error: `no headless/injected connector; available: ${harness.config.connectors.map((c) => c.id).join(",")}`,
+      };
+    }
+
+    try {
+      const res = await harness.connect(harness.config, { connector: injected });
+      return { ok: true, address: res.accounts[0], chainId: res.chainId };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  })) as { ok: boolean; address?: string; error?: string };
+
+  if (!result.ok) {
+    throw new Error(`connectWalletViaUI: ${result.error ?? "unknown failure"}`);
+  }
 }
 
 /**
- * Switch to a different account on the headless wallet and wait for the UI
- * to re-render with the new address. Falls back to a full page reload if
- * wagmi doesn't re-connect within `timeoutMs`.
+ * Switch to a different account on the headless wallet and re-connect wagmi
+ * so the page-side store + AuthContext see the new address.
+ *
+ * The shim's `setAccount` fires `accountsChanged`, but wagmi's injected
+ * connector treats that as either a no-op (same connection) or a hard
+ * disconnect (if it considers the new address foreign). For determinism we
+ * disconnect and re-connect — this guarantees both wagmi and any downstream
+ * AuthContext re-render with the new identity.
  */
 export async function switchAccountUI(
   page: Page,
   handle: InjectedWalletHandle,
   privateKey: Hex,
-  opts: { timeoutMs?: number } = {},
 ): Promise<void> {
-  const timeoutMs = opts.timeoutMs ?? 5_000;
   await handle.switchAccount(privateKey);
 
-  const expected = handle.wallet.address.toLowerCase();
-
-  // Wait for any element on the page to surface the new address (truncated).
-  // The account-button chip text contains a truncated form like "0x1234…abcd".
-  const shortPrefix = expected.slice(0, 6);
-  const shortSuffix = expected.slice(-4);
-
-  const surfaced = await page
-    .getByText(new RegExp(`${shortPrefix}.{0,4}${shortSuffix}`, "i"))
-    .first()
-    .waitFor({ state: "visible", timeout: timeoutMs })
-    .then(() => true)
-    .catch(() => false);
-
-  if (!surfaced) {
-    // Fallback path: wagmi missed the accountsChanged event. Reload.
-    await handle.hardReload();
-    await connectWalletViaUI(page);
-  }
+  await page.evaluate(async () => {
+    const harness = (
+      window as unknown as {
+        __wagmiTest?: {
+          config: unknown;
+          connect: (
+            config: unknown,
+            args: { connector: unknown },
+          ) => Promise<unknown>;
+          disconnect: (config: unknown) => Promise<void>;
+          getAccount: (
+            config: unknown,
+          ) => { isConnected: boolean };
+        };
+      }
+    ).__wagmiTest;
+    if (!harness) return;
+    const cfg = harness.config as {
+      connectors: { id: string }[];
+    };
+    if (harness.getAccount(harness.config).isConnected) {
+      await harness.disconnect(harness.config);
+    }
+    const injected =
+      cfg.connectors.find((c) => c.id === "headless-e2e") ??
+      cfg.connectors.find((c) => c.id === "injected") ??
+      cfg.connectors.find((c) => c.id === "metaMask");
+    if (injected) await harness.connect(harness.config, { connector: injected });
+  });
 }
 
 /**
- * Open the RainbowKit account menu and click Disconnect. No-op if no wallet
- * is currently connected.
+ * Disconnect the wagmi-side wallet. Safe to call regardless of state.
  */
 export async function disconnectWalletUI(page: Page): Promise<void> {
-  const accountChip = page.getByTestId("rk-account-button");
-  if (!(await accountChip.isVisible().catch(() => false))) return;
-  await accountChip.click();
-  await page.getByRole("button", { name: /disconnect/i }).click();
-  await expect(accountChip).toBeHidden({ timeout: 5_000 });
+  await page.evaluate(async () => {
+    const harness = (
+      window as unknown as {
+        __wagmiTest?: { config: unknown; disconnect: (c: unknown) => Promise<void> };
+      }
+    ).__wagmiTest;
+    if (!harness) return;
+    await harness.disconnect(harness.config).catch(() => undefined);
+  });
+}
+
+/**
+ * Sign an arbitrary message through wagmi (exercises `useSignMessage` path).
+ * Returns the signature.
+ */
+export async function signMessageViaWagmi(page: Page, message: string): Promise<`0x${string}`> {
+  const sig = (await page.evaluate(async (msg) => {
+    const harness = (
+      window as unknown as {
+        __wagmiTest?: {
+          config: unknown;
+          signMessage: (config: unknown, args: { message: string }) => Promise<`0x${string}`>;
+        };
+      }
+    ).__wagmiTest;
+    if (!harness) throw new Error("wagmi test harness missing");
+    return await harness.signMessage(harness.config, { message: msg });
+  }, message)) as `0x${string}`;
+  return sig;
+}
+
+/**
+ * Read the wagmi-side connected address (page-context useAccount equivalent).
+ * Returns `null` when nothing is connected.
+ */
+export async function readWagmiAddress(page: Page): Promise<string | null> {
+  return (await page.evaluate(() => {
+    const harness = (
+      window as unknown as {
+        __wagmiTest?: {
+          config: unknown;
+          getAccount: (
+            config: unknown,
+          ) => { isConnected: boolean; address?: string };
+        };
+      }
+    ).__wagmiTest;
+    if (!harness) return null;
+    const acc = harness.getAccount(harness.config);
+    return acc.isConnected && acc.address ? acc.address : null;
+  })) as string | null;
+}
+
+/**
+ * Convenience: wait until wagmi reports the expected address. Useful right
+ * after `switchAccountUI` to gate subsequent assertions.
+ */
+export async function expectWagmiAddress(
+  page: Page,
+  expected: string,
+  timeoutMs = 10_000,
+): Promise<void> {
+  await expect
+    .poll(async () => (await readWagmiAddress(page))?.toLowerCase() ?? null, {
+      timeout: timeoutMs,
+    })
+    .toBe(expected.toLowerCase());
 }

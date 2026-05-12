@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, cookieToInitialState } from "wagmi";
+import { connect, disconnect, signMessage, getAccount } from "wagmi/actions";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { MotionProvider } from "@/lib/motion";
@@ -10,6 +11,24 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { sepolia } from "wagmi/chains";
+
+// E2E-only escape hatch: expose wagmi config + actions on window so the
+// headless-wallet Playwright suite can drive wagmi directly via the injected
+// connector, bypassing RainbowKit's modal (whose EIP-6963 detection has
+// timing quirks against a Playwright-injected provider). Only active when
+// NEXT_PUBLIC_E2E_MODE=true; production bundles are unaffected.
+if (
+  typeof window !== "undefined" &&
+  process.env.NEXT_PUBLIC_E2E_MODE === "true"
+) {
+  (window as unknown as { __wagmiTest?: unknown }).__wagmiTest = {
+    config,
+    connect,
+    disconnect,
+    signMessage,
+    getAccount,
+  };
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

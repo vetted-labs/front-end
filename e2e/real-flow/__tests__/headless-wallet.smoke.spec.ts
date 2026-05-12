@@ -15,7 +15,7 @@ const ACCOUNT_1_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" as const;
 const ACCOUNT_2_KEY =
   "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a" as const;
 
-const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:18545";
+const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
 
 test("eth_accounts returns the active address", async () => {
   const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
@@ -23,10 +23,12 @@ test("eth_accounts returns the active address", async () => {
   expect(accounts[0].toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
 });
 
-test("eth_chainId returns 0x7a69 (foundry)", async () => {
+test("eth_chainId returns 0xaa36a7 (sepolia)", async () => {
+  // We run anvil with `--chain-id 11155111` so the whole stack aligns on
+  // sepolia (BE provider, FE wagmi sepolia, CommitmentForm's sepolia gate).
   const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
   const id = await w.request({ method: "eth_chainId" });
-  expect(id).toBe("0x7a69");
+  expect(id).toBe("0xaa36a7");
 });
 
 test("personal_sign produces a recoverable signature", async () => {

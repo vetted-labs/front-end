@@ -16,7 +16,7 @@ const ACCOUNT_2_KEY =
   "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a" as const;
 const ACCOUNT_2_ADDR = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" as const;
 
-const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:18545";
+const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
 const BLANK_PAGE = "data:text/html,<!doctype html><html><body><h1>shim</h1></body></html>";
 
 test("page sees window.ethereum after attachWallet", async ({ page }) => {
