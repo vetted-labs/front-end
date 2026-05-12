@@ -1038,3 +1038,38 @@ body:has([role="dialog"]) .sidebar-desktop {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* Guild card ambient grid texture — a subtle 24px grid behind card content. */
+.ambient-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 24px, 24px 100%;
+  background-position: 0 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Card watermark numeral — used by the Catalogue guild card. */
+.guild-card-watermark {
+  font-family: var(--font-mono);
+  font-size: 120px;
+  line-height: 0.85;
+  font-weight: 800;
+  color: rgba(255, 106, 0, 0.045);
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+}
+.guild-card-watermark.size-sm { font-size: 90px; }
+.guild-card-watermark.size-xs { font-size: 64px; }
+
+/* Subtle pulse for LIVE dot — kept here so it's shared. */
+@keyframes guild-card-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.guild-card-live-dot {
+  animation: guild-card-pulse 2s ease-in-out infinite;
+}
