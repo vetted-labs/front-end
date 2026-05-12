@@ -30,20 +30,24 @@ const FILTER_OPTIONS: Array<{ id: FilterId; label: string }> = [
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 function mapApplicationToQueueItem(app: GuildApplication, guildId: string): GuildQueueItem {
-  const phase: GuildQueueItem["phase"] =
-    app.voting_phase === "reveal"
+  const isExpertApp = app.item_type === "expert_application";
+  const isCandidateApp = app.item_type === "guild_application";
+
+  // Candidate reviews are single-shot (no commit/reveal). Expert apps still go
+  // through the commit→reveal flow driven by `voting_phase`.
+  const phase: GuildQueueItem["phase"] = isCandidateApp
+    ? "review"
+    : app.voting_phase === "reveal"
       ? "reveal"
       : app.voting_phase === "commit"
         ? "commit"
         : "vote";
+
   const bucket: GuildQueueItem["bucket"] = app.finalized
     ? "waiting"
     : phase === "reveal"
       ? "due_soon"
       : "waiting";
-
-  const isExpertApp = app.item_type === "expert_application";
-  const isCandidateApp = app.item_type === "guild_application";
 
   const href = (() => {
     const base = `/expert/guild/${encodeURIComponent(guildId)}`;
@@ -55,6 +59,16 @@ function mapApplicationToQueueItem(app: GuildApplication, guildId: string): Guil
     }
     return `/expert/voting/applications/${encodeURIComponent(app.id)}`;
   })();
+
+  const actionLabel = isCandidateApp
+    ? app.has_voted
+      ? "View review"
+      : "Review"
+    : app.has_voted
+      ? phase === "reveal"
+        ? "Reveal vote"
+        : "View commit"
+      : "Start review";
 
   return {
     id: app.id,
@@ -68,11 +82,7 @@ function mapApplicationToQueueItem(app: GuildApplication, guildId: string): Guil
     commitsRequired: app.assigned_reviewer_count,
     stakeRequired: app.required_stake,
     stakeLocked: app.has_voted ? app.required_stake : undefined,
-    actionLabel: app.has_voted
-      ? phase === "reveal"
-        ? "Reveal vote"
-        : "View commit"
-      : "Start review",
+    actionLabel,
     actionPrimary: !app.has_voted,
     actionHref: href,
   };
@@ -117,8 +127,11 @@ function mapSubmittedToQueueItem(
 function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
   if (filter === "all") return true;
   if (filter === "active") return !app.finalized;
-  if (filter === "awaiting") return app.voting_phase === "commit" && !app.finalized;
-  if (filter === "open") return app.voting_phase === "reveal" && !app.finalized;
+  // "Awaiting reveal" / "Reveal open" are commit-reveal lifecycle filters and
+  // apply only to expert applications. Candidate reviews are single-shot.
+  const isExpertApp = app.item_type === "expert_application";
+  if (filter === "awaiting") return isExpertApp && app.voting_phase === "commit" && !app.finalized;
+  if (filter === "open") return isExpertApp && app.voting_phase === "reveal" && !app.finalized;
   if (filter === "past") {
     if (!app.finalized || !app.finalized_at) return false;
     const finalizedMs = new Date(app.finalized_at).getTime();
@@ -185,9 +198,18 @@ export function GuildMyReviewsTab({
       items.filter((a) => !a.finalized).length +
       submitted.filter((r) => !r.applicationFinalized).length;
     const awaiting =
-      items.filter((a) => a.voting_phase === "commit" && !a.finalized).length +
-      submitted.filter((r) => !r.applicationFinalized).length;
-    const open = items.filter((a) => a.voting_phase === "reveal" && !a.finalized).length;
+      items.filter(
+        (a) =>
+          a.item_type === "expert_application" &&
+          a.voting_phase === "commit" &&
+          !a.finalized,
+      ).length + submitted.filter((r) => !r.applicationFinalized).length;
+    const open = items.filter(
+      (a) =>
+        a.item_type === "expert_application" &&
+        a.voting_phase === "reveal" &&
+        !a.finalized,
+    ).length;
     const past =
       items.filter((a) => matchesFilter(a, "past")).length +
       submitted.filter((r) => {

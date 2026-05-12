@@ -47,6 +47,7 @@ const TAG_TONE: Record<GuildQueueItemType, string> = {
 const PHASE_LABEL: Record<GuildQueueItemPhase, string> = {
   commit: "Commit",
   reveal: "Reveal",
+  review: "Review",
   vouch: "Vouch",
   vote: "Vote",
   open: "Open",
@@ -68,6 +69,7 @@ const VARIANT_BORDER: Record<Variant, string> = {
 const DEFAULT_ACTION_LABEL: Record<GuildQueueItemPhase, string> = {
   commit: "Start review",
   reveal: "Reveal vote",
+  review: "Review",
   vouch: "Review",
   vote: "Cast vote",
   open: "Claim review",
@@ -107,6 +109,7 @@ function captionFor(item: GuildQueueItem): string {
   if (item.type === "governance") return "Vote closes";
   if (item.phase === "reveal") return "Reveal closes";
   if (item.phase === "commit") return "Commit due";
+  if (item.phase === "review") return "Review closes";
   if (item.phase === "vouch" || item.phase === "vote") return "Vote due";
   return "Closes";
 }

@@ -1123,14 +1123,16 @@ export const guildsApi = {
     type FrontPhase = import("@/types").GuildQueueItemPhase;
     type FrontBucket = import("@/types").GuildQueueBucket;
     const mapKind = (kind: string): { type: FrontType; phase: FrontPhase } => {
+      if (kind === "unclaimed_candidate") return { type: "candidate", phase: "open" };
+      // Candidate reviews are single-shot — no commit/reveal split — even though
+      // the BE still emits `candidate_review_commit` / `candidate_review_reveal`.
       if (kind.startsWith("candidate")) {
-        return { type: "candidate", phase: kind.includes("reveal") ? "reveal" : "commit" };
+        return { type: "candidate", phase: "review" };
       }
       if (kind.startsWith("expert_app")) {
         return { type: "expert", phase: kind.includes("reveal") ? "reveal" : "commit" };
       }
       if (kind.startsWith("governance")) return { type: "governance", phase: "vote" };
-      if (kind === "unclaimed_candidate") return { type: "candidate", phase: "open" };
       return { type: "candidate", phase: "open" };
     };
     // Build the deep-link href that opens the right review surface when the

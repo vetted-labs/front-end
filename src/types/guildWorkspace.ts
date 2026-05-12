@@ -10,7 +10,7 @@
 export type GuildQueueItemType = "candidate" | "expert" | "governance" | "reveal";
 
 /** Phase / kind tag rendered on the row. */
-export type GuildQueueItemPhase = "commit" | "reveal" | "vouch" | "vote" | "open";
+export type GuildQueueItemPhase = "commit" | "reveal" | "review" | "vouch" | "vote" | "open";
 
 /** Triage bucket assigned by the backend. */
 export type GuildQueueBucket = "due_soon" | "waiting" | "unclaimed";

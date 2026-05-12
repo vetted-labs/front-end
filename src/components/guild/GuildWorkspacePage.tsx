@@ -146,10 +146,12 @@ function buildKpiBundle(args: {
   const pendingAssigned = assigned.filter((a) => a.status === "pending");
   const commitItems = items.filter((i) => i.phase === "commit");
   const revealItems = items.filter((i) => i.phase === "reveal");
-  // "Active commits" = items currently in the commit phase the user can act on
-  // (either due_soon or waiting). Falls back to count of pending assigned
-  // applications when the queue endpoint isn't populated.
-  const activeCommits = commitItems.length || pendingAssigned.length;
+  const reviewItems = items.filter((i) => i.phase === "review");
+  // "Active commits" = items the user can act on right now. Candidate reviews
+  // are single-shot (phase "review") so they count alongside commit-phase work.
+  // Falls back to count of pending assigned applications when the queue
+  // endpoint isn't populated.
+  const activeCommits = commitItems.length + reviewItems.length || pendingAssigned.length;
   const awaitingReveal = items.filter((i) => i.bucket === "due_soon" && i.phase === "reveal").length;
   const revealOpen = revealItems.length;
 
@@ -160,7 +162,7 @@ function buildKpiBundle(args: {
   // commit/reveal buckets. We don't have per-item stake from /assigned, so
   // we fall back to a flat 25% locked when there are active reviews (matches
   // the protocol's locked-stake heuristic in the dashboard).
-  const activeReviewCount = commitItems.length + revealItems.length;
+  const activeReviewCount = commitItems.length + revealItems.length + reviewItems.length;
   const inReviewVetd = activeReviewCount > 0 ? Math.round(totalStake * 0.25) : 0;
   const availableVetd = Math.max(0, totalStake - inReviewVetd);
   const inReviewPercent = totalStake > 0 ? (inReviewVetd / totalStake) * 100 : 0;
