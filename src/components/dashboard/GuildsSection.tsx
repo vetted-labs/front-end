@@ -59,7 +59,7 @@ export function GuildsSection({
             variant="widget"
             guild={guild}
             catalogueIndex={i + 1}
-            stakedAmount={guildStakes[guild.id]}
+            stakedAmount={guildStakes[guild.id] ?? guild.stakedAmount}
             onClick={() => router.push(`/expert/guild/${guild.id}`)}
           />
         ))}
