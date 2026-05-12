@@ -1,39 +1,34 @@
 "use client";
 /* eslint-disable react-hooks/refs -- the useExpertApplicationFlow hook intentionally exposes errorRef as part of its return value so consumers can scroll-target the alert; reading flow.error / flow.errorRef in JSX is the documented integration. */
 
+import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowRight,
-  Send,
   Loader2,
   CheckCircle,
   Info,
-  Check,
   ShieldCheck,
   Sparkles,
   Wallet,
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { GuildAvatar } from "@/components/ui/guild";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { STATUS_COLORS } from "@/config/colors";
-import { cn, truncateAddress } from "@/lib/utils";
+import { truncateAddress } from "@/lib/utils";
 import { useExpertApplicationFlow } from "@/lib/hooks/useExpertApplicationFlow";
+import { WizardRail, type WizardRailStep } from "@/components/wizard/WizardRail";
+import { SubstepChipStrip } from "@/components/wizard/SubstepChipStrip";
+import { WizardFooter } from "@/components/wizard/WizardFooter";
+import { useSubstepIndex } from "@/components/wizard/useSubstepIndex";
+import type { SubstepDescriptor } from "@/components/wizard/types";
 import { PersonalInfoSection } from "./PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./ApplicationQuestionsSection";
 import { ReviewSubmitStep } from "./ReviewSubmitStep";
-
-const STEP_DESCRIPTIONS = [
-  "Name, contact, resume",
-  "Guild, level, expertise",
-  "Bio, motivation, prompts",
-  "Verify wallet & submit",
-];
 
 const STEP_EYEBROWS = [
   "Step 01 · Personal info",
@@ -63,7 +58,6 @@ export default function ExpertApplicationFlow() {
 
   const totalSteps = flow.steps.length;
   const stepIndex = flow.currentStep;
-  const progressPct = Math.round(((stepIndex + 1) / totalSteps) * 100);
 
   // Try to surface the guild they're applying to (?guild=) so the hero shows
   // the right tile even before the form has been touched.
@@ -72,6 +66,125 @@ export default function ExpertApplicationFlow() {
     (g) => g.id === flow.selectedGuildId || g.id === guildParam || g.name === guildParam,
   );
   const guildLabel = guildOption?.name || flow.formData.guild || "Vetted Guild";
+
+  const {
+    formData: flowFormData,
+    resumeFile: flowResumeFile,
+    selectedGuildId: flowSelectedGuildId,
+    generalAnswers: flowGeneralAnswers,
+    levelAnswers: flowLevelAnswers,
+    levelTemplate: flowLevelTemplate,
+    noAiDeclaration: flowNoAiDeclaration,
+    walletSigned: flowWalletSigned,
+  } = flow;
+  const flowGeneralTemplate = flow.applicationQuestionsProps.generalTemplate;
+
+  const substepsPerStep = useMemo<SubstepDescriptor[][]>(() => {
+    const personalComplete =
+      !!flowFormData.fullName?.trim() &&
+      !!flowFormData.email?.trim() &&
+      !!flowResumeFile;
+    const personalInfo: SubstepDescriptor[] = [
+      { id: "personal.setup", label: "Personal info", isComplete: personalComplete, isRequired: true },
+    ];
+
+    const professionalComplete =
+      !!flowSelectedGuildId &&
+      !!flowFormData.expertiseLevel &&
+      (flowFormData.expertiseAreas?.length ?? 0) > 0;
+    const professional: SubstepDescriptor[] = [
+      { id: "professional.setup", label: "Background", isComplete: professionalComplete, isRequired: true },
+    ];
+
+    const setupComplete =
+      (flowFormData.bio?.trim().length ?? 0) >= 50 &&
+      (flowFormData.motivation?.trim().length ?? 0) >= 50 &&
+      flowNoAiDeclaration;
+
+    const generalQs = flowGeneralTemplate?.generalQuestions ?? [];
+    const levelTopics = flowLevelTemplate?.topics ?? [];
+
+    const application: SubstepDescriptor[] = [
+      { id: "application.setup", label: "Bio & intent", isComplete: setupComplete, isRequired: true },
+      ...generalQs.map((q, i) => {
+        const answerKey =
+          q.id === "learning_from_failure" ? "learningFromFailure"
+          : q.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"
+          : q.id === "motivation_and_conflict" ? "motivationAndConflict"
+          : "guildImprovement";
+        const answer = flowGeneralAnswers[answerKey as keyof typeof flowGeneralAnswers];
+        return {
+          id: `application.general.${q.id}`,
+          label: `General Q${i + 1}`,
+          isComplete: (answer?.trim().length ?? 0) >= 50,
+          isRequired: true,
+        };
+      }),
+      ...levelTopics.map((topic, i) => ({
+        id: `application.level.${topic.id}`,
+        label: `Level Q${i + 1}`,
+        isComplete: (flowLevelAnswers[topic.id]?.trim().length ?? 0) >= 50,
+        isRequired: true,
+      })),
+    ];
+
+    const review: SubstepDescriptor[] = [
+      { id: "review.submit", label: "Verify & submit", isComplete: flowWalletSigned, isRequired: true },
+    ];
+
+    return [personalInfo, professional, application, review];
+  }, [
+    flowFormData,
+    flowResumeFile,
+    flowSelectedGuildId,
+    flowGeneralTemplate,
+    flowGeneralAnswers,
+    flowLevelTemplate,
+    flowLevelAnswers,
+    flowNoAiDeclaration,
+    flowWalletSigned,
+  ]);
+
+  const { substepIndex, setSubstepIndex, queuePendingSubstep } = useSubstepIndex({
+    topStepIndex: stepIndex,
+  });
+
+  const currentSubsteps = substepsPerStep[stepIndex] ?? [];
+  const safeSubstepIndex = Math.min(substepIndex, Math.max(currentSubsteps.length - 1, 0));
+  const isLastSubstepInStep = safeSubstepIndex >= currentSubsteps.length - 1;
+  const isFinalSubstep = flow.isLastStep && isLastSubstepInStep;
+
+  const totalSubsteps = substepsPerStep.reduce((a, s) => a + s.length, 0);
+  const completedCount = substepsPerStep.flat().filter((s) => s.isComplete).length;
+  const newProgressPct = totalSubsteps === 0 ? 0 : Math.round((completedCount / totalSubsteps) * 100);
+
+  const incompleteTopSteps: number[] = substepsPerStep
+    .map((substeps, idx) => ({
+      stepNum: idx + 1,
+      incomplete: substeps.some((s) => s.isRequired && !s.isComplete),
+    }))
+    .filter((s) => s.incomplete && s.stepNum !== stepIndex + 1)
+    .map((s) => s.stepNum);
+
+  const handleSubstepContinue = () => {
+    if (!isLastSubstepInStep) {
+      setSubstepIndex(safeSubstepIndex + 1);
+      return;
+    }
+    flow.handleContinue();
+  };
+
+  const handleSubstepBack = () => {
+    if (safeSubstepIndex > 0) {
+      setSubstepIndex(safeSubstepIndex - 1);
+      return;
+    }
+    if (stepIndex > 0) {
+      const prev = substepsPerStep[stepIndex - 1] ?? [];
+      queuePendingSubstep(Math.max(prev.length - 1, 0));
+      flow.handleBack();
+    }
+  };
 
   // --- Success state ---
   if (flow.success) {
@@ -181,12 +294,12 @@ export default function ExpertApplicationFlow() {
             </div>
             <div className="hidden md:flex flex-col items-end gap-1.5 flex-shrink-0">
               <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground tabular-nums">
-                {progressPct}% complete
+                {newProgressPct}% complete
               </span>
               <div className="w-32 h-1 rounded-full bg-border/40 overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${progressPct}%` }}
+                  style={{ width: `${newProgressPct}%` }}
                 />
               </div>
             </div>
@@ -197,11 +310,37 @@ export default function ExpertApplicationFlow() {
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="grid lg:grid-cols-[268px_1fr] min-h-[640px]">
             {/* Left rail */}
-            <ApplyWizardRail
-              currentStep={stepIndex}
-              steps={flow.steps}
-              onStepClick={flow.handleStepClick}
-            />
+            <aside className="bg-background border-b lg:border-b-0 lg:border-r border-border py-7 lg:sticky lg:top-16 lg:self-start">
+              <div className="flex items-center gap-2.5 px-6 pb-6 border-b border-border mb-6">
+                <div
+                  className="w-7 h-7 rounded-lg grid place-items-center text-white font-black text-sm font-display"
+                  style={{ background: "linear-gradient(135deg, #ff7a1a, #ff4d00)" }}
+                >
+                  V
+                </div>
+                <div className="font-bold text-sm text-foreground tracking-tight">
+                  Expert application
+                </div>
+              </div>
+
+              <WizardRail
+                sectionLabel="Setup"
+                steps={flow.steps.map<WizardRailStep>((s, i) => ({ number: i + 1, label: s.label }))}
+                currentStep={stepIndex + 1}
+                incompleteSteps={incompleteTopSteps}
+                maxUnlockedStep={stepIndex + 1}
+                onStepClick={(num) => flow.handleStepClick(num - 1)}
+              />
+
+              <div className="mt-8 mx-6 rounded-lg border border-primary/15 bg-primary/[0.04] p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-[11.5px] text-muted-foreground leading-relaxed">
+                    Your draft saves automatically. Resume from any device with the same wallet.
+                  </p>
+                </div>
+              </div>
+            </aside>
 
             {/* Right pane */}
             <main className="px-6 sm:px-10 py-8 lg:py-10">
@@ -257,6 +396,12 @@ export default function ExpertApplicationFlow() {
                 </div>
               )}
 
+              <SubstepChipStrip
+                substeps={currentSubsteps}
+                activeIndex={safeSubstepIndex}
+                onJumpTo={setSubstepIndex}
+              />
+
               {/* Step content — preserves the existing section components */}
               <div className="transition-opacity duration-200">
                 {stepIndex === 0 && <PersonalInfoSection {...flow.personalInfoProps} />}
@@ -264,7 +409,10 @@ export default function ExpertApplicationFlow() {
                   <ProfessionalBackgroundSection {...flow.professionalBackgroundProps} />
                 )}
                 {stepIndex === 2 && (
-                  <ApplicationQuestionsSection {...flow.applicationQuestionsProps} />
+                  <ApplicationQuestionsSection
+                    {...flow.applicationQuestionsProps}
+                    substepIndex={safeSubstepIndex}
+                  />
                 )}
                 {stepIndex === 3 && (
                   <ReviewSubmitStep
@@ -286,13 +434,18 @@ export default function ExpertApplicationFlow() {
           </div>
 
           {/* Sticky footer */}
-          <ApplyWizardFooter
-            currentStep={stepIndex}
-            totalSteps={totalSteps}
+          <WizardFooter
+            stepLabel={
+              isFinalSubstep
+                ? `Step ${stepIndex + 1} of ${totalSteps} · ready to submit`
+                : `Step ${stepIndex + 1} of ${totalSteps} · substep ${safeSubstepIndex + 1} of ${currentSubsteps.length}`
+            }
+            progressPct={newProgressPct}
             isSubmitting={flow.isSubmitting}
-            isLastStep={flow.isLastStep}
-            onBack={flow.handleBack}
-            onContinue={flow.handleContinue}
+            isFinalSubstep={isFinalSubstep}
+            canGoBack={stepIndex > 0 || safeSubstepIndex > 0}
+            onBack={handleSubstepBack}
+            onContinue={handleSubstepContinue}
             onCancel={() => router.push("/expert/dashboard")}
           />
         </div>
@@ -301,185 +454,3 @@ export default function ExpertApplicationFlow() {
   );
 }
 
-/* ─── ApplyWizardRail ──────────────────────────────────────────── */
-
-interface ApplyWizardRailProps {
-  currentStep: number;
-  steps: { label: string }[];
-  onStepClick: (step: number) => void;
-}
-
-function ApplyWizardRail({ currentStep, steps, onStepClick }: ApplyWizardRailProps) {
-  return (
-    <aside className="bg-background border-b lg:border-b-0 lg:border-r border-border py-7 lg:sticky lg:top-16 lg:self-start">
-      <div className="flex items-center gap-2.5 px-6 pb-6 border-b border-border mb-6">
-        <div
-          className="w-7 h-7 rounded-lg grid place-items-center text-white font-black text-sm font-display"
-          style={{ background: "linear-gradient(135deg, #ff7a1a, #ff4d00)" }}
-        >
-          V
-        </div>
-        <div className="font-bold text-sm text-foreground tracking-tight">
-          Expert application
-        </div>
-      </div>
-      <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 px-6 mb-3 font-semibold">
-        Setup
-      </div>
-
-      <ol className="relative">
-        {steps.map((step, i) => {
-          const isActive = i === currentStep;
-          const isDone = i < currentStep;
-          const isPending = i > currentStep;
-          const isFirst = i === 0;
-          const isLast = i === steps.length - 1;
-
-          return (
-            <li key={step.label} className="relative">
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute left-[37px] w-px bg-border",
-                  isFirst ? "top-1/2" : "-top-2",
-                  isLast ? "bottom-1/2" : "-bottom-2",
-                )}
-              />
-              <button
-                type="button"
-                onClick={() => onStepClick(i)}
-                disabled={isPending}
-                className="grid grid-cols-[28px_1fr] gap-3.5 px-6 py-2.5 items-center w-full text-left hover:bg-muted/40 transition-colors disabled:cursor-default disabled:hover:bg-transparent"
-              >
-                <span
-                  className={cn(
-                    "relative z-[1] grid place-items-center w-7 h-7 rounded-full border text-[11px] font-bold tabular-nums",
-                    isDone && `${STATUS_COLORS.positive.bg} text-white border-transparent`,
-                    isActive &&
-                      "bg-primary text-primary-foreground border-primary ring-4 ring-primary/15",
-                    isPending && "bg-muted text-muted-foreground border-border",
-                  )}
-                >
-                  {isDone ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                </span>
-                <span className="flex flex-col gap-0.5 min-w-0">
-                  <span
-                    className={cn(
-                      "text-[13.5px] font-semibold tracking-tight truncate",
-                      isActive
-                        ? "text-primary"
-                        : isDone
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    {step.label}
-                  </span>
-                  <span className="text-[11.5px] text-muted-foreground/70 truncate">
-                    {STEP_DESCRIPTIONS[i]}
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="mt-8 mx-6 rounded-lg border border-primary/15 bg-primary/[0.04] p-3.5">
-        <div className="flex items-start gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-          <p className="text-[11.5px] text-muted-foreground leading-relaxed">
-            Your draft saves automatically. Resume from any device with the same wallet.
-          </p>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-/* ─── ApplyWizardFooter ────────────────────────────────────────── */
-
-interface ApplyWizardFooterProps {
-  currentStep: number;
-  totalSteps: number;
-  isSubmitting: boolean;
-  isLastStep: boolean;
-  onBack: () => void;
-  onContinue: () => void;
-  onCancel: () => void;
-}
-
-function ApplyWizardFooter({
-  currentStep,
-  totalSteps,
-  isSubmitting,
-  isLastStep,
-  onBack,
-  onContinue,
-  onCancel,
-}: ApplyWizardFooterProps) {
-  const pct = Math.round(((currentStep + 1) / totalSteps) * 100);
-
-  return (
-    <div className="border-t border-border bg-background px-6 sm:px-8 py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between sm:items-center sticky bottom-0">
-      <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-        <div className="w-32 h-1 bg-muted/60 rounded-sm overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-sm transition-[width] duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <span className="tabular-nums">
-          Step {currentStep + 1} of {totalSteps} · {pct}% complete
-        </span>
-      </div>
-
-      <div className="flex gap-2.5">
-        {currentStep > 0 ? (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onBack}
-            disabled={isSubmitting}
-            icon={<ArrowLeft className="w-3.5 h-3.5" />}
-          >
-            Back
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-        )}
-
-        <Button
-          type="button"
-          onClick={onContinue}
-          disabled={isSubmitting}
-          icon={
-            isSubmitting ? undefined : isLastStep ? (
-              <Send className="w-3.5 h-3.5" />
-            ) : (
-              <ArrowRight className="w-3.5 h-3.5" />
-            )
-          }
-        >
-          {isSubmitting ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Submitting…
-            </span>
-          ) : isLastStep ? (
-            "Submit application"
-          ) : (
-            "Continue"
-          )}
-        </Button>
-      </div>
-    </div>
-  );
-}
