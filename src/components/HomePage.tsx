@@ -78,8 +78,6 @@ export function HomePage() {
     <div className="min-h-screen animate-page-enter">
       {/* ── 1. Hero ────────────────────────────────────────────────── */}
       <HeroSection
-        guilds={guildList}
-        isLoadingGuilds={isLoadingGuilds}
         onJoinAsCandidate={handleJoinAsCandidate}
         onJoinAsExpert={handleExpertJoin}
         onPostJob={handlePostJob}
