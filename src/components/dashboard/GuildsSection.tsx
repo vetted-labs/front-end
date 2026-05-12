@@ -17,10 +17,16 @@ export function GuildsSection({
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
 
-  // Sort by earnings descending
-  const sorted = [...guilds].sort(
-    (a, b) => (b.totalEarnings ?? 0) - (a.totalEarnings ?? 0)
-  );
+  // Sort by staked amount descending (fall back to profile staked amount when
+  // the on-chain stakes map doesn't have a fresh entry yet — matches the
+  // resolution used by the workspace variant of the card).
+  const resolveStake = (g: ExpertGuild): number => {
+    const raw = guildStakes[g.id] ?? g.stakedAmount;
+    if (!raw) return 0;
+    const n = typeof raw === "string" ? parseFloat(raw) : raw;
+    return Number.isFinite(n) ? n : 0;
+  };
+  const sorted = [...guilds].sort((a, b) => resolveStake(b) - resolveStake(a));
 
   const top3 = sorted.slice(0, 3);
   const rest = sorted.slice(3);
