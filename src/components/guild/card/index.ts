@@ -3,4 +3,3 @@ export type { GuildCardProps } from "./GuildCard";
 export { GuildCardHeader } from "./GuildCardHeader";
 export { GuildMembersHero } from "./GuildMembersHero";
 export { GuildTickerStrip, type TickerCell } from "./GuildTickerStrip";
-export { GuildCardWatermark } from "./GuildCardWatermark";

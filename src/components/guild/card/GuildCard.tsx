@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { cn, formatVetd } from "@/lib/utils";
 import { getGuildThesis } from "@/config/guildThesis";
-import { GuildCardWatermark } from "./GuildCardWatermark";
 import { GuildCardHeader } from "./GuildCardHeader";
 import { GuildMembersHero } from "./GuildMembersHero";
 import { GuildTickerStrip, type TickerCell } from "./GuildTickerStrip";
@@ -159,7 +158,6 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — workspace`}>
         {pending > 0 && <PendingBanner count={pending} />}
-        <GuildCardWatermark index={props.catalogueIndex} />
         <div className={cn("relative z-10", pending > 0 ? "pt-9 px-5 pb-0" : "p-5 pb-0")}>
           <GuildCardHeader
             registrySlug={slug}
@@ -219,7 +217,6 @@ export function GuildCard(props: GuildCardProps) {
     const open = guild.openPositions ?? 0;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild`}>
-        <GuildCardWatermark index={props.catalogueIndex} />
         <div className="relative z-10 p-5 pb-0">
           <GuildCardHeader
             registrySlug={slug}
@@ -261,7 +258,6 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — widget`}>
         {pending > 0 && <PendingBanner count={pending} />}
-        <GuildCardWatermark index={props.catalogueIndex} size="sm" />
         <div className={cn("relative z-10", pending > 0 ? "pt-9 px-4 pb-0" : "p-4 pb-0")}>
           <GuildCardHeader
             registrySlug={slug}
@@ -315,7 +311,6 @@ export function GuildCard(props: GuildCardProps) {
       : null;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} — guild position`}>
-        <GuildCardWatermark index={props.catalogueIndex} size="sm" />
         <div className="relative z-10 p-4 pb-0">
           <GuildCardHeader
             registrySlug={slug}
@@ -372,7 +367,6 @@ export function GuildCard(props: GuildCardProps) {
     const thesis = getGuildThesis(name);
     return (
       <CardShell onClick={onClick} ariaLabel={`${name} guild — application ${statusLabel.toLowerCase()}`}>
-        <GuildCardWatermark index={props.catalogueIndex} size="sm" />
         <div className="relative z-10 p-5 pb-0">
           <GuildCardHeader
             registrySlug={slug}
