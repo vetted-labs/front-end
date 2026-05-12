@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
-import { getGuildIdentity } from "@/lib/guildIdentity";
+import { getGuildIconName } from "@/lib/guildHelpers";
 import { getAssetUrl } from "@/lib/api";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { getTimeAgo, formatSalaryRange, cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
 
 function FeaturedJobCard({ job, onClick }: { job: Job; onClick: () => void }) {
   const guildName = job.guild?.replace(/ Guild$/i, "") ?? "";
-  const guildDot = guildName ? getGuildIdentity(guildName).classes.dot : null;
+  const guildIconName = guildName ? getGuildIconName(guildName) : null;
   const company = job.companyName || "Company";
   const logoUrl = job.companyLogo
     ? getAssetUrl(job.companyLogo)
@@ -110,14 +110,14 @@ function FeaturedJobCard({ job, onClick }: { job: Job; onClick: () => void }) {
         }
       }}
       className={cn(
-        "relative overflow-hidden rounded-[10px] border border-border bg-card",
+        "relative flex flex-col overflow-hidden rounded-[10px] border border-border bg-card h-full",
         "transition-colors duration-200 cursor-pointer",
         "hover:border-border/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
       )}
     >
       <div aria-hidden className="absolute inset-0 ambient-grid" />
 
-      <div className="relative z-10 p-5 pb-0">
+      <div className="relative z-10 flex-1 p-5 pb-4">
         {/* Header — logo + company + guild dot */}
         <div className="flex items-center gap-3 mb-3">
           <div className="relative w-8 h-8 rounded-md overflow-hidden bg-muted/40 border border-border flex items-center justify-center shrink-0">
@@ -144,11 +144,16 @@ function FeaturedJobCard({ job, onClick }: { job: Job; onClick: () => void }) {
             </div>
           </div>
 
-          {guildDot && (
+          {guildIconName && (
             <span
-              className={cn("w-1.5 h-1.5 rounded-full shrink-0", guildDot)}
+              className="inline-flex items-center gap-1.5 shrink-0 text-muted-foreground"
               title={guildName}
-            />
+            >
+              <VettedIcon name={guildIconName} className="w-3.5 h-3.5" />
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.18em]">
+                {guildName}
+              </span>
+            </span>
           )}
         </div>
 
