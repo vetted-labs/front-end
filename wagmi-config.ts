@@ -41,6 +41,14 @@ const sepoliaRpcOptions = {
   timeout: 10_000,
 } as const;
 
+// `rank: true` makes viem actively rank these transports by stability + latency
+// rather than always firing at the configured Infura key first. When the paid
+// RPC's quota is exhausted (returns -32005 / 429), it gets demoted and a public
+// fallback handles subsequent requests in the same session — so we don't keep
+// burning credits / latency on a known-bad endpoint. interval=120s + sampleCount=3
+// keeps probe traffic to ~1 call per RPC every 2 minutes (~1.5 probes/min total).
+// Stability weighted higher than latency so a slightly slower-but-working RPC
+// beats a fast-but-erroring one.
 const sepoliaTransport = fallback(
   [
     ...(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL
@@ -49,7 +57,14 @@ const sepoliaTransport = fallback(
     http("https://ethereum-sepolia-rpc.publicnode.com", sepoliaRpcOptions),
     http("https://sepolia.drpc.org", sepoliaRpcOptions),
   ],
-  { rank: false },
+  {
+    rank: {
+      interval: 120_000,
+      sampleCount: 3,
+      timeout: 5_000,
+      weights: { latency: 0.3, stability: 0.7 },
+    },
+  },
 );
 
 const foundryTransport = http(
