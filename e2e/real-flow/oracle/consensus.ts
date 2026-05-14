@@ -1,10 +1,13 @@
 // e2e/real-flow/oracle/consensus.ts
 //
 // Adaptive Median Band (IQR) consensus — Technical Appendix §4 "Consensus
-// Determination" + §7 "Candidate Score". The oracle intentionally matches the
-// backend's VotingConsensusService.calculateIQR() so it is a valid comparison
-// reference during E2E volume runs. The Technical Appendix does not specify the
-// quartile method, so the backend implementation is the de-facto spec.
+// Determination" + §7 "Candidate Score". The Technical Appendix does not
+// specify the quartile method, but the CEO Consensus Scenarios document
+// (2026-05-14) is the authoritative spec for it: all 10 of its scenarios are
+// only reproducible with the inclusive-halves quartile method (the median
+// element is included in both halves when n is odd). This oracle therefore
+// uses inclusive-halves. The backend's VotingConsensusService.calculateIQR()
+// uses exclusive-halves and diverges from this spec — tracked as DIV-003.
 
 export type ScoreClassification = { score: number; aligned: boolean };
 
@@ -45,13 +48,15 @@ export function computeConsensus(scores: number[]): ConsensusResult {
   const sorted = [...scores].sort((a, b) => a - b);
   const n = sorted.length;
   const median = medianOf(sorted);
-  // Exclusive-halves quartile method: the median element is excluded from both
-  // halves when n is odd. Intentionally matches the backend reference
-  // implementation (voting-consensus.service.ts calculateIQR) so the oracle is
-  // a valid comparison reference — the Technical Appendix does not specify the
-  // quartile method, so the backend implementation is the de-facto spec.
-  const lowerHalf = sorted.slice(0, Math.floor(n / 2));
-  const upperHalf = sorted.slice(Math.ceil(n / 2));
+  // Inclusive-halves quartile method: the median element IS included in both
+  // halves when n is odd. This matches the CEO Consensus Scenarios document
+  // (the authoritative spec for the quartile method) — all 10 of its scenarios
+  // are only reproducible with this method. The backend's
+  // VotingConsensusService.calculateIQR() uses exclusive-halves
+  // (sorted.slice(0, Math.floor(n/2)) / sorted.slice(Math.ceil(n/2))) and
+  // therefore diverges from the spec — tracked as DIV-003.
+  const lowerHalf = sorted.slice(0, Math.ceil(n / 2));
+  const upperHalf = sorted.slice(Math.floor(n / 2));
   const q1 = lowerHalf.length ? medianOf(lowerHalf) : median;
   const q3 = upperHalf.length ? medianOf(upperHalf) : median;
   const iqr = q3 - q1;

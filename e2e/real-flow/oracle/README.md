@@ -4,7 +4,7 @@ Independent TypeScript re-implementation of the Vetted protocol math.
 
 **Ground truth:** `backend/docs/technical-whitepaper.md` (Technical Appendix). This oracle is anchored to the *appendix*, not to the codebase or on-chain contracts. Its purpose is to be the independent reference against which the actual platform output is diffed in E2E scenarios.
 
-> **Quartile method note:** `computeConsensus()` uses **exclusive-halves** quartiles (the median element is excluded from both halves when n is odd). This intentionally matches the backend's `VotingConsensusService.calculateIQR()` — `sorted.slice(0, Math.floor(n/2))` / `sorted.slice(Math.ceil(n/2))` — because the Technical Appendix does not specify the quartile method, making the backend implementation the de-facto spec. Using inclusive-halves would produce different IQR values for odd-count panels and cause false discrepancies in volume-harness comparisons.
+> **Quartile method note:** `computeConsensus()` uses **inclusive-halves** quartiles — the median element is included in both halves when n is odd (`sorted.slice(0, Math.ceil(n/2))` / `sorted.slice(Math.floor(n/2))`). This is the method demonstrated by the **CEO Consensus Scenarios document** (2026-05-14), which is the authoritative spec for the quartile method — all 10 of its scenarios are only reproducible with inclusive-halves. The backend's `VotingConsensusService.calculateIQR()` uses exclusive-halves and therefore diverges from the spec — tracked as **DIV-003** in `docs/testing/PROTOCOL_DIVERGENCES.md`. See `__tests__/ceo-consensus-scenarios.spec.ts` for the authoritative 10-scenario regression suite.
 
 ---
 
@@ -14,6 +14,7 @@ Independent TypeScript re-implementation of the Vetted protocol math.
 |---|---|---|
 | `computeConsensus(scores)` | `consensus.ts` | §4 "Consensus Determination", §7 "Candidate Score" |
 | `ScoreClassification`, `ConsensusResult` | `consensus.ts` | §4 |
+| 10-scenario CEO regression suite | `__tests__/ceo-consensus-scenarios.spec.ts` | CEO Consensus Scenarios doc (2026-05-14) — authoritative spec for the IQR quartile method |
 | `reviewSlash(input)` | `slashing.ts` | §4 "Slashing Mechanics", §3 "Reputation Point Schedule" |
 | `ReviewSlashInput`, `ReviewSlashResult` | `slashing.ts` | §4 |
 | `tierOf(reputation)` | `rewards.ts` | §3 "Tier Thresholds" |
@@ -67,6 +68,6 @@ npx playwright test e2e/real-flow/oracle/__tests__/consensus.spec.ts \
   --reporter=line
 ```
 
-Expected: 16 tests pass (4 consensus + 3 slashing + 5 rewards + 4 endorsement).
+Expected: 27 tests pass (5 consensus + 10 CEO consensus scenarios + 3 slashing + 5 rewards + 4 endorsement).
 
 The `reuseExistingServer: true` flag in the Playwright config means these tests won't block on a missing frontend server — they run against pure TypeScript functions.
