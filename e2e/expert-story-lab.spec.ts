@@ -353,286 +353,359 @@ test.describe("expert story lab", () => {
       if (message.type() === "error") diagnostics.push(`console: ${message.text()}`);
     });
 
-    await setupStoryLabMocks(page);
-    await seedExpertBrowserSession(page);
+    // Chapter 1: setup — mocks, session, story entry
+    await test.step("mocks and expert session are seeded, story lab opens on the dashboard overview", async () => {
+      await setupStoryLabMocks(page);
+      await seedExpertBrowserSession(page);
 
-    await page.goto("/story-lab/expert", { waitUntil: "domcontentloaded" });
-    await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
-    await expectFocusInsideStoryDriver(page);
-    const appRoot = page.getByTestId("app-shell-root");
-    await expect(appRoot).toHaveAttribute("aria-hidden", "true");
-    await expect.poll(() => appRoot.evaluate((node) => (node as HTMLElement).inert)).toBe(true);
-
-    // Walk per-step sub-stops first (no-op when a step has only one sub-stop).
-    await walkRemainingSubStopsWithinStep(page, "overview", "Go to guilds");
-
-    // Cross-step transition contract: clicking the step's action button must
-    // navigate from storyStep=overview to storyStep=guilds (router.push), and
-    // the URL must NOT retain the previous storyStep value. This locks in the
-    // step→step routing so a regression to e.g. additive params is caught.
-    await page.getByRole("button", { name: "Go to guilds" }).click();
-    await expect(page).toHaveURL(/\/expert\/guilds\?storyLab=expert&storyStep=guilds/, {
-      timeout: 20_000,
+      await page.goto("/story-lab/expert", { waitUntil: "domcontentloaded" });
+      await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
+      await expectFocusInsideStoryDriver(page);
+      const appRoot = page.getByTestId("app-shell-root");
+      await expect(appRoot).toHaveAttribute("aria-hidden", "true");
+      await expect.poll(() => appRoot.evaluate((node) => (node as HTMLElement).inert)).toBe(true);
     });
-    await expect(page).not.toHaveURL(/storyStep=overview/);
-    await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
-    await page.mouse.click(95, 180);
-    await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
-    await page.getByRole("button", { name: "Back" }).focus();
-    await page.keyboard.press("Enter");
-    await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
-    await page.getByRole("button", { name: "Go to guilds" }).click();
-    await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
-    await walkRemainingSubStopsWithinStep(page, "guilds", "Open a guild");
 
-    // The "Open a guild" action navigates via dynamic route resolution. The
-    // primary button is rendered as a <button>; the test only asserts the
-    // resulting URL after click rather than reading an href off the button.
-    await page.getByRole("button", { name: "Open a guild" }).click();
-    await expectStoryStep(page, "Inspect guild standards before reviewing", /\/expert\/guild\/story-lab-engineering-guild\?storyLab=expert&storyStep=guild-detail/, diagnostics, TOUR_TARGETS.guildStandards);
-    await walkRemainingSubStopsWithinStep(page, "guild-detail", "Go to applications");
+    // Chapter 2: overview → guilds, including Back navigation and click-outside safety
+    await test.step("expert advances from the dashboard overview to the guilds directory", async () => {
+      // Walk per-step sub-stops first (no-op when a step has only one sub-stop).
+      await walkRemainingSubStopsWithinStep(page, "overview", "Go to guilds");
 
-    await page.getByRole("button", { name: "Go to applications" }).click();
-    await expectStoryStep(page, "The review queue is the workbench", /\/expert\/voting\?storyLab=expert&storyStep=applications/, diagnostics, TOUR_TARGETS.applicationsOverview);
-    await expect(page.getByText("Maya Chen")).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "applications", "Show story application");
+      // Cross-step transition contract: clicking the step's action button must
+      // navigate from storyStep=overview to storyStep=guilds (router.push), and
+      // the URL must NOT retain the previous storyStep value. This locks in the
+      // step→step routing so a regression to e.g. additive params is caught.
+      await page.getByRole("button", { name: "Go to guilds" }).click();
+      await expect(page).toHaveURL(/\/expert\/guilds\?storyLab=expert&storyStep=guilds/, {
+        timeout: 20_000,
+      });
+      await expect(page).not.toHaveURL(/storyStep=overview/);
+      await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
+    });
 
-    await page.getByRole("button", { name: "Show story application" }).click();
-    await expectStoryStep(page, "Maya Chen is the story application", /\/expert\/voting\?storyLab=expert&storyStep=application-card/, diagnostics, TOUR_TARGETS.applicationReviewCard);
-    await walkRemainingSubStopsWithinStep(page, "application-card", "Open review walkthrough");
+    await test.step("clicking outside the driver popover keeps the current story step", async () => {
+      await page.mouse.click(95, 180);
+      await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
+    });
 
-    await page.getByRole("button", { name: "Open review walkthrough" }).click();
-    await expectStoryStep(page, "Start review by reading evidence", /\/expert\/voting\?storyLab=expert&storyStep=review-evidence/, diagnostics, TOUR_TARGETS.practiceReviewProfile);
-    await expect(page.getByText("Practice sample / synthetic applicant")).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "review-evidence", "Show scoring rubric");
+    await test.step("pressing Back returns to the dashboard overview step", async () => {
+      await page.getByRole("button", { name: "Back" }).focus();
+      await page.keyboard.press("Enter");
+      await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
+    });
 
-    await page.getByRole("button", { name: "Show scoring rubric" }).click();
-    await expectStoryStep(page, "Score evidence against the rubric", /\/expert\/voting\?storyLab=expert&storyStep=review-scoring/, diagnostics, TOUR_TARGETS.practiceReviewGeneralRubric);
-    await walkRemainingSubStopsWithinStep(page, "review-scoring", "Show red flags");
+    await test.step("expert advances again to the guilds directory after going back", async () => {
+      await page.getByRole("button", { name: "Go to guilds" }).click();
+      await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
+      await walkRemainingSubStopsWithinStep(page, "guilds", "Open a guild");
+    });
 
-    await page.getByRole("button", { name: "Show red flags" }).click();
-    await expectStoryStep(page, "Record domain signal and red flags", /\/expert\/voting\?storyLab=expert&storyStep=review-red-flags/, diagnostics, TOUR_TARGETS.practiceReviewDomainRubric);
-    await walkRemainingSubStopsWithinStep(page, "review-red-flags", "Show commit behavior");
+    // Chapter 3: guild detail
+    await test.step("expert opens a specific guild to inspect its standards", async () => {
+      // The "Open a guild" action navigates via dynamic route resolution. The
+      // primary button is rendered as a <button>; the test only asserts the
+      // resulting URL after click rather than reading an href off the button.
+      await page.getByRole("button", { name: "Open a guild" }).click();
+      await expectStoryStep(page, "Inspect guild standards before reviewing", /\/expert\/guild\/story-lab-engineering-guild\?storyLab=expert&storyStep=guild-detail/, diagnostics, TOUR_TARGETS.guildStandards);
+      await walkRemainingSubStopsWithinStep(page, "guild-detail", "Go to applications");
+    });
 
-    await page.getByRole("button", { name: "Show commit behavior" }).click();
-    await expectStoryStep(page, "Commit/reveal protects independent judgment", /\/expert\/voting\?storyLab=expert&storyStep=review-commit/, diagnostics, TOUR_TARGETS.practiceReviewCommitReveal);
-    await walkRemainingSubStopsWithinStep(page, "review-commit", "Show simulated result");
+    // Chapter 4: applications queue
+    await test.step("expert opens the review queue and sees the story application card for Maya Chen", async () => {
+      await page.getByRole("button", { name: "Go to applications" }).click();
+      await expectStoryStep(page, "The review queue is the workbench", /\/expert\/voting\?storyLab=expert&storyStep=applications/, diagnostics, TOUR_TARGETS.applicationsOverview);
+      await expect(page.getByText("Maya Chen")).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "applications", "Show story application");
+    });
 
-    await page.getByRole("button", { name: "Show simulated result" }).click();
-    await expectStoryStep(page, "The practice judgment resolves safely", /\/expert\/voting\?storyLab=expert&storyStep=review-result/, diagnostics, TOUR_TARGETS.practiceReviewResult);
-    await walkRemainingSubStopsWithinStep(page, "review-result", "Show result notification");
+    // Chapter 5: application card spotlight
+    await test.step("the story spotlights Maya Chen's application card in the queue", async () => {
+      await page.getByRole("button", { name: "Show story application" }).click();
+      await expectStoryStep(page, "Maya Chen is the story application", /\/expert\/voting\?storyLab=expert&storyStep=application-card/, diagnostics, TOUR_TARGETS.applicationReviewCard);
+      await walkRemainingSubStopsWithinStep(page, "application-card", "Open review walkthrough");
+    });
 
-    await page.getByRole("button", { name: "Show result notification" }).click();
-    await expectStoryStep(page, "Consensus result arrives", /\/expert\/notifications\?storyLab=expert&storyStep=notification/, diagnostics, TOUR_TARGETS.notificationResultCard);
-    await expect(page.getByText("Maya Chen review reached consensus")).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "notification", "Open earnings");
+    // Chapter 6: review evidence
+    await test.step("expert enters the review walkthrough and reads the candidate evidence", async () => {
+      await page.getByRole("button", { name: "Open review walkthrough" }).click();
+      await expectStoryStep(page, "Start review by reading evidence", /\/expert\/voting\?storyLab=expert&storyStep=review-evidence/, diagnostics, TOUR_TARGETS.practiceReviewProfile);
+      await expect(page.getByText("Practice sample / synthetic applicant")).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "review-evidence", "Show scoring rubric");
+    });
 
-    await page.getByRole("button", { name: "Open earnings" }).click();
-    await expectStoryStep(page, "Reward is posted in Earnings", /\/expert\/earnings\?storyLab=expert&storyStep=earnings/, diagnostics, TOUR_TARGETS.earningsRewardRow);
-    await expect(page.getByText(/Voting Reward: Maya Chen/)).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "earnings", "Open reputation");
+    // Chapter 7: scoring rubric
+    await test.step("expert views the scoring rubric to guide their judgment", async () => {
+      await page.getByRole("button", { name: "Show scoring rubric" }).click();
+      await expectStoryStep(page, "Score evidence against the rubric", /\/expert\/voting\?storyLab=expert&storyStep=review-scoring/, diagnostics, TOUR_TARGETS.practiceReviewGeneralRubric);
+      await walkRemainingSubStopsWithinStep(page, "review-scoring", "Show red flags");
+    });
 
-    await page.getByRole("button", { name: "Open reputation" }).click();
-    await expectStoryStep(page, "Reputation changes explain judgment quality", /\/expert\/reputation\?storyLab=expert&storyStep=reputation/, diagnostics, TOUR_TARGETS.reputationDeltaRow);
-    await expect(page.getByText(/Aligned review on Maya Chen/)).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "reputation", "Open endorsements");
+    // Chapter 8: red flags
+    await test.step("expert records domain signal and red flags", async () => {
+      await page.getByRole("button", { name: "Show red flags" }).click();
+      await expectStoryStep(page, "Record domain signal and red flags", /\/expert\/voting\?storyLab=expert&storyStep=review-red-flags/, diagnostics, TOUR_TARGETS.practiceReviewDomainRubric);
+      await walkRemainingSubStopsWithinStep(page, "review-red-flags", "Show commit behavior");
+    });
 
-    await page.getByRole("button", { name: "Open endorsements" }).click();
-    await expectStoryStep(page, "Endorsement is a different kind of backing", /\/expert\/endorsements\?storyLab=expert&storyStep=endorsement/, diagnostics, TOUR_TARGETS.endorsementCandidateCard);
-    await expect(page.getByText("Riley Park")).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "endorsement", "Open governance");
+    // Chapter 9: commit / reveal
+    await test.step("the story explains commit/reveal to protect independent judgment", async () => {
+      await page.getByRole("button", { name: "Show commit behavior" }).click();
+      await expectStoryStep(page, "Commit/reveal protects independent judgment", /\/expert\/voting\?storyLab=expert&storyStep=review-commit/, diagnostics, TOUR_TARGETS.practiceReviewCommitReveal);
+      await walkRemainingSubStopsWithinStep(page, "review-commit", "Show simulated result");
+    });
 
-    await page.getByRole("button", { name: "Open governance" }).click();
-    await expectStoryStep(page, "Guild decisions live in Governance", /\/expert\/governance\?storyLab=expert&storyStep=governance/, diagnostics, TOUR_TARGETS.governanceProposalCard);
-    await expect(page.getByText(/Raise Engineering review quorum/).first()).toBeVisible();
-    await walkRemainingSubStopsWithinStep(page, "governance", "Finish story");
+    // Chapter 10: practice result
+    await test.step("the simulated review judgment resolves safely in the practice run", async () => {
+      await page.getByRole("button", { name: "Show simulated result" }).click();
+      await expectStoryStep(page, "The practice judgment resolves safely", /\/expert\/voting\?storyLab=expert&storyStep=review-result/, diagnostics, TOUR_TARGETS.practiceReviewResult);
+      await walkRemainingSubStopsWithinStep(page, "review-result", "Show result notification");
+    });
 
-    await page.getByRole("button", { name: "Finish story" }).click();
-    await expectStoryStep(page, "The full expert story now makes sense", /\/expert\/dashboard\?storyLab=expert&storyStep=complete/, diagnostics, TOUR_TARGETS.dashboardOverview);
-    await walkRemainingSubStopsWithinStep(page, "complete", "Finish");
+    // Chapter 11: notification
+    await test.step("the consensus result notification for Maya Chen's review arrives", async () => {
+      await page.getByRole("button", { name: "Show result notification" }).click();
+      await expectStoryStep(page, "Consensus result arrives", /\/expert\/notifications\?storyLab=expert&storyStep=notification/, diagnostics, TOUR_TARGETS.notificationResultCard);
+      await expect(page.getByText("Maya Chen review reached consensus")).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "notification", "Open earnings");
+    });
 
-    await page.getByRole("button", { name: "Finish" }).click();
-    await expect(page).toHaveURL(/\/expert\/dashboard$/);
-    // After Finish the URL must contain none of the story params — proves the
-    // Finish path scrubs storyLab, storyStep, and storySub on completion.
-    const finalUrl = new URL(page.url());
-    expect(finalUrl.searchParams.get("storyLab")).toBeNull();
-    expect(finalUrl.searchParams.get("storyStep")).toBeNull();
-    expect(finalUrl.searchParams.get("storySub")).toBeNull();
-    await expect(page.getByTestId("expert-story-lab-driver")).toHaveCount(0);
-    await expect(page.getByRole("dialog", { name: "Expert story mode" })).toHaveCount(0);
-    const actionableDiagnostics = diagnostics.filter(
-      (entry) =>
-        !entry.includes("Hydration failed") &&
-        !entry.includes("tree hydrated but some attributes") &&
-        !entry.includes("hydration-mismatch") &&
-        !entry.includes("blocked by CORS policy") &&
-        !entry.includes("Error checking Cross-Origin-Opener-Policy") &&
-        !entry.includes("Analytics SDK: TypeError: Failed to fetch") &&
-        !entry.includes("Failed to load resource: net::ERR_FAILED"),
-    );
-    expect(actionableDiagnostics).toEqual([]);
-    expect(mutationRequests).toEqual([]);
+    // Chapter 12: earnings
+    await test.step("the voting reward for Maya Chen's review appears in Earnings", async () => {
+      await page.getByRole("button", { name: "Open earnings" }).click();
+      await expectStoryStep(page, "Reward is posted in Earnings", /\/expert\/earnings\?storyLab=expert&storyStep=earnings/, diagnostics, TOUR_TARGETS.earningsRewardRow);
+      await expect(page.getByText(/Voting Reward: Maya Chen/)).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "earnings", "Open reputation");
+    });
+
+    // Chapter 13: reputation
+    await test.step("the aligned review on Maya Chen is reflected in the Reputation timeline", async () => {
+      await page.getByRole("button", { name: "Open reputation" }).click();
+      await expectStoryStep(page, "Reputation changes explain judgment quality", /\/expert\/reputation\?storyLab=expert&storyStep=reputation/, diagnostics, TOUR_TARGETS.reputationDeltaRow);
+      await expect(page.getByText(/Aligned review on Maya Chen/)).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "reputation", "Open endorsements");
+    });
+
+    // Chapter 14: endorsements
+    await test.step("the story explains endorsements using Riley Park's candidate card", async () => {
+      await page.getByRole("button", { name: "Open endorsements" }).click();
+      await expectStoryStep(page, "Endorsement is a different kind of backing", /\/expert\/endorsements\?storyLab=expert&storyStep=endorsement/, diagnostics, TOUR_TARGETS.endorsementCandidateCard);
+      await expect(page.getByText("Riley Park")).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "endorsement", "Open governance");
+    });
+
+    // Chapter 15: governance
+    await test.step("guild governance decisions are surfaced via a proposal card", async () => {
+      await page.getByRole("button", { name: "Open governance" }).click();
+      await expectStoryStep(page, "Guild decisions live in Governance", /\/expert\/governance\?storyLab=expert&storyStep=governance/, diagnostics, TOUR_TARGETS.governanceProposalCard);
+      await expect(page.getByText(/Raise Engineering review quorum/).first()).toBeVisible();
+      await walkRemainingSubStopsWithinStep(page, "governance", "Finish story");
+    });
+
+    // Chapter 16: completion and cleanup
+    await test.step("the story completes and the Finish button scrubs all story params from the URL", async () => {
+      await page.getByRole("button", { name: "Finish story" }).click();
+      await expectStoryStep(page, "The full expert story now makes sense", /\/expert\/dashboard\?storyLab=expert&storyStep=complete/, diagnostics, TOUR_TARGETS.dashboardOverview);
+      await walkRemainingSubStopsWithinStep(page, "complete", "Finish");
+
+      await page.getByRole("button", { name: "Finish" }).click();
+      await expect(page).toHaveURL(/\/expert\/dashboard$/);
+      // After Finish the URL must contain none of the story params — proves the
+      // Finish path scrubs storyLab, storyStep, and storySub on completion.
+      const finalUrl = new URL(page.url());
+      expect(finalUrl.searchParams.get("storyLab")).toBeNull();
+      expect(finalUrl.searchParams.get("storyStep")).toBeNull();
+      expect(finalUrl.searchParams.get("storySub")).toBeNull();
+      await expect(page.getByTestId("expert-story-lab-driver")).toHaveCount(0);
+      await expect(page.getByRole("dialog", { name: "Expert story mode" })).toHaveCount(0);
+    });
+
+    await test.step("no actionable errors or unexpected mutations occurred during the story", async () => {
+      const actionableDiagnostics = diagnostics.filter(
+        (entry) =>
+          !entry.includes("Hydration failed") &&
+          !entry.includes("tree hydrated but some attributes") &&
+          !entry.includes("hydration-mismatch") &&
+          !entry.includes("blocked by CORS policy") &&
+          !entry.includes("Error checking Cross-Origin-Opener-Policy") &&
+          !entry.includes("Analytics SDK: TypeError: Failed to fetch") &&
+          !entry.includes("Failed to load resource: net::ERR_FAILED"),
+      );
+      expect(actionableDiagnostics).toEqual([]);
+      expect(mutationRequests).toEqual([]);
+    });
   });
 
   test("does not complete onboarding from a direct completion deep link", async ({
     page,
   }) => {
-    await setupStoryLabMocks(page);
-    await seedExpertBrowserSession(page);
-
-    await page.goto("/expert/dashboard?storyLabComplete=expert", {
-      waitUntil: "domcontentloaded",
+    await test.step("mocks and expert session are seeded", async () => {
+      await setupStoryLabMocks(page);
+      await seedExpertBrowserSession(page);
     });
 
-    await expect(page).toHaveURL(/\/expert\/dashboard\?storyLab=expert&storyStep=overview/);
-    await expect(page.getByTestId("expert-story-lab-driver")).toBeVisible();
-
-    const onboardingState = await page.evaluate(() => {
-      const rawValue = localStorage.getItem(
-        "vetted:expert-onboarding-tour:v1:mock-expert-id-001"
-      );
-      return rawValue ? JSON.parse(rawValue) : null;
+    await test.step("expert navigates directly to the storyLabComplete deep link", async () => {
+      await page.goto("/expert/dashboard?storyLabComplete=expert", {
+        waitUntil: "domcontentloaded",
+      });
     });
-    expect(onboardingState?.completed).not.toBe(true);
-    expect(onboardingState?.events?.practiceReviewCompleted).not.toBe(true);
+
+    await test.step("the app redirects to the story overview instead of accepting the completion shortcut", async () => {
+      await expect(page).toHaveURL(/\/expert\/dashboard\?storyLab=expert&storyStep=overview/);
+      await expect(page.getByTestId("expert-story-lab-driver")).toBeVisible();
+    });
+
+    await test.step("onboarding state in localStorage is not marked completed", async () => {
+      const onboardingState = await page.evaluate(() => {
+        const rawValue = localStorage.getItem(
+          "vetted:expert-onboarding-tour:v1:mock-expert-id-001"
+        );
+        return rawValue ? JSON.parse(rawValue) : null;
+      });
+      expect(onboardingState?.completed).not.toBe(true);
+      expect(onboardingState?.events?.practiceReviewCompleted).not.toBe(true);
+    });
   });
 
   test("starts the route story for first-run experts from the dashboard", async ({ page }) => {
-    await setupStoryLabMocks(page);
-    await seedExpertBrowserSession(page);
+    await test.step("mocks and expert session are seeded", async () => {
+      await setupStoryLabMocks(page);
+      await seedExpertBrowserSession(page);
+    });
 
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+    await test.step("first-run expert opens the dashboard", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+    });
 
-    await expect(page).toHaveURL(/\/expert\/dashboard\?storyLab=expert&storyStep=overview/);
-    await expectStoryStep(
-      page,
-      "Start with the expert loop",
-      /\/expert\/dashboard\?storyLab=expert&storyStep=overview/,
-      [],
-      TOUR_TARGETS.dashboardOverview
-    );
+    await test.step("the story lab launches automatically and lands on the overview step", async () => {
+      await expect(page).toHaveURL(/\/expert\/dashboard\?storyLab=expert&storyStep=overview/);
+      await expectStoryStep(
+        page,
+        "Start with the expert loop",
+        /\/expert\/dashboard\?storyLab=expert&storyStep=overview/,
+        [],
+        TOUR_TARGETS.dashboardOverview
+      );
+    });
   });
 
   test("dashboard surfaces the canonical 100 VETD stake during story mode", async ({ page }) => {
-    await setupStoryLabMocks(page);
-    // Override the real-API staking mock with an empty list so this assertion
-    // actually proves withStoryLabGuildStakes ran. If the injector regresses,
-    // the dashboard sees no stake and the test fails.
-    await page.route("**/api/blockchain/staking/guilds/**", (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: [] }),
+    await test.step("mocks are set up with story-lab guild stake injector overriding the empty staking API", async () => {
+      await setupStoryLabMocks(page);
+      // Override the real-API staking mock with an empty list so this assertion
+      // actually proves withStoryLabGuildStakes ran. If the injector regresses,
+      // the dashboard sees no stake and the test fails.
+      await page.route("**/api/blockchain/staking/guilds/**", (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: [] }),
+        });
       });
+      await seedExpertBrowserSession(page);
     });
-    await seedExpertBrowserSession(page);
-    await page.goto("/story-lab/expert");
-    await expect(page.getByText(/100 VETD/)).toBeVisible({ timeout: 15000 });
+
+    await test.step("expert enters story mode and the dashboard shows the canonical 100 VETD stake", async () => {
+      await page.goto("/story-lab/expert");
+      await expect(page.getByText(/100 VETD/)).toBeVisible({ timeout: 15000 });
+    });
   });
 
   test("Finish scrubs all story params and persists completion", async ({ page }) => {
     let putBody: unknown = null;
-    await setupStoryLabMocks(page);
-    await seedExpertBrowserSession(page);
 
-    // Capture the PUT to /api/experts/me/onboarding-state.
-    await page.route("**/api/experts/me/onboarding-state", async (route) => {
-      if (route.request().method() === "PUT") {
-        putBody = route.request().postDataJSON();
-      }
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: putBody ?? null }),
+    await test.step("mocks are set up and the onboarding-state PUT endpoint is intercepted", async () => {
+      await setupStoryLabMocks(page);
+      await seedExpertBrowserSession(page);
+
+      // Capture the PUT to /api/experts/me/onboarding-state.
+      await page.route("**/api/experts/me/onboarding-state", async (route) => {
+        if (route.request().method() === "PUT") {
+          putBody = route.request().postDataJSON();
+        }
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: putBody ?? null }),
+        });
       });
     });
 
-    // Walk to the last step directly via URL state, then click Finish.
-    await page.goto("/expert/dashboard?storyLab=expert&storyStep=complete");
-    await page.getByRole("button", { name: "Finish" }).click();
+    await test.step("expert jumps to the final step via direct URL and clicks Finish", async () => {
+      // Walk to the last step directly via URL state, then click Finish.
+      await page.goto("/expert/dashboard?storyLab=expert&storyStep=complete");
+      await page.getByRole("button", { name: "Finish" }).click();
+    });
 
-    await expect(page).toHaveURL(/\/expert\/dashboard$/);
-    expect(new URL(page.url()).searchParams.toString()).toBe("");
-    await expect.poll(() => putBody).toMatchObject({ completed: true });
+    await test.step("the URL is clean and the completion state is persisted to the API", async () => {
+      await expect(page).toHaveURL(/\/expert\/dashboard$/);
+      expect(new URL(page.url()).searchParams.toString()).toBe("");
+      await expect.poll(() => putBody).toMatchObject({ completed: true });
+    });
   });
 
   test("non-story expert routes do not render any story-lab DOM", async ({ page }) => {
-    // Mock minimal dashboard endpoints so the page actually renders.
-    await page.route("**/api/experts/**", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: {} }),
-      }),
-    );
-    await page.route("**/api/blockchain/**", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: [] }),
-      }),
-    );
-
     // Capture any uncaught exceptions — if the StoryLabLeakDetector throws,
     // the page errors propagate here.
     const pageErrors: string[] = [];
     page.on("pageerror", (err) => pageErrors.push(err.message));
 
-    await seedExpertBrowserSession(page);
-
-    // Mark onboarding completed locally so the layout doesn't auto-redirect
-    // into story mode. Key shape: vetted:expert-onboarding-tour:v1:<expertId>.
-    await page.addInitScript((expertId) => {
-      const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          dismissed: false,
-          completed: true,
-          checklistDismissed: false,
-          events: {},
+    await test.step("minimal API mocks and a completed-onboarding expert session are set up", async () => {
+      // Mock minimal dashboard endpoints so the page actually renders.
+      await page.route("**/api/experts/**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: {} }),
         }),
       );
-    }, MOCK_EXPERT.expertId);
+      await page.route("**/api/blockchain/**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: [] }),
+        }),
+      );
 
-    await page.goto("/expert/dashboard");
+      await seedExpertBrowserSession(page);
 
-    // Wait briefly for the dashboard tree to mount.
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(500);
+      // Mark onboarding completed locally so the layout doesn't auto-redirect
+      // into story mode. Key shape: vetted:expert-onboarding-tour:v1:<expertId>.
+      await page.addInitScript((expertId) => {
+        const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            dismissed: false,
+            completed: true,
+            checklistDismissed: false,
+            events: {},
+          }),
+        );
+      }, MOCK_EXPERT.expertId);
+    });
 
-    // No story-prefixed DOM should be present.
-    const leaks = page.locator("[id^='story-lab-'], [data-story-lab-guild-id], [data-story-lab-review-url]");
-    await expect(leaks).toHaveCount(0);
+    await test.step("expert opens the dashboard outside of story mode", async () => {
+      await page.goto("/expert/dashboard");
 
-    // The leak detector must not have thrown.
-    const storyLabErrors = pageErrors.filter((m) => m.includes("StoryLab leak"));
-    expect(storyLabErrors).toEqual([]);
+      // Wait briefly for the dashboard tree to mount.
+      await page.waitForLoadState("domcontentloaded");
+      await page.waitForTimeout(500);
+    });
+
+    await test.step("no story-lab DOM nodes are present and the leak detector has not thrown", async () => {
+      // No story-prefixed DOM should be present.
+      const leaks = page.locator("[id^='story-lab-'], [data-story-lab-guild-id], [data-story-lab-review-url]");
+      await expect(leaks).toHaveCount(0);
+
+      // The leak detector must not have thrown.
+      const storyLabErrors = pageErrors.filter((m) => m.includes("StoryLab leak"));
+      expect(storyLabErrors).toEqual([]);
+    });
   });
 
   test("leak detector throws when story-lab DOM appears outside story mode", async ({
     page,
   }) => {
-    // This proves the detector itself works. We synthetically inject a node
-    // with `data-story-lab-guild-id` while the URL has neither `storyLab=expert`
-    // nor `storyLabComplete=expert`. The MutationObserver inside
-    // StoryLabLeakDetector must throw a "StoryLab leak detected" error.
-    await page.route("**/api/experts/**", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: {} }),
-      }),
-    );
-    await page.route("**/api/blockchain/**", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: [] }),
-      }),
-    );
-
     const pageErrors: string[] = [];
     const consoleErrors: string[] = [];
     page.on("pageerror", (err) => pageErrors.push(err.message));
@@ -640,96 +713,131 @@ test.describe("expert story lab", () => {
       if (msg.type() === "error") consoleErrors.push(msg.text());
     });
 
-    await seedExpertBrowserSession(page);
-
-    // Suppress the auto-redirect into story mode so the URL stays clean.
-    await page.addInitScript((expertId) => {
-      const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          dismissed: false,
-          completed: true,
-          checklistDismissed: false,
-          events: {},
+    await test.step("minimal API mocks and a completed-onboarding expert session are set up", async () => {
+      // This proves the detector itself works. We synthetically inject a node
+      // with `data-story-lab-guild-id` while the URL has neither `storyLab=expert`
+      // nor `storyLabComplete=expert`. The MutationObserver inside
+      // StoryLabLeakDetector must throw a "StoryLab leak detected" error.
+      await page.route("**/api/experts/**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: {} }),
         }),
       );
-    }, MOCK_EXPERT.expertId);
+      await page.route("**/api/blockchain/**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, data: [] }),
+        }),
+      );
 
-    await page.goto("/expert/dashboard");
-    await page.waitForLoadState("domcontentloaded");
+      await seedExpertBrowserSession(page);
 
-    // Confirm the URL is clean before injecting (otherwise the detector early-returns).
-    const url = new URL(page.url());
-    expect(url.searchParams.get("storyLab")).toBeNull();
-    expect(url.searchParams.get("storyLabComplete")).toBeNull();
-
-    // Wait briefly for the layout's StoryLabLeakDetector effect to mount and
-    // start observing the DOM. If we inject before mount, the initial sweep
-    // would catch it but only via querySelector (still fine), but observing a
-    // mounted MutationObserver is the more interesting code path.
-    await page.waitForTimeout(500);
-
-    // Inject a leak. This must trigger the detector.
-    await page.evaluate(() => {
-      const el = document.createElement("div");
-      el.setAttribute("data-story-lab-guild-id", "synthetic-leak");
-      el.textContent = "synthetic story-lab leak";
-      document.body.appendChild(el);
+      // Suppress the auto-redirect into story mode so the URL stays clean.
+      await page.addInitScript((expertId) => {
+        const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            dismissed: false,
+            completed: true,
+            checklistDismissed: false,
+            events: {},
+          }),
+        );
+      }, MOCK_EXPERT.expertId);
     });
 
-    // The detector calls console.error AND throws. We assert on both because:
-    // - console.error is the dev-mode signal users see in their terminal
-    // - throw is what fails Playwright/CI when story DOM truly leaks
-    await expect
-      .poll(() => consoleErrors.find((m) => m.includes("StoryLab leak detected")), {
-        timeout: 2000,
-      })
-      .toBeTruthy();
+    await test.step("expert opens the dashboard and the URL is confirmed to be clean", async () => {
+      await page.goto("/expert/dashboard");
+      await page.waitForLoadState("domcontentloaded");
 
-    await expect
-      .poll(() => pageErrors.find((m) => m.includes("StoryLab leak detected")), {
-        timeout: 2000,
-      })
-      .toBeTruthy();
+      // Confirm the URL is clean before injecting (otherwise the detector early-returns).
+      const url = new URL(page.url());
+      expect(url.searchParams.get("storyLab")).toBeNull();
+      expect(url.searchParams.get("storyLabComplete")).toBeNull();
+    });
+
+    await test.step("a synthetic story-lab DOM node is injected outside story mode", async () => {
+      // Wait briefly for the layout's StoryLabLeakDetector effect to mount and
+      // start observing the DOM. If we inject before mount, the initial sweep
+      // would catch it but only via querySelector (still fine), but observing a
+      // mounted MutationObserver is the more interesting code path.
+      await page.waitForTimeout(500);
+
+      // Inject a leak. This must trigger the detector.
+      await page.evaluate(() => {
+        const el = document.createElement("div");
+        el.setAttribute("data-story-lab-guild-id", "synthetic-leak");
+        el.textContent = "synthetic story-lab leak";
+        document.body.appendChild(el);
+      });
+    });
+
+    await test.step("the leak detector fires both a console error and an uncaught exception", async () => {
+      // The detector calls console.error AND throws. We assert on both because:
+      // - console.error is the dev-mode signal users see in their terminal
+      // - throw is what fails Playwright/CI when story DOM truly leaks
+      await expect
+        .poll(() => consoleErrors.find((m) => m.includes("StoryLab leak detected")), {
+          timeout: 2000,
+        })
+        .toBeTruthy();
+
+      await expect
+        .poll(() => pageErrors.find((m) => m.includes("StoryLab leak detected")), {
+          timeout: 2000,
+        })
+        .toBeTruthy();
+    });
   });
 
   test("provides a deterministic story guild when the real expert has no guilds", async ({
     page,
   }) => {
-    await setupStoryLabMocks(page, {
-      expertProfile: { ...MOCK_EXPERT_PROFILE, guilds: [] },
+    await test.step("mocks are set up for an expert with no guild memberships", async () => {
+      await setupStoryLabMocks(page, {
+        expertProfile: { ...MOCK_EXPERT_PROFILE, guilds: [] },
+      });
+      await seedExpertBrowserSession(page);
     });
-    await seedExpertBrowserSession(page);
 
-    await page.goto("/story-lab/expert", { waitUntil: "domcontentloaded" });
-    await expectStoryStep(
-      page,
-      "Start with the expert loop",
-      /\/expert\/dashboard\?storyLab=expert&storyStep=overview/,
-      [],
-      TOUR_TARGETS.dashboardOverview
-    );
+    await test.step("expert enters story mode and the overview step is shown on the dashboard", async () => {
+      await page.goto("/story-lab/expert", { waitUntil: "domcontentloaded" });
+      await expectStoryStep(
+        page,
+        "Start with the expert loop",
+        /\/expert\/dashboard\?storyLab=expert&storyStep=overview/,
+        [],
+        TOUR_TARGETS.dashboardOverview
+      );
+    });
 
-    await page.getByRole("button", { name: "Go to guilds" }).click();
-    await expectStoryStep(
-      page,
-      "Guilds are where expertise is organized",
-      /\/expert\/guilds\?storyLab=expert&storyStep=guilds/,
-      [],
-      TOUR_TARGETS.guildDirectory
-    );
+    await test.step("expert advances to the guilds directory step", async () => {
+      await page.getByRole("button", { name: "Go to guilds" }).click();
+      await expectStoryStep(
+        page,
+        "Guilds are where expertise is organized",
+        /\/expert\/guilds\?storyLab=expert&storyStep=guilds/,
+        [],
+        TOUR_TARGETS.guildDirectory
+      );
+    });
 
-    // The action button is now a <button>; the dynamic guild route is resolved
-    // inside goNextSubStop, not exposed as an href on the trigger. Assert by
-    // observing the resulting URL after the click instead.
-    await page.getByRole("button", { name: "Open a guild" }).click();
-    await expectStoryStep(
-      page,
-      "Inspect guild standards before reviewing",
-      /\/expert\/guild\/story-lab-engineering-guild\?storyLab=expert&storyStep=guild-detail/,
-      [],
-      TOUR_TARGETS.guildStandards
-    );
+    await test.step("the story resolves a deterministic fallback guild and opens the guild detail", async () => {
+      // The action button is now a <button>; the dynamic guild route is resolved
+      // inside goNextSubStop, not exposed as an href on the trigger. Assert by
+      // observing the resulting URL after the click instead.
+      await page.getByRole("button", { name: "Open a guild" }).click();
+      await expectStoryStep(
+        page,
+        "Inspect guild standards before reviewing",
+        /\/expert\/guild\/story-lab-engineering-guild\?storyLab=expert&storyStep=guild-detail/,
+        [],
+        TOUR_TARGETS.guildStandards
+      );
+    });
   });
 });
