@@ -4,7 +4,9 @@
 // Idempotent — safe to run repeatedly against a live Anvil + E2E backend.
 //
 // Usage:
-//   BACKEND_URL=http://localhost:4100 npm run e2e:bootstrap -- 3
+//   npm run e2e:bootstrap -- 3
+//   BACKEND_URL=http://localhost:4000 npm run e2e:bootstrap -- 3   # default
+//   BACKEND_URL=http://localhost:4100 npm run e2e:bootstrap -- 3   # override for separate E2E backend port
 //
 // tsx reads tsconfig.json paths natively, so the @/ alias and JSON imports
 // in the canonical helpers resolve correctly without any extra flags.

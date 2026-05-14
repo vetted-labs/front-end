@@ -15,7 +15,7 @@
 // placement in the old fixture arrangement.
 
 import { test, expect } from "@playwright/test";
-import { parseAbi } from "viem";
+import { parseAbi, getContract } from "viem";
 import {
   createAnvilHandle,
   makeWallet,
@@ -63,58 +63,64 @@ test("snapshot/revert produces identical on-chain state across two runs with con
   const owner = makeWallet(ANVIL_KEYS[0]);
   const expert = makeWallet(ANVIL_KEYS[1]);
 
+  // getContract handles bound to their respective wallet clients — matches the
+  // pattern used in setup-stack.ts so that tsc can resolve account+chain from
+  // the contract client rather than requiring them on every call.
+  const guildRegistry = getContract({
+    address: addrs.GuildRegistry,
+    abi: GUILD_REGISTRY_ABI,
+    client: { public: anvil.publicClient, wallet: owner.client },
+  });
+
+  const vettedTokenOwner = getContract({
+    address: addrs.VettedToken,
+    abi: VETTED_TOKEN_ABI,
+    client: { public: anvil.publicClient, wallet: owner.client },
+  });
+
+  const vettedTokenExpert = getContract({
+    address: addrs.VettedToken,
+    abi: VETTED_TOKEN_ABI,
+    client: { public: anvil.publicClient, wallet: expert.client },
+  });
+
+  const expertStaking = getContract({
+    address: addrs.ExpertStaking,
+    abi: EXPERT_STAKING_ABI,
+    client: { public: anvil.publicClient, wallet: expert.client },
+  });
+
   // ── Phase 1: idempotent on-chain setup ────────────────────────────────
   await test.step("set up the on-chain guild and fund the expert", async () => {
     // Fund expert with ETH for gas.
     await anvil.setBalance(expert.address, 10n * 10n ** 18n);
 
     // Create the guild if it doesn't already exist (idempotent for reruns).
-    const guildExists = await anvil.publicClient.readContract({
-      address: addrs.GuildRegistry,
-      abi: GUILD_REGISTRY_ABI,
-      functionName: "guildExists",
-      args: [SPIKE_GUILD_ID],
-    });
+    const guildExists = await guildRegistry.read.guildExists([SPIKE_GUILD_ID]);
     if (!guildExists) {
-      await owner.client.writeContract({
-        address: addrs.GuildRegistry,
-        abi: GUILD_REGISTRY_ABI,
-        functionName: "createGuild",
-        args: [SPIKE_GUILD_ID, "DeterminismSpike", MIN_STAKE, 0n],
-      });
+      await guildRegistry.write.createGuild(
+        [SPIKE_GUILD_ID, "DeterminismSpike", MIN_STAKE, 0n],
+        { account: owner.client.account!, chain: null },
+      );
     }
 
     // Add the expert as a guild member if not already (idempotent).
-    const isMember = await anvil.publicClient.readContract({
-      address: addrs.GuildRegistry,
-      abi: GUILD_REGISTRY_ABI,
-      functionName: "isMember",
-      args: [SPIKE_GUILD_ID, expert.address],
-    });
+    const isMember = await guildRegistry.read.isMember([SPIKE_GUILD_ID, expert.address]);
     if (!isMember) {
-      await owner.client.writeContract({
-        address: addrs.GuildRegistry,
-        abi: GUILD_REGISTRY_ABI,
-        functionName: "addMember",
-        args: [SPIKE_GUILD_ID, expert.address],
-      });
+      await guildRegistry.write.addMember(
+        [SPIKE_GUILD_ID, expert.address],
+        { account: owner.client.account!, chain: null },
+      );
     }
 
     // Mint VETD tokens to the expert (from the owner/minter).
-    await owner.client.writeContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "mint",
-      args: [expert.address, MINT_AMOUNT],
-    });
+    await vettedTokenOwner.write.mint(
+      [expert.address, MINT_AMOUNT],
+      { account: owner.client.account!, chain: null },
+    );
 
     // Confirm the balance is as expected before we start the experiment.
-    const balance = await anvil.publicClient.readContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "balanceOf",
-      args: [expert.address],
-    });
+    const balance = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
     // balance may already include tokens from prior runs on the same anvil; we
     // just need it to be >= MINT_AMOUNT for the experiment to be meaningful.
     expect(balance).toBeGreaterThanOrEqual(MINT_AMOUNT);
@@ -126,28 +132,19 @@ test("snapshot/revert produces identical on-chain state across two runs with con
     const snap1 = await anvil.snapshot();
 
     // Approve ExpertStaking to spend the expert's tokens.
-    await expert.client.writeContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "approve",
-      args: [addrs.ExpertStaking, STAKE_AMOUNT],
-    });
+    await vettedTokenExpert.write.approve(
+      [addrs.ExpertStaking, STAKE_AMOUNT],
+      { account: expert.client.account!, chain: null },
+    );
 
     // Stake into the guild.
-    await expert.client.writeContract({
-      address: addrs.ExpertStaking,
-      abi: EXPERT_STAKING_ABI,
-      functionName: "stake",
-      args: [SPIKE_GUILD_ID, STAKE_AMOUNT],
-    });
+    await expertStaking.write.stake(
+      [SPIKE_GUILD_ID, STAKE_AMOUNT],
+      { account: expert.client.account!, chain: null },
+    );
 
     // Read post-stake balance.
-    first = (await anvil.publicClient.readContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "balanceOf",
-      args: [expert.address],
-    })) as bigint;
+    first = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
 
     // Revert chain to pre-stake state.
     await anvil.revert(snap1);
@@ -159,26 +156,17 @@ test("snapshot/revert produces identical on-chain state across two runs with con
     const snap2 = await anvil.snapshot();
 
     // Repeat the exact same operations from the same pre-stake baseline.
-    await expert.client.writeContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "approve",
-      args: [addrs.ExpertStaking, STAKE_AMOUNT],
-    });
+    await vettedTokenExpert.write.approve(
+      [addrs.ExpertStaking, STAKE_AMOUNT],
+      { account: expert.client.account!, chain: null },
+    );
 
-    await expert.client.writeContract({
-      address: addrs.ExpertStaking,
-      abi: EXPERT_STAKING_ABI,
-      functionName: "stake",
-      args: [SPIKE_GUILD_ID, STAKE_AMOUNT],
-    });
+    await expertStaking.write.stake(
+      [SPIKE_GUILD_ID, STAKE_AMOUNT],
+      { account: expert.client.account!, chain: null },
+    );
 
-    second = (await anvil.publicClient.readContract({
-      address: addrs.VettedToken,
-      abi: VETTED_TOKEN_ABI,
-      functionName: "balanceOf",
-      args: [expert.address],
-    })) as bigint;
+    second = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
 
     await anvil.revert(snap2);
   });

@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Hex } from "viem";
 import { writeManifest, readManifest, type BootstrapManifest } from "../manifest";
 
 test("writeManifest then readManifest round-trips", () => {
@@ -17,7 +18,7 @@ test("writeManifest then readManifest round-trips", () => {
       {
         id: "e1",
         address: "0x0000000000000000000000000000000000000002",
-        privateKey: "0x" + "1".repeat(64),
+        privateKey: ("0x" + "1".repeat(64)) as Hex,
         guildId: "g1",
       },
     ],
