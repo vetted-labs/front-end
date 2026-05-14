@@ -10,50 +10,63 @@ test.describe("Dashboard vote weight with high reputation", () => {
   });
 
   test("shows expert dashboard loads", async ({ page }) => {
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+    await test.step("expert navigates to the dashboard", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+    });
 
-    await expect(page.getByText("Dashboard").first()).toBeVisible({
-      timeout: 15000,
+    await test.step("the Dashboard heading is visible", async () => {
+      await expect(page.getByText("Dashboard").first()).toBeVisible({
+        timeout: 15000,
+      });
     });
   });
 
   test("shows vote weight 2.5 from 1500 reputation", async ({ page }) => {
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
-
-    await expect(page.getByText("Dashboard").first()).toBeVisible({
-      timeout: 15000,
+    await test.step("expert navigates to the dashboard", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("Dashboard").first()).toBeVisible({
+        timeout: 15000,
+      });
     });
 
-    // 1500 rep → weight = 1 × (1 + min(1500/1000, 2.0)) = 2.5×
-    // Display may be "2.5×" or "2.50×"
-    await expect(
-      page.getByText("2.50×").first(),
-    ).toBeVisible({ timeout: 10000 });
+    await test.step("a 1500-reputation expert shows a 2.50x vote weight", async () => {
+      // 1500 rep → weight = 1 × (1 + min(1500/1000, 2.0)) = 2.5×
+      // Display may be "2.5×" or "2.50×"
+      await expect(
+        page.getByText("2.50×").first(),
+      ).toBeVisible({ timeout: 10000 });
+    });
   });
 
   test("shows reward tier Established for 1500 reputation", async ({
     page,
   }) => {
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
-
-    await expect(page.getByText("Dashboard").first()).toBeVisible({
-      timeout: 15000,
+    await test.step("expert navigates to the dashboard", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("Dashboard").first()).toBeVisible({
+        timeout: 15000,
+      });
     });
 
-    await expect(page.getByText("Established").first()).toBeVisible();
+    await test.step("the Established reward tier is displayed for a 1500-reputation expert", async () => {
+      await expect(page.getByText("Established").first()).toBeVisible();
+    });
   });
 
   test("no error toasts on load", async ({ page }) => {
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
-
-    await expect(page.getByText("Dashboard").first()).toBeVisible({
-      timeout: 15000,
+    await test.step("expert navigates to the dashboard", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("Dashboard").first()).toBeVisible({
+        timeout: 15000,
+      });
     });
 
-    // Sonner toasts use [data-sonner-toast] with data-type="error"
-    const errorToasts = page.locator(
-      '[data-sonner-toast][data-type="error"]',
-    );
-    await expect(errorToasts).toHaveCount(0);
+    await test.step("no error toasts appear after the page settles", async () => {
+      // Sonner toasts use [data-sonner-toast] with data-type="error"
+      const errorToasts = page.locator(
+        '[data-sonner-toast][data-type="error"]',
+      );
+      await expect(errorToasts).toHaveCount(0);
+    });
   });
 });

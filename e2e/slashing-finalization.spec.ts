@@ -71,59 +71,87 @@ test.describe("Slashing finalization display", () => {
   });
 
   test("severe slashing — shows Rejected banner, severe tier, -25%, -20 rep, Low alignment", async ({ page }) => {
-    await setupVotingDetailMocks(page, SLASHED_ID, {
-      application: MOCK_APPLICATION_SLASHED,
-      voteHistory: [VOTE_SEVERE],
-      crPhase: CR_FINALIZED,
+    await test.step("voting detail mock is set up with a severe-slash finalized application", async () => {
+      await setupVotingDetailMocks(page, SLASHED_ID, {
+        application: MOCK_APPLICATION_SLASHED,
+        voteHistory: [VOTE_SEVERE],
+        crPhase: CR_FINALIZED,
+      });
     });
-    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText("severe").first()).toBeVisible();
-    await expect(page.getByText("-25%").first()).toBeVisible();
-    await expect(page.getByText("-20").first()).toBeVisible();
-    await expect(page.getByText(/Low alignment/i).first()).toBeVisible();
+    await test.step("expert navigates to the finalized voting detail page", async () => {
+      await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
+    });
+
+    await test.step("the rejected banner, severe slash tier, -25% penalty, -20 rep change, and Low alignment label all render", async () => {
+      await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("severe").first()).toBeVisible();
+      await expect(page.getByText("-25%").first()).toBeVisible();
+      await expect(page.getByText("-20").first()).toBeVisible();
+      await expect(page.getByText(/Low alignment/i).first()).toBeVisible();
+    });
   });
 
   test("mild slashing — shows Approved banner, mild tier, -5%, Moderate alignment", async ({ page }) => {
-    await setupVotingDetailMocks(page, MILD_ID, {
-      application: MOCK_APPLICATION_MILD_SLASH,
-      voteHistory: [VOTE_MILD],
-      crPhase: CR_FINALIZED,
+    await test.step("voting detail mock is set up with a mild-slash finalized application", async () => {
+      await setupVotingDetailMocks(page, MILD_ID, {
+        application: MOCK_APPLICATION_MILD_SLASH,
+        voteHistory: [VOTE_MILD],
+        crPhase: CR_FINALIZED,
+      });
     });
-    await page.goto(`/expert/voting/applications/${MILD_ID}`, { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText("mild").first()).toBeVisible();
-    await expect(page.getByText("-5%").first()).toBeVisible();
-    await expect(page.getByText(/Moderate alignment/i).first()).toBeVisible();
+    await test.step("expert navigates to the finalized voting detail page", async () => {
+      await page.goto(`/expert/voting/applications/${MILD_ID}`, { waitUntil: "domcontentloaded" });
+    });
+
+    await test.step("the approved banner, mild slash tier, -5% penalty, and Moderate alignment label all render", async () => {
+      await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("mild").first()).toBeVisible();
+      await expect(page.getByText("-5%").first()).toBeVisible();
+      await expect(page.getByText(/Moderate alignment/i).first()).toBeVisible();
+    });
   });
 
   test("aligned (no slash) — shows Approved banner, aligned tier, +10 rep, 12.50 VETD, High alignment", async ({ page }) => {
-    await setupVotingDetailMocks(page, FINALIZED_ID, {
-      application: MOCK_APPLICATION_FINALIZED,
-      voteHistory: [VOTE_ALIGNED],
-      crPhase: CR_FINALIZED,
+    await test.step("voting detail mock is set up with an aligned finalized application", async () => {
+      await setupVotingDetailMocks(page, FINALIZED_ID, {
+        application: MOCK_APPLICATION_FINALIZED,
+        voteHistory: [VOTE_ALIGNED],
+        crPhase: CR_FINALIZED,
+      });
     });
-    await page.goto(`/expert/voting/applications/${FINALIZED_ID}`, { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText("aligned").first()).toBeVisible();
-    await expect(page.getByText("+10").first()).toBeVisible();
-    await expect(page.getByText("12.50 VETD").first()).toBeVisible();
-    await expect(page.getByText(/High alignment/i).first()).toBeVisible();
+    await test.step("expert navigates to the finalized voting detail page", async () => {
+      await page.goto(`/expert/voting/applications/${FINALIZED_ID}`, { waitUntil: "domcontentloaded" });
+    });
+
+    await test.step("the approved banner, aligned tier, +10 rep gain, 12.50 VETD reward, and High alignment label all render", async () => {
+      await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("aligned").first()).toBeVisible();
+      await expect(page.getByText("+10").first()).toBeVisible();
+      await expect(page.getByText("12.50 VETD").first()).toBeVisible();
+      await expect(page.getByText(/High alignment/i).first()).toBeVisible();
+    });
   });
 
   test("IQR stats — shows Median 35.0 and IQR 14.0 from application iqr data", async ({ page }) => {
-    await setupVotingDetailMocks(page, SLASHED_ID, {
-      application: MOCK_APPLICATION_SLASHED,
-      voteHistory: [VOTE_SEVERE],
-      crPhase: CR_FINALIZED,
+    await test.step("voting detail mock is set up with the severe-slash application carrying IQR data", async () => {
+      await setupVotingDetailMocks(page, SLASHED_ID, {
+        application: MOCK_APPLICATION_SLASHED,
+        voteHistory: [VOTE_SEVERE],
+        crPhase: CR_FINALIZED,
+      });
     });
-    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/Median 35\.0/i).first()).toBeVisible();
-    await expect(page.getByText(/IQR 14\.0/i).first()).toBeVisible();
+    await test.step("expert navigates to the finalized voting detail page", async () => {
+      await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
+    });
+
+    await test.step("the IQR stats panel shows Median 35.0 and IQR 14.0", async () => {
+      await expect(page.getByText(/Median 35\.0/i).first()).toBeVisible();
+      await expect(page.getByText(/IQR 14\.0/i).first()).toBeVisible();
+    });
   });
 });
