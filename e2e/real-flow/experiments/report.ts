@@ -15,7 +15,7 @@ import path from "node:path";
 export type ApplicationResult = {
   /** Opaque application/session identifier. */
   applicationId: string;
-  /** The panel scores that were submitted (0-100 range, IQR path). */
+  /** The panel scores that were submitted (0-100 range, Pipeline C path). */
   scores: number[];
   /** Consensus score read from the platform (backend/chain). */
   platformConsensus: number;
@@ -86,7 +86,10 @@ export type BuiltReport = {
 
 /** Build an in-memory report from a completed ExperimentRun. */
 export function buildReport(run: ExperimentRun): BuiltReport {
-  const mismatches = run.results.filter((r) => !r.consensusMatch);
+  // Only count mismatches for COMPLETED (finalized) results, not skipped/blocked ones.
+  const mismatches = run.results.filter(
+    (r) => !r.consensusMatch && !r.blockedBy?.length && r.platformConsensus !== -1,
+  );
   const summary: ReportSummary = {
     requested: run.requested,
     completed: run.completed,
@@ -136,7 +139,9 @@ function buildMarkdown(run: ExperimentRun, summary: ReportSummary): string {
 
   // --- Oracle attestation ---
   lines.push(
-    `> Results validated against Technical Appendix Adaptive Median Band; ` +
+    `> Results validated against the Pipeline C simple-majority oracle ` +
+      `(Technical Appendix §4 approval threshold). ` +
+      `NOTE: the IQR/commit-reveal pipeline (Pipeline B) is not exercised — see DIV-001. ` +
       `UI exercised on ${summary.uiExercised} of ${summary.requested} applications.`,
   );
   lines.push("");

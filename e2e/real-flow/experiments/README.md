@@ -35,9 +35,13 @@ BACKEND_URL=http://localhost:4100 npm run e2e:experiment -- \
 wizard + expert review modal); the remainder use the faster API/chain path. The
 report shows which applications went via which path.
 
-### `ui-soak`
-All applications run through the browser UI. Intended for catching UI-at-volume
-bugs (pagination, memory leaks, request races). Slower — use a smaller N.
+### `ui-soak` (reserved — pending DIV-001)
+Intended for driving all applications through the full browser UI (rubric wizard
++ expert review modal) to catch UI-at-volume bugs (pagination, memory leaks,
+request races). **Not yet behaviorally distinct from `hybrid`** — until DIV-001
+is resolved, all applications run through the API path regardless of mode.
+The value is recorded in the run report and report directory name for traceability
+but has no effect on execution today.
 
 ## Score distributions
 
@@ -61,8 +65,10 @@ Each run produces `experiments/reports/<timestamp>.json` and `.md`:
   running at volume, with references to `docs/testing/PROTOCOL_DIVERGENCES.md`.
 - **Per-application table** — scores, oracle prediction, platform outcome, via
   (api/ui), and any blockedBy references.
-- **Oracle attestation line** — `"validated against Technical Appendix Adaptive
-  Median Band; UI exercised on X of N applications"` (required for audit trail).
+- **Oracle attestation line** — `"Results validated against the Pipeline C
+  simple-majority oracle (Technical Appendix §4 approval threshold). NOTE: the
+  IQR/commit-reveal pipeline (Pipeline B) is not exercised — see DIV-001. UI
+  exercised on X of N applications."` (required for audit trail).
 
 Reports are **gitignored** (`e2e/real-flow/experiments/reports/` in `.gitignore`).
 

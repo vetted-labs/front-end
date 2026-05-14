@@ -26,7 +26,8 @@ test("buildReport summarizes discrepancies, timings, and divergences", () => {
   expect(r.summary.completed).toBe(2);
   expect(r.summary.consensusMismatches).toBe(0);
   expect(r.markdown).toContain("DIV-001");
-  expect(r.markdown).toContain("validated against Technical Appendix");
+  expect(r.markdown).toContain("Pipeline C simple-majority oracle");
+  expect(r.markdown).toContain("Technical Appendix §4 approval threshold");
 });
 
 test("writeReport emits both json and md", () => {

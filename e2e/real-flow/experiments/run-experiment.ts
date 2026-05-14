@@ -40,8 +40,6 @@ import {
 // ---------------------------------------------------------------------------
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
-const CRON_SECRET =
-  process.env.CRON_SECRET ?? "dev-cron-secret-pad-to-32-chars-minimum-length";
 
 // A vote is "approve" when the normalized score >= the approval threshold.
 const APPROVAL_THRESHOLD_PCT = 60; // §4 in constants.ts → protocol.config.ts
@@ -65,6 +63,11 @@ function parseArgs() {
     applications: Number(get("--applications", "20")),
     guilds: Number(get("--guilds", "1")),
     distribution: get("--distribution", "realistic") as ScoreDistribution,
+    // NOTE: --mode is parsed and recorded in the run report for audit purposes.
+    // However, "ui-soak" has no distinct runtime behavior today — it is reserved
+    // pending DIV-001 (full browser-driven UI volume is not currently exercised).
+    // All applications run through the API path regardless of the mode value.
+    // Remove this comment once DIV-001 is resolved and ui-soak has real behavior.
     mode: get("--mode", "hybrid") as "hybrid" | "ui-soak",
     uiSampleRate: Number(get("--uiSampleRate", "0")),
     panelSize: Number(get("--panelSize", "5")),

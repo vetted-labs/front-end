@@ -68,21 +68,33 @@ test("N=20 API/chain cohort: all panels finalize and match the oracle", () => {
   }
 
   // -------------------------------------------------------------------------
-  // Find the most recent report written during this run.
+  // Find the report written by THIS run.
+  // The harness prints a parseable line:  [harness]   Report JSON:           <path>
+  // We extract it from stdout so we never accidentally read a stale report
+  // from a previous run that landed in the same second.
   // -------------------------------------------------------------------------
-  fs.mkdirSync(REPORTS_DIR, { recursive: true });
-  const reportFiles = fs
-    .readdirSync(REPORTS_DIR)
-    .filter((f) => f.endsWith(".json"))
-    .sort()
-    .reverse();
+  const reportJsonMatch = stdout.match(/\[harness\]\s+Report JSON:\s+(\S+)/);
+  const latestReportPath = reportJsonMatch
+    ? reportJsonMatch[1].trim()
+    : (() => {
+        // Fallback: lexicographic sort (only reached if stdout was lost).
+        fs.mkdirSync(REPORTS_DIR, { recursive: true });
+        const reportFiles = fs
+          .readdirSync(REPORTS_DIR)
+          .filter((f) => f.endsWith(".json"))
+          .sort()
+          .reverse();
+        expect(
+          reportFiles.length,
+          "Expected at least one report file in experiments/reports/ — harness may not have run",
+        ).toBeGreaterThan(0);
+        return path.join(REPORTS_DIR, reportFiles[0]);
+      })();
 
   expect(
-    reportFiles.length,
-    "Expected at least one report file in experiments/reports/ — harness may not have run",
-  ).toBeGreaterThan(0);
-
-  const latestReportPath = path.join(REPORTS_DIR, reportFiles[0]);
+    fs.existsSync(latestReportPath),
+    `Report file not found at path parsed from harness stdout: ${latestReportPath}`,
+  ).toBe(true);
   const run = JSON.parse(
     fs.readFileSync(latestReportPath, "utf-8"),
   ) as ExperimentRun;
@@ -126,8 +138,7 @@ test("N=20 API/chain cohort: all panels finalize and match the oracle", () => {
     ).toBe(0);
   }
 
-  // 3. Report file exists (already checked above; this assertion documents intent).
-  expect(fs.existsSync(latestReportPath)).toBe(true);
+  // 3. Report file exists — already asserted during path discovery above (documents intent).
 
   // -------------------------------------------------------------------------
   // Summary output for CI logs
