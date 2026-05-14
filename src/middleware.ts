@@ -54,17 +54,25 @@ export function middleware(_request: NextRequest) {
   // Development CSP: More permissive for hot reload and dev tools
   // Note: 'unsafe-inline' is used instead of nonce in dev to avoid hydration mismatches
   // and allow wallet SDK inline scripts (Coinbase, MetaMask) to work without nonces
+  // Dev hosts: both `localhost` and `127.0.0.1` — CSP treats them as distinct
+  // origins, and local tooling (anvil RPC, the e2e backend, `.env.local`
+  // NEXT_PUBLIC_*_RPC_URL) routinely uses the `127.0.0.1` form. Allowing only
+  // `localhost` silently CSP-blocks those connections in dev (e.g. the wagmi
+  // chain client / headless E2E wallet talking to `http://127.0.0.1:8545`).
+  const devHosts = "http://localhost:* http://127.0.0.1:*";
+  const devWsHosts =
+    "ws://localhost:* wss://localhost:* ws://127.0.0.1:* wss://127.0.0.1:*";
   const devCSP = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline + unsafe-eval for dev compatibility
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com", // unsafe-inline needed for CSS-in-JS libraries
-    "img-src 'self' data: https: blob: http://localhost:*",
+    `img-src 'self' data: https: blob: ${devHosts}`,
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
-    `connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* ${rpcConnectSrc}`,
+    `connect-src 'self' ${devHosts} ${devWsHosts} ${rpcConnectSrc}`,
     // frame-src allows the resume PDF iframes (`<iframe src="${API_BASE_URL}/uploads/resumes/...">`)
     // to load from the BE host. Without this, default-src 'self' blocks them
     // and the user sees "This content is blocked. Contact the site owner."
-    "frame-src 'self' http://localhost:* https://*.up.railway.app blob: data:",
+    `frame-src 'self' ${devHosts} https://*.up.railway.app blob: data:`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
