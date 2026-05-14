@@ -8,18 +8,27 @@
 //
 // DESIGN: The test is entirely self-contained — it does NOT rely on the
 // shared fixtures.ts worker setup (no guild pre-seeded, no experts pre-
-// approved).  It seeds its own minimal on-chain state (guild + member + mint),
+// approved).  On every run it generates a UNIQUE guild id (keccak256 of a
+// timestamp-salted string) and a UNIQUE expert wallet (generatePrivateKey),
+// so there is zero chance of colliding with prior state on a dirty chain.
+// It seeds its own minimal on-chain state (guild + member + mint),
 // takes a snapshot, runs approve+stake, reverts, and repeats.  If the balance
 // is identical across both runs the snapshot mechanism is blameless and the
 // historical drift must come from non-deterministic seeding or snapshot
 // placement in the old fixture arrangement.
+//
+// VERDICT: captured in e2e/real-flow/bootstrap/DETERMINISM_FINDING.md
 
 import { test, expect } from "@playwright/test";
-import { parseAbi, getContract } from "viem";
+import { parseAbi, getContract, keccak256, toHex } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { createWalletClient, http } from "viem";
 import {
   createAnvilHandle,
   makeWallet,
   ANVIL_KEYS,
+  foundry,
+  ANVIL_RPC,
 } from "../../helpers/chain";
 import { readContractAddresses } from "../../helpers/contracts";
 
@@ -44,13 +53,7 @@ const EXPERT_STAKING_ABI = parseAbi([
   "function getStakeInfo(address expert, bytes32 guildId) external view returns (uint256 amount, uint256 stakedAt)",
 ]);
 
-// A guild id distinct from anything else in the suite.
-const SPIKE_GUILD_ID =
-  `0x${"d1".padEnd(64, "0")}` as `0x${string}`;
 const MIN_STAKE = 10n * 10n ** 18n;
-// Mint enough to stake twice without revert (snapshot revert undoes the first
-// stake so the expert regains their allowance; but the balance is what we're
-// asserting, not the stake record).
 const MINT_AMOUNT = 100n * 10n ** 18n;
 const STAKE_AMOUNT = 10n * 10n ** 18n;
 
@@ -61,7 +64,21 @@ test("snapshot/revert produces identical on-chain state across two runs with con
   const anvil = createAnvilHandle();
   const addrs = readContractAddresses();
   const owner = makeWallet(ANVIL_KEYS[0]);
-  const expert = makeWallet(ANVIL_KEYS[1]);
+
+  // Generate a unique guild id on every run so no prior chain state can
+  // interfere — this is the primary fix for dirty-chain failures.
+  const SPIKE_GUILD_ID = keccak256(
+    toHex(`determinism-spike-${Date.now()}-${Math.random()}`),
+  ) as `0x${string}`;
+
+  // Generate a fresh expert wallet with zero prior chain state on every run.
+  const freshPrivateKey = generatePrivateKey();
+  const freshAccount = privateKeyToAccount(freshPrivateKey);
+  const freshWalletClient = createWalletClient({
+    account: freshAccount,
+    chain: foundry,
+    transport: http(ANVIL_RPC),
+  });
 
   // getContract handles bound to their respective wallet clients — matches the
   // pattern used in setup-stack.ts so that tsc can resolve account+chain from
@@ -81,49 +98,54 @@ test("snapshot/revert produces identical on-chain state across two runs with con
   const vettedTokenExpert = getContract({
     address: addrs.VettedToken,
     abi: VETTED_TOKEN_ABI,
-    client: { public: anvil.publicClient, wallet: expert.client },
+    client: { public: anvil.publicClient, wallet: freshWalletClient },
   });
 
   const expertStaking = getContract({
     address: addrs.ExpertStaking,
     abi: EXPERT_STAKING_ABI,
-    client: { public: anvil.publicClient, wallet: expert.client },
+    client: { public: anvil.publicClient, wallet: freshWalletClient },
   });
 
   // ── Phase 1: idempotent on-chain setup ────────────────────────────────
-  await test.step("set up the on-chain guild and fund the expert", async () => {
-    // Fund expert with ETH for gas.
-    await anvil.setBalance(expert.address, 10n * 10n ** 18n);
+  await test.step("create unique guild and fund the fresh expert wallet", async () => {
+    // Fund fresh expert with ETH for gas (address has zero history).
+    await anvil.setBalance(freshAccount.address, 10n * 10n ** 18n);
 
-    // Create the guild if it doesn't already exist (idempotent for reruns).
-    const guildExists = await guildRegistry.read.guildExists([SPIKE_GUILD_ID]);
-    if (!guildExists) {
-      await guildRegistry.write.createGuild(
+    // Create the unique guild — this id has never been used before, so
+    // GuildAlreadyExists should never fire; narrow catch retained for safety.
+    try {
+      const createTx = await guildRegistry.write.createGuild(
         [SPIKE_GUILD_ID, "DeterminismSpike", MIN_STAKE, 0n],
         { account: owner.client.account!, chain: null },
       );
+      await anvil.publicClient.waitForTransactionReceipt({ hash: createTx });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/GuildAlreadyExists/.test(msg)) throw err;
     }
 
-    // Add the expert as a guild member if not already (idempotent).
-    const isMember = await guildRegistry.read.isMember([SPIKE_GUILD_ID, expert.address]);
-    if (!isMember) {
-      await guildRegistry.write.addMember(
-        [SPIKE_GUILD_ID, expert.address],
-        { account: owner.client.account!, chain: null },
-      );
-    }
-
-    // Mint VETD tokens to the expert (from the owner/minter).
-    await vettedTokenOwner.write.mint(
-      [expert.address, MINT_AMOUNT],
+    // Add the fresh expert as a guild member (brand-new address, no prior
+    // AlreadyMember state possible).
+    const addTx = await guildRegistry.write.addMember(
+      [SPIKE_GUILD_ID, freshAccount.address],
       { account: owner.client.account!, chain: null },
     );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: addTx });
 
-    // Confirm the balance is as expected before we start the experiment.
-    const balance = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
-    // balance may already include tokens from prior runs on the same anvil; we
-    // just need it to be >= MINT_AMOUNT for the experiment to be meaningful.
-    expect(balance).toBeGreaterThanOrEqual(MINT_AMOUNT);
+    // Mint exactly MINT_AMOUNT to the fresh expert (starts at 0 so the
+    // pre-snapshot balance is precisely known).
+    const mintTx = await vettedTokenOwner.write.mint(
+      [freshAccount.address, MINT_AMOUNT],
+      { account: owner.client.account!, chain: null },
+    );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: mintTx });
+
+    // Confirm the balance matches expectations before entering the experiment.
+    const balance = (await vettedTokenExpert.read.balanceOf([
+      freshAccount.address,
+    ])) as bigint;
+    expect(balance).toBe(MINT_AMOUNT);
   });
 
   // ── Phase 2: first snapshot/revert cycle ─────────────────────────────
@@ -132,19 +154,23 @@ test("snapshot/revert produces identical on-chain state across two runs with con
     const snap1 = await anvil.snapshot();
 
     // Approve ExpertStaking to spend the expert's tokens.
-    await vettedTokenExpert.write.approve(
+    const approveTx1 = await vettedTokenExpert.write.approve(
       [addrs.ExpertStaking, STAKE_AMOUNT],
-      { account: expert.client.account!, chain: null },
+      { account: freshWalletClient.account!, chain: null },
     );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: approveTx1 });
 
     // Stake into the guild.
-    await expertStaking.write.stake(
+    const stakeTx1 = await expertStaking.write.stake(
       [SPIKE_GUILD_ID, STAKE_AMOUNT],
-      { account: expert.client.account!, chain: null },
+      { account: freshWalletClient.account!, chain: null },
     );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: stakeTx1 });
 
     // Read post-stake balance.
-    first = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
+    first = (await vettedTokenExpert.read.balanceOf([
+      freshAccount.address,
+    ])) as bigint;
 
     // Revert chain to pre-stake state.
     await anvil.revert(snap1);
@@ -156,23 +182,33 @@ test("snapshot/revert produces identical on-chain state across two runs with con
     const snap2 = await anvil.snapshot();
 
     // Repeat the exact same operations from the same pre-stake baseline.
-    await vettedTokenExpert.write.approve(
+    const approveTx2 = await vettedTokenExpert.write.approve(
       [addrs.ExpertStaking, STAKE_AMOUNT],
-      { account: expert.client.account!, chain: null },
+      { account: freshWalletClient.account!, chain: null },
     );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: approveTx2 });
 
-    await expertStaking.write.stake(
+    const stakeTx2 = await expertStaking.write.stake(
       [SPIKE_GUILD_ID, STAKE_AMOUNT],
-      { account: expert.client.account!, chain: null },
+      { account: freshWalletClient.account!, chain: null },
     );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: stakeTx2 });
 
-    second = await vettedTokenExpert.read.balanceOf([expert.address]) as bigint;
+    second = (await vettedTokenExpert.read.balanceOf([
+      freshAccount.address,
+    ])) as bigint;
 
     await anvil.revert(snap2);
   });
 
   // ── Phase 4: determinism assertion ───────────────────────────────────
   await test.step("assert that both runs produced identical post-stake balances", async () => {
+    console.log(
+      `[determinism-spike] guild id (unique per run): ${SPIKE_GUILD_ID}`,
+    );
+    console.log(
+      `[determinism-spike] expert address (fresh per run): ${freshAccount.address}`,
+    );
     console.log(
       `[determinism-spike] first balance after stake: ${first}`,
     );
