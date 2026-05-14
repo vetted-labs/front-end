@@ -22,51 +22,74 @@ async function postJson<T>(
 }
 
 export const testApi = {
-  reset: (req: APIRequestContext) => postJson<{ truncated: number }>(req, "/api/test/reset"),
+  reset: (req: APIRequestContext) =>
+    postJson<{ truncated: number }>(req, "/api/test/reset"),
   drain: (req: APIRequestContext) => postJson<void>(req, "/api/test/drain"),
-  seedGuild: (req: APIRequestContext, body: { name: string; slug: string; onChainGuildId: number }) =>
-    postJson<{ id: string; slug: string; on_chain_guild_id: number }>(req, "/api/test/seed/guild", body),
+  seedGuild: (
+    req: APIRequestContext,
+    body: { name: string; slug: string; onChainGuildId: number },
+  ) =>
+    postJson<{ id: string; slug: string; on_chain_guild_id: `0x${string}` }>(
+      req,
+      "/api/test/seed/guild",
+      body,
+    ),
   seedCompany: (
     req: APIRequestContext,
     body: { name: string; email?: string; walletAddress?: string },
-  ) => postJson<{ id: string; name: string; email: string; wallet_address: string | null; token: string }>(
-    req,
-    "/api/test/seed/company",
-    body,
-  ),
+  ) =>
+    postJson<{
+      id: string;
+      name: string;
+      email: string;
+      wallet_address: string | null;
+      token: string;
+    }>(req, "/api/test/seed/company", body),
   seedJob: (
     req: APIRequestContext,
     body: { companyId: string; title: string; guild: string; status?: string },
   ) => postJson<{ jobId: string }>(req, "/api/test/seed/job", body),
   seedExpert: (
     req: APIRequestContext,
-    body: { walletAddress: string; fullName: string; email: string; status?: string; guildId?: string; stakeAmount?: string },
+    body: {
+      walletAddress: string;
+      fullName: string;
+      email: string;
+      status?: string;
+      guildId?: string;
+      stakeAmount?: string;
+    },
   ) => postJson<{ id: string }>(req, "/api/test/seed/expert", body),
-  seedExpertToken: (
-    req: APIRequestContext,
-    body: { expertId: string },
-  ) => postJson<{ id: string; wallet_address: string; token: string }>(
-    req,
-    "/api/test/seed/expert-token",
-    body,
-  ),
+  seedExpertToken: (req: APIRequestContext, body: { expertId: string }) =>
+    postJson<{ id: string; wallet_address: string; token: string }>(
+      req,
+      "/api/test/seed/expert-token",
+      body,
+    ),
   endorsement: {
     processRetention: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/process-retention"),
-    markRetentionReady: (req: APIRequestContext, body: { applicationId: string }) =>
-      postJson<{ id: string; application_id: string; retention_deadline: string }>(
-        req,
-        "/api/test/endorsement/retention-ready",
-        body,
-      ),
+    markRetentionReady: (
+      req: APIRequestContext,
+      body: { applicationId: string },
+    ) =>
+      postJson<{
+        id: string;
+        application_id: string;
+        retention_deadline: string;
+      }>(req, "/api/test/endorsement/retention-ready", body),
     expireDisputes: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/expire-disputes"),
     drainBlockchainOps: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/drain-blockchain-ops"),
     rewardDistributorAdmin: async (req: APIRequestContext) => {
-      const res = await req.get(`${BACKEND_URL}/api/test/endorsement/reward-distributor-admin`);
+      const res = await req.get(
+        `${BACKEND_URL}/api/test/endorsement/reward-distributor-admin`,
+      );
       if (!res.ok()) {
-        throw new Error(`GET /api/test/endorsement/reward-distributor-admin failed: ${res.status()} ${await res.text()}`);
+        throw new Error(
+          `GET /api/test/endorsement/reward-distributor-admin failed: ${res.status()} ${await res.text()}`,
+        );
       }
       const body = (await res.json()) as {
         data: {
@@ -89,9 +112,13 @@ export const testApi = {
       const q = new URLSearchParams();
       if (params.applicationId) q.set("applicationId", params.applicationId);
       if (params.expertId) q.set("expertId", params.expertId);
-      const res = await req.get(`${BACKEND_URL}/api/test/endorsement/slashing-records?${q.toString()}`);
+      const res = await req.get(
+        `${BACKEND_URL}/api/test/endorsement/slashing-records?${q.toString()}`,
+      );
       if (!res.ok()) {
-        throw new Error(`GET /api/test/endorsement/slashing-records failed: ${res.status()} ${await res.text()}`);
+        throw new Error(
+          `GET /api/test/endorsement/slashing-records failed: ${res.status()} ${await res.text()}`,
+        );
       }
       const body = (await res.json()) as {
         data: Array<{
@@ -126,28 +153,46 @@ export const testApi = {
           amount: number;
           reason: string;
         }>;
-      }>(req, `/api/test/candidate-reviews/${applicationId}/expire-and-finalize`),
+      }>(
+        req,
+        `/api/test/candidate-reviews/${applicationId}/expire-and-finalize`,
+      ),
   },
 };
 
 export const cronApi = {
   processExpertTransitions: (req: APIRequestContext) =>
-    postJson<unknown>(req, "/api/experts/guild-applications/commit-reveal/process-transitions", undefined, {
-      "x-cron-secret": CRON_SECRET,
-    }),
+    postJson<unknown>(
+      req,
+      "/api/experts/guild-applications/commit-reveal/process-transitions",
+      undefined,
+      {
+        "x-cron-secret": CRON_SECRET,
+      },
+    ),
   processProposalTransitions: (req: APIRequestContext) =>
-    postJson<unknown>(req, "/api/proposals/commit-reveal/process-transitions", undefined, {
-      "x-cron-secret": CRON_SECRET,
-    }),
+    postJson<unknown>(
+      req,
+      "/api/proposals/commit-reveal/process-transitions",
+      undefined,
+      {
+        "x-cron-secret": CRON_SECRET,
+      },
+    ),
   /**
    * Trigger commit-reveal enablement on a freshly created proposal. The BE
    * writes `blockchain_session_id` and queues a `create_vetting_session` op
    * in the pending_blockchain_ops outbox. Pair with `drainBlockchainOps`.
    */
   enableCommitReveal: (req: APIRequestContext, proposalId: string) =>
-    postJson<unknown>(req, `/api/proposals/${proposalId}/commit-reveal/enable`, undefined, {
-      "x-cron-secret": CRON_SECRET,
-    }),
+    postJson<unknown>(
+      req,
+      `/api/proposals/${proposalId}/commit-reveal/enable`,
+      undefined,
+      {
+        "x-cron-secret": CRON_SECRET,
+      },
+    ),
   /**
    * Run a single blockchain-ops cron tick to drain pending on-chain ops
    * (create_vetting_session, distributeSingleReward, etc.). Reuses the

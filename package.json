@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "e2e:bootstrap": "tsx e2e/real-flow/bootstrap/setup-stack.ts",
     "e2e:real-flow": "npx dotenv -e .env.local -- npx playwright test --config=e2e/real-flow/playwright.real-flow.config.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
@@ -63,6 +64,7 @@
     "jsdom": "^28.1.0",
     "lint-staged": "^16.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.1",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }

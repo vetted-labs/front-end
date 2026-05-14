@@ -4,68 +4,33 @@
 // Idempotent — safe to run repeatedly against a live Anvil + E2E backend.
 //
 // Usage:
-//   BACKEND_URL=http://localhost:4100 npx ts-node \
-//     --transpileOnly \
-//     --compiler-options '{"module":"commonjs","moduleResolution":"node","baseUrl":"."}' \
-//     e2e/real-flow/bootstrap/setup-stack.ts [guildCount]
+//   BACKEND_URL=http://localhost:4100 npm run e2e:bootstrap -- 3
+//
+// tsx reads tsconfig.json paths natively, so the @/ alias and JSON imports
+// in the canonical helpers resolve correctly without any extra flags.
 
-import fs from "node:fs";
-import path from "node:path";
 import https from "node:https";
 import http from "node:http";
-import { getContract, type Address, type Hex } from "viem";
+import { getContract, type Hex } from "viem";
 import { createAnvilHandle, makeWallet, ANVIL_KEYS } from "../helpers/chain";
+import { readContractAddresses, makeContracts } from "../helpers/contracts";
 import { deriveExpertKeys } from "./keys";
-// Types only — we inline writeManifest to avoid a CommonJS/ts-node export issue
-// with manifest.ts when running under --transpileOnly (the module resolves
-// correctly as a TypeScript module inside Playwright, but not via ts-node CLI).
+import { writeManifest } from "./manifest";
 import type { BootstrapManifest, ManifestGuild, ManifestExpert } from "./manifest";
-
-const MANIFEST_PATH = path.resolve(__dirname, "manifest.json");
-
-function writeManifest(m: BootstrapManifest): void {
-  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + "\n", "utf-8");
-}
+import { BACKEND_URL } from "../helpers/backend";
+// ABIs — tsx + tsconfig paths resolves @/ correctly at CLI runtime
+import expertStakingAbi from "@/contracts/abis/ExpertStaking.json";
+import vettedTokenAbi from "@/contracts/abis/VettedToken.json";
 
 // ---------------------------------------------------------------------------
-// Inline contract-address reader (avoids @/ alias in helpers/contracts.ts)
+// Inline HTTP helper (no Playwright APIRequestContext at CLI script runtime)
 // ---------------------------------------------------------------------------
-
-type ContractAddresses = {
-  VettedToken: Address;
-  ExpertStaking: Address;
-  GuildRegistry: Address;
-  VettingManager: Address;
-  SlashingManager: Address;
-  EndorsementBidding: Address;
-  RewardDistributor: Address;
-  ReputationManager: Address;
-};
-
-function readContractAddresses(): ContractAddresses {
-  const deploymentsPath = path.resolve(
-    __dirname,
-    "../../../../smart-contracts/deployments/local-latest.json",
-  );
-  if (!fs.existsSync(deploymentsPath)) {
-    throw new Error(
-      `local-latest.json not found at ${deploymentsPath}. Run forge deploy first.`,
-    );
-  }
-  return JSON.parse(fs.readFileSync(deploymentsPath, "utf-8")) as ContractAddresses;
-}
-
-// ---------------------------------------------------------------------------
-// Inline HTTP helper (no Playwright APIRequestContext at script runtime)
-// ---------------------------------------------------------------------------
-
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4100";
 
 async function postJson<T>(
-  path: string,
+  urlPath: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
-  const url = new URL(path, BACKEND_URL);
+  const url = new URL(urlPath, BACKEND_URL);
   const payload = JSON.stringify(body ?? {});
 
   return new Promise<T>((resolve, reject) => {
@@ -90,7 +55,7 @@ async function postJson<T>(
           if (!res.statusCode || res.statusCode >= 400) {
             reject(
               new Error(
-                `POST ${path} failed: ${res.statusCode} ${data.slice(0, 200)}`,
+                `POST ${urlPath} failed: ${res.statusCode} ${data.slice(0, 200)}`,
               ),
             );
             return;
@@ -122,8 +87,8 @@ async function apiSeedGuild(body: {
   name: string;
   slug: string;
   onChainGuildId: number;
-}): Promise<{ id: string; name: string; slug: string; on_chain_guild_id: string }> {
-  return postJson<{ id: string; name: string; slug: string; on_chain_guild_id: string }>(
+}): Promise<{ id: string; name: string; slug: string; on_chain_guild_id: `0x${string}` }> {
+  return postJson<{ id: string; name: string; slug: string; on_chain_guild_id: `0x${string}` }>(
     "/api/test/seed/guild",
     body,
   );
@@ -149,6 +114,8 @@ const STAKE = 10n * 10n ** 18n;
 const EXPERT_LIQUID = 1_000n * 10n ** 18n;
 const GAS_ETH = 1n * 10n ** 18n; // 1 ETH for gas
 
+// onChainGuildId values are the integer guild IDs the backend normalizes to
+// bytes32 when returning on_chain_guild_id from seedGuild.
 const GUILD_DEFS = [
   { name: "Engineering", slug: "engineering", onChainGuildId: 1 },
   { name: "Design", slug: "design", onChainGuildId: 2 },
@@ -171,25 +138,19 @@ async function main(): Promise<void> {
   const addresses = readContractAddresses();
   const owner = makeWallet(ANVIL_KEYS[0]);
 
-  // Build contract handles with write capability via per-wallet `account` option.
-  // We use getContract from viem directly here (same as makeContracts does) to
-  // avoid the @/ path alias that makeContracts uses in its ABI imports.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const guildRegistryAbi = require("../../../src/contracts/abis/GuildRegistry.json") as object[];
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const expertStakingAbi = require("../../../src/contracts/abis/ExpertStaking.json") as object[];
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const vettedTokenAbi = require("../../../src/contracts/abis/VettedToken.json") as object[];
+  // Read-only contract handles via makeContracts (owner public client)
+  const contracts = makeContracts(addresses, anvil.publicClient);
 
+  // Write-capable owner contract handles (owner wallet client)
   const guildRegistry = getContract({
     address: addresses.GuildRegistry,
-    abi: guildRegistryAbi,
+    abi: contracts.guildRegistry.abi,
     client: { public: anvil.publicClient, wallet: owner.client },
   });
 
   const vettedToken = getContract({
     address: addresses.VettedToken,
-    abi: vettedTokenAbi,
+    abi: contracts.vettedToken.abi,
     client: { public: anvil.publicClient, wallet: owner.client },
   });
 
@@ -216,8 +177,8 @@ async function main(): Promise<void> {
     });
 
     // The backend returns on_chain_guild_id as a 0x-prefixed bytes32 hex string.
-    // We pass it straight to contract calls — do NOT BigInt() it.
-    const onChainGuildId = guildRow.on_chain_guild_id as Hex;
+    // Pass it straight to contract calls — do NOT BigInt() it.
+    const onChainGuildId = guildRow.on_chain_guild_id;
 
     guildsManifest.push({
       id: guildRow.id,
@@ -270,7 +231,7 @@ async function main(): Promise<void> {
         if (!/AlreadyMember/.test(msg)) throw err;
       }
 
-      // On-chain: approve staking contract then stake
+      // Per-expert write-capable contract handles
       const expertStakingClient = getContract({
         address: addresses.ExpertStaking,
         abi: expertStakingAbi,
@@ -283,11 +244,18 @@ async function main(): Promise<void> {
         client: { public: anvil.publicClient, wallet: expertWallet.client },
       });
 
-      const approveTx = await expertTokenClient.write.approve(
-        [addresses.ExpertStaking, STAKE],
-        { account: expertWallet.client.account },
-      );
-      await anvil.publicClient.waitForTransactionReceipt({ hash: approveTx as Hex });
+      // On-chain: approve staking contract (skip if already sufficient)
+      const allowance = await expertTokenClient.read.allowance([
+        expertWallet.address,
+        addresses.ExpertStaking,
+      ]) as bigint;
+      if (allowance < STAKE) {
+        const approveTx = await expertTokenClient.write.approve(
+          [addresses.ExpertStaking, STAKE],
+          { account: expertWallet.client.account },
+        );
+        await anvil.publicClient.waitForTransactionReceipt({ hash: approveTx as Hex });
+      }
 
       try {
         const stakeTx = await expertStakingClient.write.stake(
