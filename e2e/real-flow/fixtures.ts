@@ -231,6 +231,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // that use the singular `guild` fixture don't need to change.
   guild: [
     async ({ guilds }, use) => {
+      if (guilds.length === 0) throw new Error("guild fixture: manifest has no guilds — run `npm run e2e:bootstrap`");
       await use(guilds[0]);
     },
     { scope: "worker" },
