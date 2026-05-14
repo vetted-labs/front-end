@@ -72,10 +72,13 @@ import { BACKEND_URL, CRON_SECRET } from "../helpers/backend";
 import { computeConsensus } from "../oracle";
 
 // ─── DIV-002 fixme guard ─────────────────────────────────────────────────────
-// Remove this block (and the closing brace below) once both gaps are fixed.
-// When the guard is active the entire describe block is skipped; the test file
-// still compiles and is visible in `--list` output.
-const DIV_002_GAPS_OPEN = true;
+// Both gaps are now closed (2026-05-14):
+//   Gap 1: POST /api/test/expert-reviews/:id/activate-and-assign and
+//           POST /api/test/expert-reviews/:id/expire-and-finalize added to
+//           backend/src/routes/test/expert-reviews.ts.
+//   Gap 2: CRON_SECRET added to backend/.env.e2e.
+// Guard is set to false so the scenario runs.
+const DIV_002_GAPS_OPEN = false;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -194,11 +197,11 @@ async function activateAndAssignReviewers(
   );
   if (!res.ok()) {
     throw new Error(
-      `activateAndAssignReviewers(${applicationId}): ${res.status()} ${await res.text()}. ` +
-        "Gap 1 of DIV-002 — endpoint does not exist yet.",
+      `activateAndAssignReviewers(${applicationId}): ${res.status()} ${await res.text()}.`,
     );
   }
-  return (await res.json()) as { assigned: boolean; reviewerIds: string[] };
+  const body = (await res.json()) as { data: { assigned: boolean; reviewerIds: string[] } };
+  return body.data;
 }
 
 /**
@@ -237,6 +240,10 @@ async function submitDirectReview(
           overallMax,
           general: { total: overallScore * 0.6 },
           domain: { total: overallScore * 0.4 },
+        },
+        criteriaJustifications: {
+          general: `E2E panel review — general criteria score ${(overallScore * 0.6).toFixed(0)}/${(overallMax * 0.6).toFixed(0)}.`,
+          domain: `E2E panel review — domain criteria score ${(overallScore * 0.4).toFixed(0)}/${(overallMax * 0.4).toFixed(0)}.`,
         },
         feedback: `E2E panel review — normalised score target ${normalizedScore}.`,
       },
