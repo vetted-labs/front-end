@@ -167,64 +167,66 @@ test.describe("Expert sidebar navigation flow", () => {
   });
 
   test("expert sidebar shows all navigation items", async ({ page }) => {
-    await setupDashboardMocks(page);
-    await page.goto("/expert/dashboard", { waitUntil: "networkidle" });
+    await test.step("dashboard mocks are set up and expert lands on the dashboard", async () => {
+      await setupDashboardMocks(page);
+      await page.goto("/expert/dashboard", { waitUntil: "networkidle" });
 
-    // Wait for the page to render
-    await page.waitForTimeout(3000);
-    const bodyText = await page.textContent("body");
-    expect(bodyText).toBeTruthy();
+      await page.waitForTimeout(3000);
+      const bodyText = await page.textContent("body");
+      expect(bodyText).toBeTruthy();
+    });
 
-    // Verify sidebar navigation groups and items from sidebar-config.ts
-    // Home group
-    await expect(page.getByRole("link", { name: "Dashboard" }).first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("link", { name: "Notifications" }).first()).toBeVisible();
+    await test.step("sidebar Home group links are visible", async () => {
+      await expect(page.getByRole("link", { name: "Dashboard" }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("link", { name: "Notifications" }).first()).toBeVisible();
+    });
 
-    // Vetting group
-    await expect(page.getByRole("link", { name: "Applications" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Endorsements" }).first()).toBeVisible();
+    await test.step("sidebar Vetting and Guilds group links are visible", async () => {
+      await expect(page.getByRole("link", { name: "Applications" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Endorsements" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "My Guilds" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Guild Ranks" }).first()).toBeVisible();
+    });
 
-    // Guilds group
-    await expect(page.getByRole("link", { name: "My Guilds" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Guild Ranks" }).first()).toBeVisible();
-
-    // Governance group
-    await expect(page.getByRole("link", { name: "Proposals" }).first()).toBeVisible();
-
-    // Rewards group
-    await expect(page.getByRole("link", { name: "Earnings" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Reputation" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Leaderboard" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Withdrawals" }).first()).toBeVisible();
+    await test.step("sidebar Governance and Rewards group links are visible", async () => {
+      await expect(page.getByRole("link", { name: "Proposals" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Earnings" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Reputation" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Leaderboard" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Withdrawals" }).first()).toBeVisible();
+    });
   });
 
   test("expert can navigate between pages", async ({ page }) => {
-    // Set up mocks for all the pages we'll navigate to
-    await setupDashboardMocks(page);
-    await setupEarningsMocks(page);
-    await setupReputationMocks(page);
-    await setupNotificationsMocks(page);
+    await test.step("mocks for all destination pages are set up and expert lands on the dashboard", async () => {
+      await setupDashboardMocks(page);
+      await setupEarningsMocks(page);
+      await setupReputationMocks(page);
+      await setupNotificationsMocks(page);
 
-    // Start on dashboard
-    await page.goto("/expert/dashboard", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+      await page.goto("/expert/dashboard", { waitUntil: "networkidle" });
+      await page.waitForTimeout(3000);
+    });
 
-    // Click Earnings in sidebar
-    await page.getByRole("link", { name: "Earnings" }).first().click();
-    await page.waitForURL("**/expert/earnings", { timeout: 10000 });
-    await expect(page.getByText("Earnings").first()).toBeVisible({ timeout: 15000 });
+    await test.step("expert clicks Earnings in the sidebar and the earnings page loads", async () => {
+      await page.getByRole("link", { name: "Earnings" }).first().click();
+      await page.waitForURL("**/expert/earnings", { timeout: 10000 });
+      await expect(page.getByText("Earnings").first()).toBeVisible({ timeout: 15000 });
+    });
 
-    // Click Reputation in sidebar
-    await page.getByRole("link", { name: "Reputation" }).first().click();
-    await page.waitForURL("**/expert/reputation", { timeout: 10000 });
-    await expect(page.getByText("Reputation").first()).toBeVisible({ timeout: 15000 });
+    await test.step("expert clicks Reputation in the sidebar and the reputation page loads", async () => {
+      await page.getByRole("link", { name: "Reputation" }).first().click();
+      await page.waitForURL("**/expert/reputation", { timeout: 10000 });
+      await expect(page.getByText("Reputation").first()).toBeVisible({ timeout: 15000 });
+    });
 
-    // Click Notifications in sidebar
-    await page.getByRole("link", { name: "Notifications" }).first().click();
-    await page.waitForURL("**/expert/notifications", { timeout: 10000 });
-    // Notifications page should render heading or loading state
-    const hasHeading = await page.getByText("Notifications").first().isVisible().catch(() => false);
-    const hasLoading = await page.getByText("Loading notifications").isVisible().catch(() => false);
-    expect(hasHeading || hasLoading).toBeTruthy();
+    await test.step("expert clicks Notifications in the sidebar and the notifications page loads", async () => {
+      await page.getByRole("link", { name: "Notifications" }).first().click();
+      await page.waitForURL("**/expert/notifications", { timeout: 10000 });
+      // Notifications page should render heading or loading state
+      const hasHeading = await page.getByText("Notifications").first().isVisible().catch(() => false);
+      const hasLoading = await page.getByText("Loading notifications").isVisible().catch(() => false);
+      expect(hasHeading || hasLoading).toBeTruthy();
+    });
   });
 });

@@ -41,52 +41,68 @@ test.describe("Expert profile page", () => {
   });
 
   test("shows expert name as heading", async ({ page }) => {
-    await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    await test.step("expert opens their profile page", async () => {
+      await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    });
 
-    await expect(
-      page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
-    ).toBeVisible({ timeout: 15000 });
+    await test.step("the expert's name appears as the page heading", async () => {
+      await expect(
+        page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
+      ).toBeVisible({ timeout: 15000 });
+    });
   });
 
   test("shows Member since text", async ({ page }) => {
-    await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    await test.step("expert opens their profile page", async () => {
+      await page.goto("/expert/profile", { waitUntil: "networkidle" });
+      await expect(
+        page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
+      ).toBeVisible({ timeout: 15000 });
+    });
 
-    await expect(
-      page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
-    ).toBeVisible({ timeout: 15000 });
-
-    await expect(page.getByText(/Member since/i).first()).toBeVisible({ timeout: 10000 });
+    await test.step("the Member since label is visible on the profile", async () => {
+      await expect(page.getByText(/Member since/i).first()).toBeVisible({ timeout: 10000 });
+    });
   });
 
   test("shows stat cards for Reputation Score and Total Earnings", async ({ page }) => {
-    await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    await test.step("expert opens their profile page", async () => {
+      await page.goto("/expert/profile", { waitUntil: "networkidle" });
+      await expect(
+        page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
+      ).toBeVisible({ timeout: 15000 });
+    });
 
-    await expect(
-      page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
-    ).toBeVisible({ timeout: 15000 });
-
-    await expect(page.getByText("Reputation Score").first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Total Earnings").first()).toBeVisible();
+    await test.step("Reputation Score and Total Earnings stat cards are rendered", async () => {
+      await expect(page.getByText("Reputation Score").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Total Earnings").first()).toBeVisible();
+    });
   });
 
   test("shows Guild Memberships section", async ({ page }) => {
-    await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    await test.step("expert opens their profile page", async () => {
+      await page.goto("/expert/profile", { waitUntil: "networkidle" });
+      await expect(
+        page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
+      ).toBeVisible({ timeout: 15000 });
+    });
 
-    await expect(
-      page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
-    ).toBeVisible({ timeout: 15000 });
-
-    await expect(page.getByText("Guild Memberships").first()).toBeVisible({ timeout: 10000 });
+    await test.step("the Guild Memberships section is visible on the profile", async () => {
+      await expect(page.getByText("Guild Memberships").first()).toBeVisible({ timeout: 10000 });
+    });
   });
 
   test("no error toasts on load", async ({ page }) => {
-    await page.goto("/expert/profile", { waitUntil: "networkidle" });
+    await test.step("expert opens their profile page", async () => {
+      await page.goto("/expert/profile", { waitUntil: "networkidle" });
+      await expect(
+        page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
+      ).toBeVisible({ timeout: 15000 });
+    });
 
-    await expect(
-      page.getByText(MOCK_EXPERT_PROFILE.fullName).first(),
-    ).toBeVisible({ timeout: 15000 });
-
-    const errorToasts = page.locator('[data-sonner-toast][data-type="error"]');
-    await expect(errorToasts).toHaveCount(0);
+    await test.step("no error toasts appear after the profile finishes loading", async () => {
+      const errorToasts = page.locator('[data-sonner-toast][data-type="error"]');
+      await expect(errorToasts).toHaveCount(0);
+    });
   });
 });

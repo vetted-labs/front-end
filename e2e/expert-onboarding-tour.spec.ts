@@ -48,38 +48,56 @@ async function setupExpertDashboard(page: Page) {
 
 test.describe("Expert story mode", () => {
   test("forces the fake story and suspends it while practice review is open", async ({ page }) => {
-    await setupExpertDashboard(page);
-    await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
-
-    const story = page.getByRole("dialog", { name: "Expert story mode" });
-    await expect(story).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole("heading", { name: "Meet your guild" })).toBeVisible();
-    await expect(story.getByRole("button", { name: /skip/i })).toHaveCount(0);
-    await expect(story.getByRole("button", { name: /close/i })).toHaveCount(0);
-
-    await story.getByRole("button", { name: "Next" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Maya Chen applies to Engineering" })
-    ).toBeVisible();
-
-    await story.getByRole("button", { name: "Next" }).click();
-
-    await expect(page.getByRole("heading", { name: "Practice review" })).toBeVisible({
-      timeout: 15000,
+    await test.step("expert session is prepared with onboarding tour state cleared", async () => {
+      await setupExpertDashboard(page);
     });
-    await expect(page.getByText("Sandbox walkthrough. No backend, wallet, or real queue changes.")).toBeVisible();
-    await expect(page.getByRole("dialog", { name: "Expert story mode" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /close review modal/i })).toHaveCount(0);
+
+    await test.step("expert opens the dashboard and the story modal launches automatically", async () => {
+      await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+
+      const story = page.getByRole("dialog", { name: "Expert story mode" });
+      await expect(story).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "Meet your guild" })).toBeVisible();
+      await expect(story.getByRole("button", { name: /skip/i })).toHaveCount(0);
+      await expect(story.getByRole("button", { name: /close/i })).toHaveCount(0);
+    });
+
+    await test.step("expert advances through the story steps to the practice review", async () => {
+      const story = page.getByRole("dialog", { name: "Expert story mode" });
+
+      await story.getByRole("button", { name: "Next" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Maya Chen applies to Engineering" })
+      ).toBeVisible();
+
+      await story.getByRole("button", { name: "Next" }).click();
+    });
+
+    await test.step("practice review opens and the story modal suspends without a close button", async () => {
+      await expect(page.getByRole("heading", { name: "Practice review" })).toBeVisible({
+        timeout: 15000,
+      });
+      await expect(page.getByText("Sandbox walkthrough. No backend, wallet, or real queue changes.")).toBeVisible();
+      await expect(page.getByRole("dialog", { name: "Expert story mode" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /close review modal/i })).toHaveCount(0);
+    });
   });
 
   test("redirects unfinished experts from deep links back to the dashboard story", async ({ page }) => {
-    await setupExpertDashboard(page);
-    await page.goto("/expert/earnings", { waitUntil: "domcontentloaded" });
+    await test.step("expert session is prepared with onboarding tour state cleared", async () => {
+      await setupExpertDashboard(page);
+    });
 
-    await expect(page).toHaveURL(/\/expert\/dashboard/, { timeout: 15000 });
-    await expect(
-      page.getByRole("dialog", { name: "Expert story mode" })
-    ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Meet your guild" })).toBeVisible();
+    await test.step("expert tries to navigate directly to the earnings page", async () => {
+      await page.goto("/expert/earnings", { waitUntil: "domcontentloaded" });
+    });
+
+    await test.step("expert is redirected to the dashboard where the story modal is shown", async () => {
+      await expect(page).toHaveURL(/\/expert\/dashboard/, { timeout: 15000 });
+      await expect(
+        page.getByRole("dialog", { name: "Expert story mode" })
+      ).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Meet your guild" })).toBeVisible();
+    });
   });
 });
