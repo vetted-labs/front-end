@@ -13,6 +13,7 @@
     "test:e2e:ui": "playwright test --ui",
     "e2e:bootstrap": "tsx e2e/real-flow/bootstrap/setup-stack.ts",
     "e2e:real-flow": "npx dotenv -e .env.local -- npx playwright test --config=e2e/real-flow/playwright.real-flow.config.ts",
+    "e2e:experiment": "tsx e2e/real-flow/experiments/run-experiment.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "lint:fix": "eslint --fix",
