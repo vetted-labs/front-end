@@ -401,13 +401,40 @@ export async function submitRubricReviewViaUI(
     await expect(submitBtn).toBeEnabled({ timeout: 10_000 });
     await submitBtn.click();
 
+    // ── Commit-reveal confirmation gate ──────────────────────────────────
+    // In commit-reveal phase (expert membership reviews AND, since DIV-001,
+    // candidate guild-application reviews) clicking "Submit Commitment" does
+    // NOT submit directly — it opens the inline CommitFlowPanel "Confirm your
+    // commitment" card with an "I understand this commitment is final."
+    // checkbox + a "Sign Commit Vote" button. The wallet signature only fires
+    // after that. In the direct-submit phase this card never appears and the
+    // success heading shows immediately. Handle both: if the confirm card
+    // shows up, tick the ack box and sign; otherwise fall straight through.
+    const ackCheckbox = page
+      .getByRole("checkbox", { name: /i understand this commitment is final/i })
+      .first();
+    const confirmCardVisible = await ackCheckbox
+      .isVisible({ timeout: 5_000 })
+      .catch(() => false);
+    if (confirmCardVisible) {
+      await ackCheckbox.check();
+      const signBtn = page
+        .getByRole("button", { name: /sign commit vote/i })
+        .first();
+      await expect(signBtn).toBeEnabled({ timeout: 10_000 });
+      // Clicking Sign triggers the headless wallet's commitVote signature;
+      // the BE submit + on-chain confirmation run after that. We just wait
+      // for the success heading below — same as the direct path.
+      await signBtn.click();
+    }
+
     // Wait for the success state: "Review Submitted" / "Commitment Submitted"
     // / "Practice Complete" heading from ReviewSuccessStep.
     await expect(
       page
         .getByText(/review submitted|commitment submitted|practice complete/i)
         .first(),
-    ).toBeVisible({ timeout: 60_000 });
+    ).toBeVisible({ timeout: 90_000 });
 
     // Extract the overall score from the success panel's display
     // ("Overall Score" label + the value next to it). The ReviewSuccessStep
