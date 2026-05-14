@@ -46,6 +46,7 @@ next-env.d.ts
 /blob-report/
 /playwright/.cache/
 /e2e/real-flow/playwright-report-real-flow/
+e2e/real-flow/bootstrap/manifest.json
 .superpowers/
 /screenshots
 /docs/
