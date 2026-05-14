@@ -3,19 +3,36 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3030";
 
+// The real-flow stack runs a dedicated e2e backend (default :4100, see
+// backend/.env.e2e) so it can coexist with a dev backend on :4000. Test-side
+// helpers/fixtures already honour BACKEND_URL, but the *browser* reads
+// NEXT_PUBLIC_API_URL — which .env.local pins to :4000. Without forwarding
+// BACKEND_URL into the dev server's NEXT_PUBLIC_API_URL, the UI fetches
+// (e.g. expertApi.getProfile during wallet login) hit the un-seeded :4000
+// backend, 404, and bounce the expert to /expert/apply instead of the
+// dashboard.
+const backendUrl = process.env.BACKEND_URL || "http://localhost:4100";
+const watchSlowMo = process.env.PLAYWRIGHT_WATCH_UI === "1" ? 250 : 0;
+const slowMo = Number(process.env.PLAYWRIGHT_SLOW_MO ?? watchSlowMo);
+const launchOptions = slowMo > 0 ? { slowMo } : undefined;
+
 export default defineConfig({
   testDir: ".",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: [["html", { outputFolder: "playwright-report-real-flow" }], ["list"]],
+  reporter: [
+    ["html", { outputFolder: "playwright-report-real-flow" }],
+    ["list"],
+  ],
   timeout: 120_000,
   use: {
     baseURL,
     bypassCSP: true,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    launchOptions,
   },
   projects: [
     {
@@ -39,7 +56,8 @@ export default defineConfig({
     },
     {
       name: "platform",
-      testMatch: /scenarios\/(candidate|company|cross-role|expert|protocol)\/.*\.spec\.ts/,
+      testMatch:
+        /scenarios\/(candidate|company|cross-role|expert|protocol)\/.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
   ],
@@ -57,6 +75,10 @@ export default defineConfig({
       "cd ../.. && npx dotenv -e .env.local -- env",
       "NEXT_PUBLIC_E2E_MODE=true",
       "NEXT_PUBLIC_EXPERT_ONBOARDING_TOUR=false",
+      // Point the browser at the e2e backend (BACKEND_URL, default :4100) —
+      // NOT the :4000 dev backend that .env.local configures. Must come after
+      // the `dotenv ... env` dump so it overrides the .env.local value.
+      `NEXT_PUBLIC_API_URL=${backendUrl}`,
       // FE wagmi reads (`useReadContract`, etc.) need to hit local anvil,
       // not public sepolia. Default fallback in `http(undefined)` uses the
       // chain's public RPC, which has none of our deployed state.
