@@ -290,18 +290,27 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   ],
 
   wallet: async ({}, use) => {
-    let handle: InjectedWalletHandle | null = null;
+    // Track handles per page. Attaching twice to the SAME page is still a bug
+    // (attachWallet's page.exposeFunction is not re-runnable), but multi-actor
+    // scenarios legitimately attach a wallet to one fresh page/context per
+    // expert — so the guard is keyed on the page, not the whole test.
+    const handles = new Map<Page, InjectedWalletHandle>();
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use({
       attach: async (page, privateKey) => {
-        if (handle) throw new Error("wallet.attach called twice in one test");
-        handle = await attachWallet(page, privateKey, {
+        if (handles.has(page)) {
+          throw new Error(
+            "wallet.attach called twice for the same page in one test",
+          );
+        }
+        const handle = await attachWallet(page, privateKey, {
           rpcUrl: process.env.ANVIL_RPC_URL,
         });
+        handles.set(page, handle);
         return handle;
       },
     });
-    // No teardown — page closes at end of test, taking exposeFunction with it.
+    // No teardown — pages close at end of test, taking exposeFunction with them.
   },
 });
 
