@@ -7,32 +7,15 @@
 // sees the outcome. Every test.step() asserts a user-visible outcome AND a
 // chain/DB invariant AND oracle agreement (computeConsensus).
 //
-// ─── PROTOCOL DIVERGENCE — FIXME gating ───────────────────────────────────────
+// ─── DIV-001 RESOLVED (2026-05-14) ────────────────────────────────────────────
 //
-// This scenario is gated with test.fixme() because the canonical Pipeline B
-// flow (5-7 panel, IQR + commit-reveal) is NOT reachable via the current
-// frontend guild-application UI path.
-//
-// THE EXACT STALL POINT (confirmed by tracing helpers/scenario.ts):
-//   applyToGuildViaUI() calls POST /api/guilds/{id}/applications, which creates
-//   a candidate_guild_applications row (Pipeline C — simple majority) but does
-//   NOT create a candidate_proposals row. The helper then reads
-//   candidate_proposal_id from the application record. Since no candidate_proposals
-//   row was ever written, the field is null, and applyToGuildViaUI() throws:
-//
-//     "applyToGuildViaUI: BE did not link a candidate_proposal for application
-//      {id}. This usually means reviewer assignment failed."
-//
-// This surfaces BEFORE any expert can review, because commit-reveal enablement
-// and session creation both require a proposal id from the Pipeline B chain.
-//
-// See docs/testing/PROTOCOL_DIVERGENCES.md (on-disk, gitignored) for the full
-// canonical analysis, the SCENARIO_OUTCOME_MATRIX.md §1 "pipeline bifurcation"
-// reference, and the Workstream C remediation path.
-//
-// REMOVING the test.fixme(true, ...) call (or replacing with test.fixme(false))
-// will make this scenario runnable once the backend wires the
-// candidate-guild-application → candidate_proposals promotion path ("Phase 7").
+// Candidate guild-applications now route through Pipeline B: POST
+// /api/guilds/{id}/applications creates a linked candidate_proposals row
+// (5-7 expert panel, commit-reveal, IQR consensus) and returns its
+// candidateProposalId. applyToGuildViaUI() reads that id, then calls the
+// /api/test/candidate-reviews/{id}/assign-panel fixture with the panelFor
+// expert ids so the panel is deterministic. The test.fixme() gate has been
+// removed and this scenario runs.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -54,8 +37,9 @@ import type { Hex } from "viem";
 // each 1 day; pushing past them (plus a mine) flips the session phase.
 const ONE_DAY_PLUS_ONE = 60 * 60 * 24 + 1;
 
-// The approval threshold from protocol.config.ts — consensus score must be ≥60.
-const APPROVAL_THRESHOLD = 60;
+// The candidate pass threshold (CANDIDATE_PASS_THRESHOLD in protocol.config.ts,
+// per the CEO Consensus Scenarios doc) — consensus score must be ≥50.
+const APPROVAL_THRESHOLD = 50;
 
 // Indexable view of the sessions(bytes32) tuple. ABI loaded from non-const JSON
 // so viem types it as unknown; we cast to this shape to reach phase (slot 6).
@@ -84,39 +68,26 @@ test(
     wallet,
     cleanState: _cleanState,
   }) => {
-    // DIVERGENCE: test.fixme() marks this test as expected-to-fail (tracked bug)
-    // so CI stays green while the divergence is visible and the full scenario
-    // code is preserved for when Phase 7 is fixed.
-    //
-    // Root cause: POST /api/guilds/{id}/applications (Pipeline C) never creates
-    // a candidate_proposals row, so applyToGuildViaUI() throws at the
-    // candidate_proposal_id check before any expert can review.
-    //
-    // See: docs/testing/PROTOCOL_DIVERGENCES.md, SCENARIO_OUTCOME_MATRIX.md §1
-    test.fixme(
-      true,
-      "PROTOCOL_DIVERGENCE: candidate-guild-application does not promote to " +
-        "Pipeline B (IQR/commit-reveal). POST /api/guilds/{id}/applications " +
-        "never creates a candidate_proposals row, so applyToGuildViaUI() throws " +
-        "before the panel can review. See docs/testing/PROTOCOL_DIVERGENCES.md.",
-    );
-
     // ─── Phase 0: Application ───────────────────────────────────────────────
-    // DIVERGENCE NOTE: This step throws at the candidate_proposal_id check inside
-    // applyToGuildViaUI(). The BE endpoint POST /api/guilds/{id}/applications
-    // only creates a candidate_guild_applications row (Pipeline C). The helper
-    // then fails when candidate_proposal_id comes back null, because no
-    // candidate_proposals row was inserted (that only happens via Pipeline B's
-    // POST /api/candidate-proposals/apply endpoint).
+    // DIV-001 RESOLVED: POST /api/guilds/{id}/applications now routes through
+    // Pipeline B — it creates a linked candidate_proposals row and returns its
+    // candidateProposalId. applyToGuildViaUI() then pins the panel to the
+    // panelFor experts via the assign-panel test fixture.
+
+    // Whitepaper §2: panels are 5-7 experts. We use 5 (the minimum).
+    // Defined up front so applyToGuildViaUI can pin the panel deterministically.
+    const panel = panelFor(guild.id, 5);
 
     let applicationId!: string;
     let sessionId!: Hex;
 
     await test.step("candidate submits a guild application via the UI", async () => {
-      // applyToGuildViaUI calls POST /api/guilds/{id}/applications (Pipeline C).
-      // It will throw "BE did not link a candidate_proposal for application {id}"
-      // once Phase 7 is not wired. That throw is the exact stall point.
-      const result = await applyToGuildViaUI(page, candidate, guild.id);
+      const result = await applyToGuildViaUI(
+        page,
+        candidate,
+        guild.id,
+        panel.map((e) => e.id),
+      );
       applicationId = result.applicationId;
       sessionId = result.sessionId;
 
@@ -138,9 +109,8 @@ test(
 
     // ─── Phase 1: 5-expert panel reviews via the rubric wizard ─────────────
     //
-    // Whitepaper §2: panels are 5-7 experts. We use 5 (the minimum).
     // One browser context per actor (real-flow operating principle #3).
-    const panel = panelFor(guild.id, 5);
+    // `panel` is the same deterministic 5-expert set assigned in Phase 0.
     const submittedScores: number[] = [];
 
     await test.step("each of the 5 panel experts reviews via the 4-step rubric wizard", async () => {

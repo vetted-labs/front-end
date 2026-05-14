@@ -23,7 +23,7 @@ import type { APIRequestContext, Page } from "@playwright/test";
 import type { Expert, Candidate } from "../fixtures";
 import type { ContractHandles } from "./contracts";
 import type { AnvilHandle } from "./chain";
-import { cronApi, BACKEND_URL } from "./backend";
+import { cronApi, testApi, BACKEND_URL } from "./backend";
 
 /**
  * Submit a candidate guild-application directly via the BE API and return the
@@ -33,6 +33,15 @@ import { cronApi, BACKEND_URL } from "./backend";
  * is brittle to drive headlessly. Candidate-side UI is still exercised by the
  * end-of-scenario spot check on `/candidate/applications`.
  *
+ * The guild-application path now routes through Pipeline B: the BE creates a
+ * linked `candidate_proposals` row and returns its id as `candidateProposalId`.
+ * Reviewer selection at submission time is random; callers that need a
+ * deterministic panel (e.g. the headline scenario, which logs each panelist in
+ * to review via the UI) pass explicit `reviewerIds` — the `panelFor` fixture's
+ * expert ids — and this helper overwrites the panel via the `assign-panel`
+ * test fixture before enabling commit-reveal. Callers that don't care which
+ * experts are assigned omit it and keep the BE's random panel.
+ *
  * Caller must be signed in as `candidate` (the `candidate` fixture handles
  * that — sets `authToken` in localStorage).
  */
@@ -40,6 +49,7 @@ export async function applyToGuildViaUI(
   page: Page,
   candidate: Candidate,
   guildId: string,
+  reviewerIds?: string[],
 ): Promise<{ applicationId: string; sessionId: Hex }> {
   // Use the candidate's JWT directly — going through localStorage is fragile
   // because navigating to authed routes can trigger the FE AuthContext to
@@ -47,16 +57,19 @@ export async function applyToGuildViaUI(
   const token = candidate.token;
 
   // Submit directly. BE schema accepts arbitrary `answers` and treats other
-  // fields as optional.
+  // fields as optional. Pipeline B: the response carries `candidateProposalId`.
   const submitRes = await page.request.post(
     `${BACKEND_URL}/api/guilds/${encodeURIComponent(guildId)}/applications`,
     {
       headers: { Authorization: `Bearer ${token}` },
       data: {
         answers: {
-          motivation: "E2E test answer covering motivation and intent thoroughly enough to pass min-length checks.",
-          experience: "E2E test answer covering professional experience and expertise depth thoroughly.",
-          domain_topic: "E2E test domain answer with sufficient detail to satisfy validation requirements.",
+          motivation:
+            "E2E test answer covering motivation and intent thoroughly enough to pass min-length checks.",
+          experience:
+            "E2E test answer covering professional experience and expertise depth thoroughly.",
+          domain_topic:
+            "E2E test domain answer with sufficient detail to satisfy validation requirements.",
         },
         level: "experienced",
         noAiDeclaration: true,
@@ -69,7 +82,36 @@ export async function applyToGuildViaUI(
     );
   }
 
-  // Read application ID + candidate_proposal_id from the BE.
+  const submitBody = (await submitRes.json()) as {
+    data: {
+      applicationId: string;
+      candidateProposalId?: string | null;
+      reviewersAssigned?: number;
+    };
+  };
+  const applicationId = submitBody.data.applicationId;
+  if (!applicationId) {
+    throw new Error("applyToGuildViaUI: BE did not return an applicationId");
+  }
+  const proposalId = submitBody.data.candidateProposalId;
+  if (!proposalId) {
+    throw new Error(
+      `applyToGuildViaUI: BE did not link a candidate_proposal for application ${applicationId}. ` +
+        `Pipeline B promotion failed (check BE log for "Reviewer assignment failed").`,
+    );
+  }
+
+  // Overwrite the (randomly selected) panel with the deterministic test panel
+  // so the experts that log in and review below are exactly the assigned ones.
+  if (reviewerIds && reviewerIds.length > 0) {
+    await testApi.candidateReviews.assignPanel(
+      page.request,
+      applicationId,
+      reviewerIds,
+    );
+  }
+
+  // Read on-chain session id from the BE after enable+drain.
   const fetchApplications = async () => {
     const r = await page.request.get(
       `${BACKEND_URL}/api/candidates/me/guild-applications`,
@@ -78,26 +120,12 @@ export async function applyToGuildViaUI(
     return (await r.json()) as {
       data: Array<{
         id: string;
-        candidate_proposal_id?: string | null;
-        candidateProposalId?: string | null;
         on_chain_session_id?: string | null;
         blockchain_session_id?: string | null;
         blockchainSessionId?: string | null;
       }>;
     };
   };
-
-  const initial = await fetchApplications();
-  const app = initial.data[0];
-  if (!app) throw new Error("applyToGuildViaUI: no applications returned after submit");
-
-  const proposalId = app.candidate_proposal_id ?? app.candidateProposalId;
-  if (!proposalId) {
-    throw new Error(
-      `applyToGuildViaUI: BE did not link a candidate_proposal for application ${app.id}. ` +
-        `This usually means reviewer assignment failed (check BE log for "Reviewer assignment failed").`,
-    );
-  }
 
   // Enable commit-reveal (transitions proposal direct→commit + queues
   // create_vetting_session in pending_blockchain_ops outbox), then drain the
@@ -107,17 +135,23 @@ export async function applyToGuildViaUI(
 
   // Re-fetch — blockchain_session_id should now be populated.
   const after = await fetchApplications();
-  const refreshed = after.data.find((row) => row.id === app.id) ?? app;
+  const refreshed =
+    after.data.find((row) => row.id === applicationId) ?? after.data[0];
+  if (!refreshed) {
+    throw new Error(
+      "applyToGuildViaUI: no applications returned after submit",
+    );
+  }
   const rawSessionId =
     refreshed.on_chain_session_id ??
     refreshed.blockchain_session_id ??
     refreshed.blockchainSessionId;
   if (!rawSessionId) {
     throw new Error(
-      `applyToGuildViaUI: BE did not populate blockchain_session_id after enable+drain for application ${app.id}`,
+      `applyToGuildViaUI: BE did not populate blockchain_session_id after enable+drain for application ${applicationId}`,
     );
   }
-  return { applicationId: app.id, sessionId: rawSessionId as Hex };
+  return { applicationId, sessionId: rawSessionId as Hex };
 }
 
 /**
@@ -189,7 +223,10 @@ export async function expertReveal(
  * Thin wrapper around `anvil.increaseTime` so spec files read declaratively
  * (`await advanceTime(anvil, COMMIT_WINDOW)` instead of poking RPC directly).
  */
-export async function advanceTime(anvil: AnvilHandle, seconds: number): Promise<void> {
+export async function advanceTime(
+  anvil: AnvilHandle,
+  seconds: number,
+): Promise<void> {
   await anvil.increaseTime(seconds);
 }
 
@@ -197,7 +234,9 @@ export async function advanceTime(anvil: AnvilHandle, seconds: number): Promise<
  * Trigger the BE cron that promotes commit-reveal lifecycle phases for expert
  * applications (Commit -> Reveal -> Finalized/Expired mirror jobs).
  */
-export async function fireExpertTransitions(request: APIRequestContext): Promise<void> {
+export async function fireExpertTransitions(
+  request: APIRequestContext,
+): Promise<void> {
   await cronApi.processExpertTransitions(request);
 }
 
@@ -213,10 +252,9 @@ export async function finalize(
   contracts: ContractHandles,
   sessionId: Hex,
 ): Promise<void> {
-  await contracts.vettingManager.write.finalizeSessionVerifiable(
-    [sessionId],
-    { account: expert.client.account },
-  );
+  await contracts.vettingManager.write.finalizeSessionVerifiable([sessionId], {
+    account: expert.client.account,
+  });
 }
 
 /**
@@ -228,8 +266,7 @@ export async function expireSession(
   contracts: ContractHandles,
   sessionId: Hex,
 ): Promise<void> {
-  await contracts.vettingManager.write.expireSession(
-    [sessionId],
-    { account: expert.client.account },
-  );
+  await contracts.vettingManager.write.expireSession([sessionId], {
+    account: expert.client.account,
+  });
 }

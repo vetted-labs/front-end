@@ -136,6 +136,22 @@ export const testApi = {
     },
   },
   candidateReviews: {
+    /**
+     * Assign a deterministic Pipeline B expert panel to a candidate guild
+     * application's linked candidate_proposals row. Mirrors the expert-side
+     * /api/test/expert-reviews/:id/activate-and-assign fixture. Pass explicit
+     * reviewerIds (from the `panelFor` fixture) for a fully deterministic panel.
+     */
+    assignPanel: (
+      req: APIRequestContext,
+      applicationId: string,
+      reviewerIds: string[],
+    ) =>
+      postJson<{ proposalId: string; reviewerIds: string[] }>(
+        req,
+        `/api/test/candidate-reviews/${applicationId}/assign-panel`,
+        { reviewerIds },
+      ),
     expireAndFinalize: (req: APIRequestContext, applicationId: string) =>
       postJson<{
         finalization: { processed: number; succeeded: number; failed: number };
