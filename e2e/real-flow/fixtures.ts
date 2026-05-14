@@ -25,8 +25,6 @@
 
 import {
   test as base,
-  request as apiRequest,
-  type APIRequestContext,
   type Page,
 } from "@playwright/test";
 import fs from "node:fs";
@@ -58,6 +56,10 @@ import {
 const BACKEND_ENV_PATH = path.resolve(__dirname, "../../../backend/.env");
 const JOB_CREATOR_ETH_BALANCE = 100n * 10n ** 18n;
 const JOB_CREATOR_TOKEN_FLOAT = 100n * 10n ** 18n;
+// The backend service wallet drives the on-chain review pipeline (createSession,
+// batchRevealVotes, finalizeSession) via its blockchain-ops outbox. It is NOT an
+// anvil default account, so it starts with zero ETH — fund it for gas each test.
+const BACKEND_WALLET_ETH_BALANCE = 100n * 10n ** 18n;
 
 export type Expert = Wallet & { id: string; guildId: string };
 export type Candidate = {
@@ -136,6 +138,21 @@ function resolveJobCreatorAddress(): Address {
   }
 
   return makeWallet(ANVIL_KEYS[5]).address;
+}
+
+function resolveBackendWalletAddress(): Address {
+  const env = parseBackendEnv();
+
+  if (isAddress(env.BACKEND_WALLET_ADDRESS)) {
+    return env.BACKEND_WALLET_ADDRESS;
+  }
+
+  const privateKey = env.BACKEND_WALLET_PRIVATE_KEY;
+  if (privateKey?.startsWith("0x") && privateKey.length === 66) {
+    return makeWallet(privateKey as `0x${string}`).address;
+  }
+
+  return makeWallet(ANVIL_KEYS[0]).address;
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -250,6 +267,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     async ({ anvil, contracts, request }, use) => {
       const snapshotId = await anvil.snapshot();
       const jobCreatorAddress = resolveJobCreatorAddress();
+      const backendWalletAddress = resolveBackendWalletAddress();
       const tokenTreasury = makeWallet(ANVIL_KEYS[1]);
       const balanceResult = await contracts.vettedToken.read.balanceOf([
         jobCreatorAddress,
@@ -259,13 +277,51 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       }
 
       await anvil.setBalance(jobCreatorAddress, JOB_CREATOR_ETH_BALANCE);
+      // The backend service wallet pays gas for every on-chain review-pipeline
+      // op (createSession / batchRevealVotes / finalizeSession). It is not an
+      // anvil default account, so without this it has zero ETH and every
+      // blockchain-ops outbox tx reverts.
+      await anvil.setBalance(
+        backendWalletAddress,
+        BACKEND_WALLET_ETH_BALANCE,
+      );
       if (balanceResult < JOB_CREATOR_TOKEN_FLOAT) {
         await contracts.vettedToken.write.transfer(
           [jobCreatorAddress, JOB_CREATOR_TOKEN_FLOAT - balanceResult],
           { account: tokenTreasury.client.account },
         );
       }
-      await use();
+
+      // Keep blocks ticking for the duration of the test. Anvil is started
+      // without `--block-time`, so it only mines on-demand (one block per tx).
+      // The commit-reveal UI (CommitmentForm) waits for 12 confirmations after
+      // an on-chain commitVote — with on-demand mining no further blocks are
+      // produced and that wait hangs forever. A lightweight background miner
+      // advances the chain so finality gates clear. Automine stays on, so
+      // direct viem writes still get their own block immediately; these extra
+      // anvil_mine calls just move the head forward.
+      //
+      // The ticker is *serial* (re-armed only after the previous mine
+      // resolves) so RPC calls never pile up under load, and runs fast enough
+      // that a 12-confirmation wait clears in a couple of seconds.
+      let tickerActive = true;
+      const tick = async (): Promise<void> => {
+        while (tickerActive) {
+          await anvil.mine(1).catch(() => {
+            /* anvil may be mid-revert between tests — ignore */
+          });
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      };
+      const tickerDone = tick();
+
+      try {
+        // eslint-disable-next-line react-hooks/rules-of-hooks -- `use` is Playwright's fixture lifecycle callback, not React's `use` hook
+        await use();
+      } finally {
+        tickerActive = false;
+        await tickerDone;
+      }
       // Order matters: revert chain first, then reset DB, then drain BE
       // queues so any in-flight ops referencing the now-reverted chain
       // state are dropped.

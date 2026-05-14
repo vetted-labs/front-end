@@ -23,8 +23,7 @@ import { test, expect } from "../fixtures";
 import {
   applyToGuildViaUI,
   advanceTime,
-  fireExpertTransitions,
-  finalize,
+  finalizeViaBackend,
 } from "../helpers/scenario";
 import { loginAsExpertViaUI } from "../helpers/ui-auth";
 import { submitRubricReviewViaUI } from "../helpers/ui-review";
@@ -66,8 +65,15 @@ test(
     contracts,
     anvil,
     wallet,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructured to activate the cleanState fixture (DB/chain reset) for its side effect
     cleanState: _cleanState,
   }) => {
+    // This scenario walks the full cross-stack pipeline: 5 sequential UI
+    // rubric reviews (each with an on-chain commit + 12-confirmation wait),
+    // then a poll loop that pumps the backend outbox until the session is
+    // finalized on-chain. That legitimately exceeds the default 120s budget.
+    test.setTimeout(300_000);
+
     // ─── Phase 0: Application ───────────────────────────────────────────────
     // DIV-001 RESOLVED: POST /api/guilds/{id}/applications now routes through
     // Pipeline B — it creates a linked candidate_proposals row and returns its
@@ -181,42 +187,59 @@ test(
     // ─── Phase 3: Commit-reveal finalization ───────────────────────────────
     //
     // The rubric wizard (ReviewGuildApplicationModal → CommitmentForm) submits
-    // a "commitment" in commit-reveal mode. We need to:
+    // a "commitment" in commit-reveal mode. The on-chain session lifecycle is
+    // driven entirely by the backend service wallet (the VettingManager owner):
     //   1. Advance past the commit window.
-    //   2. Trigger the BE cron to advance the session to the Reveal phase.
+    //   2. Run the proposal-transition cron + drain the blockchain-ops outbox —
+    //      this submits the queued `batch_reveal_votes` op on-chain.
     //   3. Advance past the reveal window.
-    //   4. Trigger transitions again (session → Finalized on BE side).
-    //   5. Call finalizeSessionVerifiable on-chain.
+    //   4. Run transitions + drain again — this submits `finalize_vetting_session`
+    //      on-chain (the backend wallet owns the contract, so `onlyOwner` passes).
+    //
+    // The test must NOT call finalizeSessionVerifiable directly with a panelist
+    // wallet — that reverts with OwnableUnauthorizedAccount. finalizeViaBackend
+    // pumps the backend instead. See helpers/scenario.ts.
     //
     // SCENARIO_OUTCOME_MATRIX §3: "No reveal-phase screen exists in the
     // frontend — phase model is direct | commit | finalized. Reveal is
     // automatic backend-side." So no UI reveal action is needed here.
+
+    await test.step("commit + reveal windows expire", async () => {
+      // Two ONE_DAY_PLUS_ONE jumps blow past both the on-chain commit window
+      // and the on-chain reveal window (each is 1 day in the create-session
+      // payload), so the session is eligible for on-chain finalization.
+      await advanceTime(anvil, ONE_DAY_PLUS_ONE);
+      await advanceTime(anvil, ONE_DAY_PLUS_ONE);
+    });
+
+    // ─── Phase 4: Drive + assert on-chain finalization ─────────────────────
     //
-    // If applyToGuildViaUI stalled in Phase 0 (see divergence), the sessionId
-    // is a zero-value hex and finalize() will revert with an on-chain error.
+    // The backend orchestrates the on-chain lifecycle through its outbox:
+    // batch_reveal_votes then (queued fire-and-forget, slightly later)
+    // finalize_vetting_session, both submitted by the backend owner wallet.
+    // finalizeViaBackend pumps the proposal-transition cron + drains the
+    // outbox. Because the finalize op is queued asynchronously and processed
+    // a bounded batch at a time, we pump-and-check in a loop until the chain
+    // reports the session Finalized — eventually consistent, not instant.
 
-    await test.step("commit window expires and BE transitions session to reveal phase", async () => {
-      await advanceTime(anvil, ONE_DAY_PLUS_ONE);
-      await fireExpertTransitions(page.request);
-    });
-
-    await test.step("reveal window expires and BE finalizes the session", async () => {
-      await advanceTime(anvil, ONE_DAY_PLUS_ONE);
-      await fireExpertTransitions(page.request);
-    });
-
-    await test.step("owner calls finalizeSessionVerifiable on-chain", async () => {
-      await finalize(panel[0], contracts, sessionId);
-    });
-
-    // ─── Phase 4: Chain assertion ───────────────────────────────────────────
-
-    await test.step("on-chain session phase is Finalized (phase slot = 3)", async () => {
-      const session = (await contracts.vettingManager.read.sessions([
-        sessionId,
-      ])) as SessionTuple;
+    await test.step("BE finalizes the session on-chain (phase slot = 3)", async () => {
+      // The finalize op is queued via a chain of fire-and-forget calls
+      // (submitCommitment → autoRevealAndFinalize → finalizeProposal →
+      // scheduleOnChainFinalization) and then drained a bounded batch at a
+      // time. It always confirms once reached — no reverts — so we just pump
+      // and poll generously until the chain reports Finalized.
+      let phase: number = SESSION_PHASE.COMMIT;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await finalizeViaBackend(page.request);
+        const session = (await contracts.vettingManager.read.sessions([
+          sessionId,
+        ])) as SessionTuple;
+        phase = session[6];
+        if (phase === SESSION_PHASE.FINALIZED) break;
+        await new Promise((r) => setTimeout(r, 1_000));
+      }
       // Slot 6 is the phase enum: Finalized = 3 per SESSION_PHASE.FINALIZED.
-      expect(session[6]).toBe(SESSION_PHASE.FINALIZED);
+      expect(phase).toBe(SESSION_PHASE.FINALIZED);
     });
 
     // ─── Phase 5: BE outcome ───────────────────────────────────────────────
@@ -260,10 +283,12 @@ test(
 
     // ─── Phase 7: Candidate sees the outcome in the UI ─────────────────────
 
-    await test.step("candidate sees their application approved in the UI", async () => {
-      // The applications list renders status pills from proposalOutcome.
-      // An /approved/i match mirrors 01-approve-consensus.spec.ts §UI spot-check.
-      await page.goto("/candidate/applications", {
+    await test.step("candidate sees their guild application approved in the UI", async () => {
+      // This is a GUILD application (Pipeline B), so it surfaces on
+      // /candidate/guilds — CandidateGuilds renders an "APPROVED" status pill
+      // for guild applications whose status is "approved". (/candidate/applications
+      // is the job-application pipeline and would show "No applications yet".)
+      await page.goto("/candidate/guilds", {
         waitUntil: "domcontentloaded",
       });
       await expect(page.getByText(/approved/i).first()).toBeVisible({

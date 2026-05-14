@@ -91,7 +91,12 @@ export default defineConfig({
       "NEXT_PUBLIC_CONTRACT_REWARD=0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
       "NEXT_PUBLIC_CONTRACT_SLASHING=0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
       "NEXT_PUBLIC_CONTRACT_GUILD_REGISTRY=0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-      "NEXT_PUBLIC_CONTRACT_VETTING=0xE68a768Cc18039b50382d64405Fb4C7700966054",
+      // Must match the deployed VettingManager proxy in
+      // smart-contracts/deployments/local-latest.json (and CONTRACT_ADDRESS_VETTING
+      // in backend/.env.e2e). A stale value here sends every browser-side
+      // commitVote to an address with no code — the tx mines but emits no
+      // VoteCommitted event, surfacing as "VoteCommitted event not in receipt".
+      "NEXT_PUBLIC_CONTRACT_VETTING=0x9A676e781A523b5d0C0e43731313A708CB607508",
       "npx next dev --turbopack --port 3030",
     ].join(" "),
     url: baseURL,

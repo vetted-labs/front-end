@@ -11,9 +11,11 @@
 // tsx reads tsconfig.json paths natively, so the @/ alias and JSON imports
 // in the canonical helpers resolve correctly without any extra flags.
 
+import fs from "node:fs";
+import path from "node:path";
 import https from "node:https";
 import http from "node:http";
-import { getContract, type Hex } from "viem";
+import { getContract, type Hex, type Address } from "viem";
 import { createAnvilHandle, makeWallet, ANVIL_KEYS } from "../helpers/chain";
 import { readContractAddresses, makeContracts } from "../helpers/contracts";
 import { deriveExpertKeys } from "./keys";
@@ -23,6 +25,7 @@ import { BACKEND_URL } from "../helpers/backend";
 // ABIs — tsx + tsconfig paths resolves @/ correctly at CLI runtime
 import expertStakingAbi from "@/contracts/abis/ExpertStaking.json";
 import vettedTokenAbi from "@/contracts/abis/VettedToken.json";
+import vettingManagerAbi from "@/contracts/abis/VettingManager.json";
 
 // ---------------------------------------------------------------------------
 // Inline HTTP helper (no Playwright APIRequestContext at CLI script runtime)
@@ -115,6 +118,7 @@ const EXPERTS_PER_GUILD = 10;
 const STAKE = 10n * 10n ** 18n;
 const EXPERT_LIQUID = 1_000n * 10n ** 18n;
 const GAS_ETH = 1n * 10n ** 18n; // 1 ETH for gas
+const BACKEND_GAS_ETH = 100n * 10n ** 18n; // backend wallet drives all pipeline txs
 
 // onChainGuildId values are the integer guild IDs the backend normalizes to
 // bytes32 when returning on_chain_guild_id from seedGuild.
@@ -123,6 +127,109 @@ const GUILD_DEFS = [
   { name: "Design", slug: "design", onChainGuildId: 2 },
   { name: "Product", slug: "product", onChainGuildId: 3 },
 ];
+
+// ---------------------------------------------------------------------------
+// Backend wallet authorization
+// ---------------------------------------------------------------------------
+
+// The e2e backend runs against backend/.env.e2e. The backend service wallet
+// defined there is the sole orchestrator of the on-chain review pipeline
+// (createSession / batchRevealVotes / finalizeSession), all of which are
+// onlyOwner / onlyAuthorizedRevealer on VettingManager. Deploy.s.sol initializes
+// the VettingManager owner to the deployer (anvil account 0), so we complete the
+// wiring here: transfer ownership to the backend wallet and register it as an
+// authorized revealer. Idempotent — safe to re-run.
+function readBackendWalletKey(): Hex {
+  const envPath = path.resolve(
+    __dirname,
+    "../../../../backend/.env.e2e",
+  );
+  if (!fs.existsSync(envPath)) {
+    throw new Error(
+      `setup-stack: backend/.env.e2e not found at ${envPath} — cannot resolve BACKEND_WALLET_PRIVATE_KEY`,
+    );
+  }
+  const raw = fs.readFileSync(envPath, "utf-8");
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const sep = trimmed.indexOf("=");
+    if (sep === -1) continue;
+    if (trimmed.slice(0, sep).trim() !== "BACKEND_WALLET_PRIVATE_KEY") continue;
+    const value = trimmed.slice(sep + 1).trim().replace(/^['"]|['"]$/g, "");
+    if (!/^0x[a-fA-F0-9]{64}$/.test(value)) {
+      throw new Error(
+        "setup-stack: BACKEND_WALLET_PRIVATE_KEY in backend/.env.e2e is not a 0x-prefixed 32-byte hex string",
+      );
+    }
+    return value as Hex;
+  }
+  throw new Error(
+    "setup-stack: BACKEND_WALLET_PRIVATE_KEY not found in backend/.env.e2e",
+  );
+}
+
+async function authorizeBackendWallet(
+  anvil: ReturnType<typeof createAnvilHandle>,
+  vettingManagerAddress: Address,
+  owner: ReturnType<typeof makeWallet>,
+): Promise<void> {
+  const backend = makeWallet(readBackendWalletKey());
+  console.log(`[bootstrap] authorizing backend wallet ${backend.address}…`);
+
+  // Fund the backend wallet — it is not an anvil default account, so it has
+  // zero ETH and every pipeline tx would revert with "insufficient funds".
+  await anvil.setBalance(backend.address, BACKEND_GAS_ETH);
+
+  const ownerVetting = getContract({
+    address: vettingManagerAddress,
+    abi: vettingManagerAbi,
+    client: { public: anvil.publicClient, wallet: owner.client },
+  });
+  const backendVetting = getContract({
+    address: vettingManagerAddress,
+    abi: vettingManagerAbi,
+    client: { public: anvil.publicClient, wallet: backend.client },
+  });
+
+  const currentOwner = (await ownerVetting.read.owner()) as Address;
+
+  if (currentOwner.toLowerCase() !== backend.address.toLowerCase()) {
+    const pendingOwner = (await ownerVetting.read.pendingOwner()) as Address;
+    if (pendingOwner.toLowerCase() !== backend.address.toLowerCase()) {
+      const tx = await ownerVetting.write.transferOwnership(
+        [backend.address],
+        { account: owner.client.account },
+      );
+      await anvil.publicClient.waitForTransactionReceipt({ hash: tx as Hex });
+      console.log("[bootstrap]   transferOwnership -> backend wallet");
+    }
+    // Ownable2Step: backend wallet must accept.
+    const acceptTx = await backendVetting.write.acceptOwnership([], {
+      account: backend.client.account,
+    });
+    await anvil.publicClient.waitForTransactionReceipt({ hash: acceptTx as Hex });
+    console.log("[bootstrap]   acceptOwnership -> backend wallet is now owner");
+  } else {
+    console.log("[bootstrap]   backend wallet already owns VettingManager");
+  }
+
+  // Register the backend wallet as an authorized revealer so the
+  // batch_reveal_votes outbox op can call batchRevealVotes.
+  const isRevealer = (await backendVetting.read.isAuthorizedRevealer([
+    backend.address,
+  ])) as boolean;
+  if (!isRevealer) {
+    const tx = await backendVetting.write.addAuthorizedRevealer(
+      [backend.address],
+      { account: backend.client.account },
+    );
+    await anvil.publicClient.waitForTransactionReceipt({ hash: tx as Hex });
+    console.log("[bootstrap]   addAuthorizedRevealer -> backend wallet");
+  } else {
+    console.log("[bootstrap]   backend wallet already an authorized revealer");
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Main
@@ -159,6 +266,10 @@ async function main(): Promise<void> {
   // Step 1: reset the E2E backend DB
   console.log("[bootstrap] resetting E2E backend…");
   await apiReset();
+
+  // Step 1.5: hand the backend service wallet the on-chain privileges it needs
+  // to drive the review pipeline (VettingManager owner + authorized revealer).
+  await authorizeBackendWallet(anvil, addresses.VettingManager, owner);
 
   const totalExperts = guildCount * EXPERTS_PER_GUILD;
   const allKeys = deriveExpertKeys(totalExperts);

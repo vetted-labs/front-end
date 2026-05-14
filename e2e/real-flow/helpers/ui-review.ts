@@ -81,17 +81,6 @@ export interface SubmitRubricReviewResult {
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 /**
- * Map a score band to a button index within a ScoreButtons group.
- * ScoreButtons renders buttons 0..max. We skip index 0 for "low" (that's the
- * "not scored" sentinel) and pick a useful non-zero value.
- */
-function bandToIndex(band: RubricScoreBand, max: number): number {
-  if (band === "high") return max;
-  if (band === "mid") return Math.max(1, Math.round(max / 2));
-  return 1; // low
-}
-
-/**
  * Click all ScoreButtons groups within `container` using the desired band.
  * Each group is a sibling set of plain <button> elements whose text is a
  * non-negative integer (0, 1, 2, …). We find those groups by scanning for
@@ -393,13 +382,37 @@ export async function submitRubricReviewViaUI(
       page.getByText(/confirm your review/i).first(),
     ).toBeVisible({ timeout: modalTimeoutMs });
 
+    // Capture the overall score HERE, on the confirm step, BEFORE submitting.
+    // ReviewConfirmStep renders the "Overall Score" label next to a bold
+    // `{overallScore}/{overallMax}` span (see ReviewConfirmStep.tsx ~line 190).
+    // The success step (ReviewSuccessStep) does NOT render a score, so scraping
+    // it there always missed and fell through to a broad number-scrape that
+    // grabbed unrelated digits. We normalize to a 0-100 percentage because the
+    // oracle (computeConsensus) and APPROVAL_THRESHOLD operate on 0-100.
+    const scoreText = await page
+      .locator(':text("Overall Score")')
+      .locator("xpath=following-sibling::*[1]")
+      .first()
+      .textContent()
+      .catch(() => null);
+    if (scoreText) {
+      const frac = scoreText.match(/(\d+)\s*\/\s*(\d+)/);
+      if (frac) {
+        const raw = parseInt(frac[1], 10);
+        const max = parseInt(frac[2], 10);
+        if (max > 0) submittedScore = Math.round((raw / max) * 100);
+      } else {
+        const single = scoreText.match(/\d+/);
+        if (single) submittedScore = parseInt(single[0], 10);
+      }
+    }
+
     // Click "Submit Review" or "Submit Commitment" (commit-reveal phase).
     // Both are rendered by ReviewNavigation on step 4 with step4Mode="confirm".
     const submitBtn = page
       .getByRole("button", { name: /submit review|submit commitment/i })
       .first();
     await expect(submitBtn).toBeEnabled({ timeout: 10_000 });
-    await submitBtn.click();
 
     // ── Commit-reveal confirmation gate ──────────────────────────────────
     // In commit-reveal phase (expert membership reviews AND, since DIV-001,
@@ -408,14 +421,38 @@ export async function submitRubricReviewViaUI(
     // commitment" card with an "I understand this commitment is final."
     // checkbox + a "Sign Commit Vote" button. The wallet signature only fires
     // after that. In the direct-submit phase this card never appears and the
-    // success heading shows immediately. Handle both: if the confirm card
-    // shows up, tick the ack box and sign; otherwise fall straight through.
+    // success heading shows immediately.
+    //
+    // The first "Submit Commitment" click can occasionally be swallowed (the
+    // panel is still wiring up its handlers), leaving the wizard stuck on the
+    // confirm step with no commit-flow card. Retry the click a few times until
+    // either the ack checkbox appears (commit-reveal path) or the success
+    // heading shows (direct-submit path).
     const ackCheckbox = page
       .getByRole("checkbox", { name: /i understand this commitment is final/i })
       .first();
-    const confirmCardVisible = await ackCheckbox
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
+    const successHeading = page
+      .getByText(/review submitted|commitment submitted|practice complete/i)
+      .first();
+
+    let confirmCardVisible = false;
+    for (let clickAttempt = 0; clickAttempt < 4; clickAttempt++) {
+      if (await submitBtn.isVisible().catch(() => false)) {
+        await submitBtn.click().catch(() => {
+          /* button may have been replaced by the commit-flow card — fine */
+        });
+      }
+      // Either the commit-reveal confirm card or the direct-submit success
+      // heading should appear shortly after a successful click.
+      confirmCardVisible = await ackCheckbox
+        .isVisible({ timeout: 5_000 })
+        .catch(() => false);
+      if (confirmCardVisible) break;
+      if (await successHeading.isVisible({ timeout: 500 }).catch(() => false)) {
+        break;
+      }
+    }
+
     if (confirmCardVisible) {
       await ackCheckbox.check();
       const signBtn = page
@@ -423,9 +460,28 @@ export async function submitRubricReviewViaUI(
         .first();
       await expect(signBtn).toBeEnabled({ timeout: 10_000 });
       // Clicking Sign triggers the headless wallet's commitVote signature;
-      // the BE submit + on-chain confirmation run after that. We just wait
-      // for the success heading below — same as the direct path.
-      await signBtn.click();
+      // the BE submit + on-chain confirmation run after that. Retry the click
+      // if the success heading hasn't started resolving — the same swallowed-
+      // click race can affect this button too.
+      for (let signAttempt = 0; signAttempt < 3; signAttempt++) {
+        await signBtn.click().catch(() => {
+          /* card may have advanced past the sign step — fine */
+        });
+        const progressed = await Promise.race([
+          successHeading
+            .isVisible({ timeout: 8_000 })
+            .then(() => true)
+            .catch(() => false),
+          page
+            .getByText(/awaiting finality|signing|confirming|committing/i)
+            .first()
+            .isVisible({ timeout: 8_000 })
+            .then(() => true)
+            .catch(() => false),
+        ]);
+        if (progressed) break;
+        if (!(await signBtn.isVisible().catch(() => false))) break;
+      }
     }
 
     // Wait for the success state: "Review Submitted" / "Commitment Submitted"
@@ -436,20 +492,22 @@ export async function submitRubricReviewViaUI(
         .first(),
     ).toBeVisible({ timeout: 90_000 });
 
-    // Extract the overall score from the success panel's display
-    // ("Overall Score" label + the value next to it). The ReviewSuccessStep
-    // renders `overallScore` next to the "Overall Score" text.
-    const overallScoreText = await page
-      .locator(
-        'text="Overall Score" >> xpath=following-sibling::* | xpath=parent::*/following-sibling::*',
-      )
-      .first()
-      .textContent()
-      .catch(() => null);
+    // Fallback only: if the confirm-step capture above missed, try the
+    // success panel. (ReviewSuccessStep does not render an "Overall Score",
+    // so these rarely fire — kept as defensive backups.)
+    if (submittedScore === 0) {
+      const overallScoreText = await page
+        .locator(
+          'text="Overall Score" >> xpath=following-sibling::* | xpath=parent::*/following-sibling::*',
+        )
+        .first()
+        .textContent()
+        .catch(() => null);
 
-    if (overallScoreText) {
-      const match = overallScoreText.match(/\d+/);
-      if (match) submittedScore = parseInt(match[0], 10);
+      if (overallScoreText) {
+        const match = overallScoreText.match(/\d+/);
+        if (match) submittedScore = parseInt(match[0], 10);
+      }
     }
 
     // Try to read the score from the structured element (bold number next to
