@@ -4,6 +4,8 @@ Independent TypeScript re-implementation of the Vetted protocol math.
 
 **Ground truth:** `backend/docs/technical-whitepaper.md` (Technical Appendix). This oracle is anchored to the *appendix*, not to the codebase or on-chain contracts. Its purpose is to be the independent reference against which the actual platform output is diffed in E2E scenarios.
 
+> **Quartile method note:** `computeConsensus()` uses **exclusive-halves** quartiles (the median element is excluded from both halves when n is odd). This intentionally matches the backend's `VotingConsensusService.calculateIQR()` — `sorted.slice(0, Math.floor(n/2))` / `sorted.slice(Math.ceil(n/2))` — because the Technical Appendix does not specify the quartile method, making the backend implementation the de-facto spec. Using inclusive-halves would produce different IQR values for odd-count panels and cause false discrepancies in volume-harness comparisons.
+
 ---
 
 ## Export Map

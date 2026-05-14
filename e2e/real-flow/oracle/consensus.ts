@@ -1,9 +1,10 @@
 // e2e/real-flow/oracle/consensus.ts
 //
 // Adaptive Median Band (IQR) consensus — Technical Appendix §4 "Consensus
-// Determination" + §7 "Candidate Score". This is the CANONICAL consensus
-// algorithm per the appendix; it is the oracle's reference, independent of
-// any backend or on-chain implementation.
+// Determination" + §7 "Candidate Score". The oracle intentionally matches the
+// backend's VotingConsensusService.calculateIQR() so it is a valid comparison
+// reference during E2E volume runs. The Technical Appendix does not specify the
+// quartile method, so the backend implementation is the de-facto spec.
 
 export type ScoreClassification = { score: number; aligned: boolean };
 
@@ -16,7 +17,7 @@ export type ConsensusResult = {
   upperBound: number;
   included: number[]; // sorted, in-band
   excluded: number[]; // sorted, out-of-band
-  consensusScore: number; // average of `included`, 0 if no scores
+  consensusScore: number; // average of `included` (rounded to 2dp), or median if none in-band
   classification: ScoreClassification[]; // one per INPUT score, input order
 };
 
@@ -44,12 +45,13 @@ export function computeConsensus(scores: number[]): ConsensusResult {
   const sorted = [...scores].sort((a, b) => a - b);
   const n = sorted.length;
   const median = medianOf(sorted);
-  // Inclusive-halves quartile method (Tukey / "Method 2"): for odd-length
-  // arrays the median element is included in BOTH halves, which is the
-  // standard statistical method that matches the Technical Appendix examples.
-  const mid = Math.floor(n / 2);
-  const lowerHalf = sorted.slice(0, mid + (n % 2 === 1 ? 1 : 0));
-  const upperHalf = sorted.slice(mid);
+  // Exclusive-halves quartile method: the median element is excluded from both
+  // halves when n is odd. Intentionally matches the backend reference
+  // implementation (voting-consensus.service.ts calculateIQR) so the oracle is
+  // a valid comparison reference — the Technical Appendix does not specify the
+  // quartile method, so the backend implementation is the de-facto spec.
+  const lowerHalf = sorted.slice(0, Math.floor(n / 2));
+  const upperHalf = sorted.slice(Math.ceil(n / 2));
   const q1 = lowerHalf.length ? medianOf(lowerHalf) : median;
   const q3 = upperHalf.length ? medianOf(upperHalf) : median;
   const iqr = q3 - q1;
@@ -57,10 +59,11 @@ export function computeConsensus(scores: number[]): ConsensusResult {
   const upperBound = median + 0.75 * iqr;
   const included = sorted.filter((s) => s >= lowerBound && s <= upperBound);
   const excluded = sorted.filter((s) => s < lowerBound || s > upperBound);
-  const consensusScore =
+  const rawConsensus =
     included.length > 0
       ? included.reduce((sum, s) => sum + s, 0) / included.length
-      : 0;
+      : median;
+  const consensusScore = Math.round(rawConsensus * 100) / 100;
   const classification: ScoreClassification[] = scores.map((score) => ({
     score,
     aligned: score >= lowerBound && score <= upperBound,
