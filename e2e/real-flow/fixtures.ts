@@ -1,22 +1,27 @@
 // e2e/real-flow/fixtures.ts
 //
-// Real-flow Playwright fixtures: anvil + viem contract handles + on-chain
+// Real-flow Playwright fixtures: anvil + viem contract handles + manifest-driven
 // staked experts + per-test clean-state snapshot/revert + a candidate fixture
 // that wraps the existing `signupCandidate` helper.
 //
 // Pre-conditions for the worker-scoped setup to succeed:
-//   - Anvil running on :8545 (per ANVIL_RPC_URL).
-//   - `forge script Deploy.s.sol` has run (deployments-local.json exists).
-//   - MintTokens script has run so anvil accounts 1-4 hold enough VETD to
-//     stake (the fixture does not run mint itself; we assume the dev
-//     bootstrap has already advanced anvil time past Deploy's
-//     MINT_RATE_LIMIT and minted balances). See README task.
+//   - The deterministic bootstrap has run:
+//       npm run e2e:bootstrap
+//     This seeds 3 guilds × 10 staked experts on-chain and in the BE, then
+//     writes e2e/real-flow/bootstrap/manifest.json. The worker fixtures read
+//     that manifest — they do NOT mutate the chain or database themselves.
+//   - Anvil running on :8545 (per ANVIL_RPC_URL), still at the chain state the
+//     bootstrap produced.
 //   - Backend running on :4000 with NODE_ENV=test E2E_FIXTURE_ENABLED=true.
 //
 // Snapshot semantics: Anvil's evm_snapshot id is consumed by evm_revert.
 // Rather than juggle worker-scoped snapshot ids, we take a fresh snapshot
 // per test in `cleanState` and revert at the end of that test. This keeps
 // fixture lifetime bookkeeping local to one scope.
+//
+// Because worker fixtures no longer mutate the chain, `cleanState` per-test
+// snapshots reliably describe the same post-bootstrap baseline regardless of
+// how many tests ran in the same worker session. See DETERMINISM_FINDING.md.
 
 import {
   test as base,
@@ -41,7 +46,14 @@ import {
 } from "./helpers/contracts";
 import { testApi } from "./helpers/backend";
 import { signupCandidate } from "../helpers/auth";
-import { attachWallet, type InjectedWalletHandle } from "./helpers/wallet-injection";
+import {
+  attachWallet,
+  type InjectedWalletHandle,
+} from "./helpers/wallet-injection";
+import {
+  readManifest,
+  type BootstrapManifest,
+} from "./bootstrap/manifest";
 
 const BACKEND_ENV_PATH = path.resolve(__dirname, "../../../backend/.env");
 const JOB_CREATOR_ETH_BALANCE = 100n * 10n ** 18n;
@@ -66,8 +78,13 @@ export type RealFlowFixtures = WorkerFixtures & TestFixtures;
 type WorkerFixtures = {
   anvil: AnvilHandle;
   contracts: ContractHandles;
-  guild: Guild;
+  manifest: BootstrapManifest;
+  guilds: Guild[];
   experts: Expert[];
+  expertsForGuild: (guildId: string) => Expert[];
+  panelFor: (guildId: string, size: number) => Expert[];
+  /** Backwards-compat alias for guilds[0]. */
+  guild: Guild;
 };
 
 type TestFixtures = {
@@ -75,7 +92,10 @@ type TestFixtures = {
   candidate: Candidate;
   wallet: {
     /** Attach the headless wallet to `page` with the given key. Call once per test. */
-    attach: (page: Page, privateKey: `0x${string}`) => Promise<InjectedWalletHandle>;
+    attach: (
+      page: Page,
+      privateKey: `0x${string}`,
+    ) => Promise<InjectedWalletHandle>;
   };
 };
 
@@ -118,99 +138,6 @@ function resolveJobCreatorAddress(): Address {
   return makeWallet(ANVIL_KEYS[5]).address;
 }
 
-/**
- * Seeds the BE guild and returns its handle. Reset of the BE DB happens here
- * so it runs exactly once before any expert seeding.
- */
-async function seedGuild(request: APIRequestContext): Promise<Guild> {
-  // Reset DB once at suite start.
-  await testApi.reset(request);
-
-  // Seed guild. BE normalizes the int -> bytes32 hex string.
-  const guildRaw = await testApi.seedGuild(request, {
-    name: "Engineering",
-    slug: "engineering",
-    onChainGuildId: 1,
-  });
-  return guildRaw as unknown as Guild;
-}
-
-/**
- * Seeds 4 staked + approved experts into `guild` and returns the in-memory
- * expert handles. Extracted out of the worker fixture so the fixture body
- * stays lint-clean (avoids the react-hooks/rules-of-hooks rule mis-firing on
- * Playwright's `use` callback inside a try/catch).
- */
-async function seedExperts(
-  request: APIRequestContext,
-  contracts: ContractHandles,
-  guild: Guild,
-): Promise<Expert[]> {
-  const experts: Expert[] = [];
-  // GuildRegistry.{createGuild,addMember} are onlyOwner — sign with anvil account 0 (deployer/owner).
-  const owner = makeWallet(ANVIL_KEYS[0]);
-
-  // Ensure on-chain guild exists. Idempotent: catch GuildAlreadyExists if a
-  // prior run (or SetupTestingGuild.s.sol) already created it.
-  try {
-    await contracts.guildRegistry.write.createGuild(
-      [guild.on_chain_guild_id, guild.name, 10n * 10n ** 18n, 0n],
-      { account: owner.client.account },
-    );
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (!/GuildAlreadyExists/.test(msg)) throw err;
-  }
-
-  for (let i = 1; i <= 4; i++) {
-    const w = makeWallet(ANVIL_KEYS[i]);
-    const stakeAmount = 10n * 10n ** 18n;
-
-    // ExpertStaking.stake reverts NotGuildMember unless GuildRegistry.addMember
-    // ran first. Owner-only on-chain step before approve/stake.
-    // Idempotent: tolerate AlreadyMember from prior runs against the same anvil.
-    try {
-      await contracts.guildRegistry.write.addMember(
-        [guild.on_chain_guild_id, w.address],
-        { account: owner.client.account },
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (!/AlreadyMember/.test(msg)) throw err;
-    }
-    // On-chain: approve VETD -> stake. Pass the bytes32 guild id as the
-    // hex string the BE returns; do NOT BigInt() it.
-    await contracts.vettedToken.write.approve(
-      [contracts.expertStaking.address, stakeAmount],
-      { account: w.client.account },
-    );
-    // Idempotent stake: skip when already staked >= target amount.
-    try {
-      await contracts.expertStaking.write.stake(
-        [guild.on_chain_guild_id, stakeAmount],
-        { account: w.client.account },
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (!/AlreadyStaked|ExceedsMaxStake/i.test(msg)) throw err;
-    }
-
-    // BE: register expert as approved + linked to guild.
-    const seeded = await testApi.seedExpert(request, {
-      walletAddress: w.address,
-      fullName: `E2E Expert ${i}`,
-      email: `e2e-expert-${i}@vetted-test.com`,
-      status: "approved",
-      guildId: guild.id,
-      stakeAmount: stakeAmount.toString(),
-    });
-
-    experts.push({ ...w, id: seeded.id, guildId: guild.id });
-  }
-
-  return experts;
-}
-
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   // Worker-scoped: anvil RPC handle (snapshot/revert/time/balance helpers).
   anvil: [
@@ -231,38 +158,80 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { scope: "worker" },
   ],
 
-  // Worker-scoped: the "Engineering" guild seeded into the BE. Resets the BE
-  // DB once at suite start, then seeds the guild and exposes its handle.
-  //
-  // NOTE: BE returns `on_chain_guild_id` as a 0x-prefixed bytes32 string
-  // (`VARCHAR(66)`), not a uint. We pass the hex string straight to the
-  // staking contract. The shared `testApi.seedGuild` return type currently
-  // says `number`; we treat it as the hex string it actually is.
-  //
-  // Worker-scoped fixtures cannot consume the test-scoped `request`, so we
-  // spin up our own APIRequestContext via `apiRequest.newContext()`.
-  guild: [
+  // Worker-scoped: the bootstrap manifest produced by `npm run e2e:bootstrap`.
+  // readManifest() throws with a clear message if the bootstrap hasn't run yet.
+  manifest: [
     async ({}, use) => {
-      const request: APIRequestContext = await apiRequest.newContext();
-      const guild = await seedGuild(request);
-      await request.dispose();
-      await use(guild);
+      await use(readManifest());
     },
     { scope: "worker" },
   ],
 
-  // Worker-scoped: 4 staked + approved experts in the `guild` fixture's
-  // guild. For each of anvil accounts 1..4: approve VETD -> stake ->
-  // register expert in BE.
-  experts: [
-    async ({ anvil, contracts, guild }, use) => {
-      // anvil intentionally referenced so this fixture depends on it.
-      void anvil;
+  // Worker-scoped: 3 guilds from the manifest, mapped to the Guild shape.
+  guilds: [
+    async ({ manifest }, use) => {
+      const guilds: Guild[] = manifest.guilds.map((g) => ({
+        id: g.id,
+        name: g.name,
+        on_chain_guild_id: g.onChainGuildId,
+      }));
+      await use(guilds);
+    },
+    { scope: "worker" },
+  ],
 
-      const request: APIRequestContext = await apiRequest.newContext();
-      const experts = await seedExperts(request, contracts, guild);
-      await request.dispose();
+  // Worker-scoped: 30 staked experts (10 per guild) from the manifest.
+  // Each entry is a full Wallet (privateKey, address, viem WalletClient) plus
+  // the backend id and the guild the expert is staked into.
+  experts: [
+    async ({ manifest }, use) => {
+      const experts: Expert[] = manifest.experts.map((e) => ({
+        ...makeWallet(e.privateKey),
+        id: e.id,
+        guildId: e.guildId,
+      }));
       await use(experts);
+    },
+    { scope: "worker" },
+  ],
+
+  // Worker-scoped: filter helper — returns the 10 experts for a given guild id.
+  expertsForGuild: [
+    async ({ experts }, use) => {
+      await use((guildId: string) =>
+        experts.filter((e) => e.guildId === guildId),
+      );
+    },
+    { scope: "worker" },
+  ],
+
+  // Worker-scoped: returns a panel of `size` experts for a given guild.
+  // Whitepaper §2 mandates panels of 5-7 experts.
+  panelFor: [
+    async ({ expertsForGuild }, use) => {
+      await use((guildId: string, size: number) => {
+        if (size < 5 || size > 7) {
+          throw new Error(
+            `panelFor: size must be 5-7 (whitepaper §2), got ${size}`,
+          );
+        }
+        const pool = expertsForGuild(guildId);
+        if (pool.length < size) {
+          throw new Error(
+            `panelFor: guild ${guildId} has only ${pool.length} experts, need ${size}`,
+          );
+        }
+        return pool.slice(0, size);
+      });
+    },
+    { scope: "worker" },
+  ],
+
+  // Worker-scoped: backwards-compat alias for guilds[0]. Existing scenarios
+  // that use the singular `guild` fixture don't need to change.
+  guild: [
+    async ({ guilds }, use) => {
+      await use(guilds[0]);
     },
     { scope: "worker" },
   ],
@@ -271,12 +240,19 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // snapshot id is consumed by revert, so we take a fresh one per test
   // rather than reusing a worker-scoped id. After revert we reset the BE
   // DB and drain the BE blockchain-ops queue so DB <-> chain stay aligned.
+  //
+  // NOTE: The snapshot is taken after the worker-scoped fixtures have
+  // completed (Playwright guarantees this ordering). Because worker fixtures
+  // only READ the manifest and do not mutate the chain, the snapshot reliably
+  // captures the clean post-bootstrap baseline every time. See DETERMINISM_FINDING.md.
   cleanState: [
     async ({ anvil, contracts, request }, use) => {
       const snapshotId = await anvil.snapshot();
       const jobCreatorAddress = resolveJobCreatorAddress();
       const tokenTreasury = makeWallet(ANVIL_KEYS[1]);
-      const balanceResult = await contracts.vettedToken.read.balanceOf([jobCreatorAddress]);
+      const balanceResult = await contracts.vettedToken.read.balanceOf([
+        jobCreatorAddress,
+      ]);
       if (typeof balanceResult !== "bigint") {
         throw new Error("Expected VETD balanceOf to return a bigint");
       }
@@ -301,9 +277,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   // Test-scoped: fresh candidate account, signed in. Wraps the existing
   // `signupCandidate` helper and re-exposes the page alongside creds.
-  // Depends on `experts` so the worker-scoped DB reset (inside `guild`/
-  // `experts` setup) finishes BEFORE we sign up — otherwise the truncate
-  // wipes the freshly created candidate row.
+  // Depends on `experts` so the worker-scoped manifest load finishes BEFORE
+  // we sign up — otherwise a stale or missing manifest could cause failures.
   candidate: [
     async ({ page, experts: _experts }, use) => {
       void _experts;
@@ -313,7 +288,6 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { scope: "test" },
   ],
 
-   
   wallet: async ({}, use) => {
     let handle: InjectedWalletHandle | null = null;
     // eslint-disable-next-line react-hooks/rules-of-hooks
