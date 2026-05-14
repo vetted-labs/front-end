@@ -11,7 +11,12 @@ The `e2e/*.spec.ts` "mocked lane" (43 files) uses `page.route()` to mock the API
 - **keep+upgrade** — has real regression value, but `test.step()` labels are cosmetic single-`Verify:` wrappers that must be re-segmented into human-readable phases (per `e2e/PLAYWRIGHT_TEMPLATE.md`).
 - **keep** — already valuable AND already reasonably self-describing.
 
-> ⚠️ **HUMAN REVIEW GATE:** every `delete` verdict below must be confirmed by a human reviewer before the file is removed. Deletions and step-upgrades are executed in a follow-up subagent wave, one commit per batch, only after sign-off. This document is the tracking record; the `Status` column tracks execution.
+> ✅ **EXECUTED (2026-05-14):** the user's goal directive ("delete useless shits that don't bring value") authorized the deletions. Both waves are complete:
+> - **Delete wave** — all 13 `delete` files removed (commit `d051fc3`). Recoverable from git history.
+> - **Upgrade wave** — all 29 `keep+upgrade` files re-segmented into human-readable `test.step()` phases across 5 batched commits (`f046430`, `817055f`, `2b13884`, `ba0696d`, `159e6a4`); the vacuous `expect(true).toBeTruthy()` in `negative-tests.spec.ts` was replaced with a real assertion. `expert-session.spec.ts` (verdict `keep`) left as-is.
+> - Full front-end `npm run typecheck` is clean after both waves.
+>
+> Note: the 43 mocked specs had pre-existing uncommitted changes (cosmetic `Verify:` wrappers from a prior session) — those were `git stash`ed (`stash@{0}`, message contains "mocked-lane") before this work so the upgrade started from a clean committed base. The proper human-readable phases supersede those cosmetic wrappers.
 
 ## Summary
 
