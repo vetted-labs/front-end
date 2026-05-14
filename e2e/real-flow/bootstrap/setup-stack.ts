@@ -267,6 +267,13 @@ async function main(): Promise<void> {
   console.log("[bootstrap] resetting E2E backend…");
   await apiReset();
 
+  // Deploy.s.sol mints exactly the 24h VettedToken MINT_RATE_LIMIT (50M VETD)
+  // during deployment, so on a fresh anvil the per-expert mint top-ups below
+  // would revert with MintRateLimitExceeded(). Roll the chain past a full
+  // mint epoch so the rate-limit window resets. `increaseTime` mines a block.
+  console.log("[bootstrap] advancing chain past the 24h mint epoch…");
+  await anvil.increaseTime(25 * 60 * 60); // 25h > 24h epoch
+
   // Step 1.5: hand the backend service wallet the on-chain privileges it needs
   // to drive the review pipeline (VettingManager owner + authorized revealer).
   await authorizeBackendWallet(anvil, addresses.VettingManager, owner);
