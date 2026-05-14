@@ -138,5 +138,9 @@ export function mapCandidateToReviewApplication(
     applicationResponses: structuredResponses,
     guildId: candidateApp.guildId,
     guildName: candidateApp.guildName,
+    // Carry the linked Pipeline B proposal id so the review modal can route
+    // the commit-reveal flow (drafts / commit-hash / on-chain submit / state)
+    // through `reviewsApi.proposal.*` keyed on the proposal, not the cga id.
+    candidateProposalId: candidateApp.candidateProposalId ?? undefined,
   };
 }

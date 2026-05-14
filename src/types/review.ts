@@ -26,6 +26,14 @@ export interface ReviewModalApplication {
   bio?: string;
   motivation?: string;
   expertiseAreas?: string[];
+  /**
+   * For candidate guild-application reviews: the linked Pipeline B
+   * `candidate_proposals` row id. The commit-reveal review flow (drafts,
+   * commit-hash, on-chain submit, review state) is keyed on the proposal id,
+   * not the candidate_guild_applications id. Undefined for expert/proposal
+   * reviews, where `id` is already the correct commit-reveal target.
+   */
+  candidateProposalId?: string;
 }
 
 /** Props for the ReviewGuildApplicationModal component. */
@@ -113,6 +121,12 @@ export interface ExpertMembershipApplication {
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;
+  /**
+   * Set on mapped candidate-review applications so the commit-reveal review
+   * flow can target the linked `candidate_proposals` row. Unused for genuine
+   * expert membership applications.
+   */
+  candidateProposalId?: string;
 }
 
 /** Finalization results for an expert application */
@@ -186,6 +200,11 @@ export interface CandidateGuildApplication {
   expertiseAreas?: string[];
   yearsOfExperience?: number;
   requiredStake?: number;
+  /**
+   * Linked Pipeline B `candidate_proposals` row id. Returned by the BE
+   * candidate-applications endpoint; drives the commit-reveal review flow.
+   */
+  candidateProposalId?: string | null;
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;

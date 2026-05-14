@@ -6,7 +6,7 @@ import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { Alert } from "./ui/alert";
 import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
-import { expertApi, guildsApi, blockchainApi, extractApiError } from "@/lib/api";
+import { expertApi, guildsApi, blockchainApi, commitRevealApi, extractApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Breadcrumb } from "./ui/breadcrumb";
@@ -198,18 +198,31 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     let alive = true;
     let intervalId: number | null = null;
 
+    // Expert reviews poll the expert-application commit-reveal status; candidate
+    // reviews poll the linked proposal's commit-reveal status (Pipeline B).
+    const pollTargetId =
+      applicationReviewType === "expert"
+        ? selectedExpertMembershipApplication?.id
+        : applicationReviewType === "candidate"
+          ? selectedExpertMembershipApplication?.candidateProposalId
+          : undefined;
+    const pollPhaseStatus =
+      applicationReviewType === "candidate"
+        ? commitRevealApi.getProposalPhaseStatus
+        : expertApi.expertCommitReveal.getPhaseStatus;
+
     const shouldPoll =
       showReviewModal &&
-      applicationReviewType === "expert" &&
-      !!selectedExpertMembershipApplication?.id &&
+      (applicationReviewType === "expert" || applicationReviewType === "candidate") &&
+      !!pollTargetId &&
       crPhaseStatus?.votingPhase === "commit" &&
       !crPhaseStatus?.blockchainSessionCreated;
 
-    if (shouldPoll && selectedExpertMembershipApplication?.id) {
-      const appId = selectedExpertMembershipApplication.id;
+    if (shouldPoll && pollTargetId) {
+      const targetId = pollTargetId;
       intervalId = window.setInterval(async () => {
         try {
-          const updated = await expertApi.expertCommitReveal.getPhaseStatus(appId);
+          const updated = await pollPhaseStatus(targetId);
           if (alive) setCrPhaseStatus(updated);
         } catch {
           /* transient — keep polling */
@@ -225,6 +238,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     showReviewModal,
     applicationReviewType,
     selectedExpertMembershipApplication?.id,
+    selectedExpertMembershipApplication?.candidateProposalId,
     crPhaseStatus?.votingPhase,
     crPhaseStatus?.blockchainSessionCreated,
   ]);
@@ -297,10 +311,25 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setShowReviewModal(true);
   };
 
-  const handleReviewCandidateApplication = (candidateApp: CandidateGuildApplication) => {
+  const handleReviewCandidateApplication = async (candidateApp: CandidateGuildApplication) => {
     if (!stakingStatus?.meetsMinimum) {
       toast.info("You need to stake VETD tokens first to unlock reviewing.");
       return;
+    }
+    // Pipeline B: pull the linked proposal's commit-reveal phase so the review
+    // modal drives the same on-chain commit flow the expert path uses.
+    if (candidateApp.candidateProposalId) {
+      try {
+        const phaseStatus = await commitRevealApi.getProposalPhaseStatus(
+          candidateApp.candidateProposalId,
+        );
+        setCrPhaseStatus(phaseStatus);
+      } catch (err) {
+        logger.warn("Candidate commit-reveal status unavailable, falling back to direct voting", err);
+        setCrPhaseStatus(null);
+      }
+    } else {
+      setCrPhaseStatus(null);
     }
     setSelectedExpertMembershipApplication(mapCandidateToReviewApplication(candidateApp));
     setApplicationReviewType("candidate");
@@ -432,6 +461,16 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         .catch((err) => {
           logger.warn("Could not refresh commit-reveal phase status post-commit", err);
         });
+    } else if (
+      applicationReviewType === "candidate" &&
+      selectedExpertMembershipApplication?.candidateProposalId
+    ) {
+      commitRevealApi
+        .getProposalPhaseStatus(selectedExpertMembershipApplication.candidateProposalId)
+        .then((status) => setCrPhaseStatus(status))
+        .catch((err) => {
+          logger.warn("Could not refresh candidate commit-reveal phase status post-commit", err);
+        });
     }
   };
 
@@ -560,9 +599,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           guildId={guildId}
           onSubmitReview={handleSubmitReview}
           isReviewing={isReviewing}
-          commitRevealPhase={applicationReviewType === "expert" ? crPhaseStatus?.votingPhase : undefined}
-          blockchainSessionId={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
-          blockchainSessionCreated={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
+          commitRevealPhase={applicationReviewType === "expert" || applicationReviewType === "candidate" ? crPhaseStatus?.votingPhase : undefined}
+          blockchainSessionId={applicationReviewType === "expert" || applicationReviewType === "candidate" ? crPhaseStatus?.blockchainSessionId : undefined}
+          blockchainSessionCreated={applicationReviewType === "expert" || applicationReviewType === "candidate" ? crPhaseStatus?.blockchainSessionCreated : undefined}
           reviewerId={currentExpertId || undefined}
           expertWallet={address || undefined}
           onReviewSuccess={handleReviewSuccess}

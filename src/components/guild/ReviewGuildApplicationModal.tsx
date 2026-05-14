@@ -227,7 +227,8 @@ const CONFLICT_MAX_CYCLES = 3;
  * the browser can finish even after page teardown.
  */
 function flushDraftKeepalive(
-  applicationId: string,
+  reviewFlow: "proposal" | "guildApplication",
+  targetId: string,
   body: GuildReviewDraftBody,
   walletAddress: string,
   lastSeenModified: string | null,
@@ -237,7 +238,15 @@ function flushDraftKeepalive(
     const apiBase =
       (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
       "http://localhost:4000";
-    const url = `${apiBase}/api/experts/guild-applications/${applicationId}/review/draft`;
+    // Candidate reviews flush to the proposal draft route, expert reviews to
+    // the guild-application route — same two symmetric flavors `reviewsApi`
+    // exposes, but inlined here because keepalive must use raw `fetch` (the
+    // apiRequest client can't set `keepalive: true`).
+    const path =
+      reviewFlow === "proposal"
+        ? `/api/proposals/${targetId}/review/draft`
+        : `/api/experts/guild-applications/${targetId}/review/draft`;
+    const url = `${apiBase}${path}`;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "X-Wallet-Address": walletAddress,
@@ -345,6 +354,30 @@ export function ReviewGuildApplicationModal({
   const isPracticeMode = mode === "practice";
   const canClose = !forceCompletion || currentStep === 4;
 
+  // ─── Resilient-review flow routing ─────────────────────────────────────
+  // Candidate guild-application reviews run on Pipeline B: the commit-reveal
+  // machinery (drafts, commit-hash, on-chain submit, review state, session
+  // retry) is keyed on the linked `candidate_proposals` row, exposed to the
+  // modal as `application.candidateProposalId`. Expert membership reviews and
+  // proposal votes keep using `application.id` directly. Everything below
+  // that talks to the resilient-review BE goes through `reviewFlowApi` +
+  // `reviewTargetId` so the candidate path mirrors the expert path exactly
+  // rather than duplicating it.
+  const isCandidateReview = reviewTypeProp === "candidate";
+  const reviewFlow: "proposal" | "guildApplication" = isCandidateReview
+    ? "proposal"
+    : "guildApplication";
+  const reviewFlowApi = isCandidateReview
+    ? reviewsApi.proposal
+    : reviewsApi.guildApplication;
+  // For candidate reviews this is the proposal id; for expert reviews it is
+  // the application id. Undefined when a candidate application has no linked
+  // proposal yet (Pipeline B promotion not complete) — the commit-reveal
+  // gates below all no-op when it is missing, falling back to direct submit.
+  const reviewTargetId = isCandidateReview
+    ? application?.candidateProposalId
+    : application?.id;
+
   // In story mode the synthetic application's getPhaseStatus call fails so
   // commitRevealPhase stays undefined. Force-enable the commit phase whenever
   // the tour is parked on the commit step so the CommitRevealExplainer marker
@@ -374,12 +407,12 @@ export function ReviewGuildApplicationModal({
   // ─── Draft hydration on mount: load any prior draft from the server ────
   // This is the crash-recovery hook. We only run it for live, non-practice
   // flows that target a real application id.
-  const shouldHydrateDraft = !!application?.id && !isPracticeMode && !isStoryLabPreview;
+  const shouldHydrateDraft = !!reviewTargetId && !isPracticeMode && !isStoryLabPreview;
   useMountEffect(() => {
-    if (!shouldHydrateDraft) return;
+    if (!shouldHydrateDraft || !reviewTargetId) return;
     let alive = true;
-    reviewsApi.guildApplication
-      .getDraft(application!.id)
+    reviewFlowApi
+      .getDraft(reviewTargetId)
       .then((draft) => {
         if (!alive || !draft) return;
         // Capture lastModified so subsequent PUTs can include
@@ -423,26 +456,24 @@ export function ReviewGuildApplicationModal({
   const SESSION_POLL_INTERVAL_MS = 5000;
   const shouldPollSession =
     isOpen &&
-    !!application?.id &&
+    !!reviewTargetId &&
     !isPracticeMode &&
     !isStoryLabPreview &&
     latestSessionStatus !== "created" &&
     latestSessionStatus !== "failed" &&
     latestSessionStatus !== "abandoned";
-  // The /review/state endpoint is shared by candidate and expert flows but
-  // hardcodes `context: 'expert_application'` server-side, so its assignment
-  // check queries the wrong table for candidate reviews and always reports
-  // `isAssignedReviewer: false`. Candidate reviews don't use commit-reveal,
-  // drafts, or on-chain sessions either — the only correct authority is the
-  // submit endpoint's own assignment check. Skip the state fetch entirely.
+  // The /review/state endpoint comes in two symmetric flavors keyed by flow:
+  // candidate reviews hit `/api/proposals/:proposalId/review/state` (context
+  // `candidate_proposal`), expert reviews hit the guild-application route.
+  // Both run the correct reviewer-assignment check for their pipeline, so the
+  // candidate path can use the same envelope-driven gates as the expert path.
+  // Skip only when there is no resilient-review target id at all (practice /
+  // story fixtures, or a candidate application not yet promoted to a proposal).
   const skipReviewState =
-    !application?.id ||
-    isPracticeMode ||
-    isStoryLabPreview ||
-    reviewTypeProp === "candidate";
+    !reviewTargetId || isPracticeMode || isStoryLabPreview;
   const reviewState = useReviewState(
-    "guildApplication",
-    application?.id ?? "",
+    reviewFlow,
+    reviewTargetId ?? "",
     {
       skip: skipReviewState,
       pollIntervalMs: shouldPollSession ? SESSION_POLL_INTERVAL_MS : null,
@@ -600,7 +631,7 @@ export function ReviewGuildApplicationModal({
       saveInFlightRef.current = true;
       setDraftSaveStatus({ kind: "saving" });
       try {
-        const response = await reviewsApi.guildApplication.putDraft(
+        const response = await reviewFlowApi.putDraft(
           applicationId,
           body as unknown as Record<string, unknown>,
           { lastSeenModified: lastSeenModifiedRef.current },
@@ -628,7 +659,7 @@ export function ReviewGuildApplicationModal({
           }
           toast.message("Your draft was updated in another tab — refreshing");
           try {
-            const fresh = await reviewsApi.guildApplication.getDraft(applicationId);
+            const fresh = await reviewFlowApi.getDraft(applicationId);
             if (fresh) {
               if (typeof fresh.lastModified === "string") {
                 lastSeenModifiedRef.current = fresh.lastModified;
@@ -691,7 +722,7 @@ export function ReviewGuildApplicationModal({
         saveInFlightRef.current = false;
       }
     },
-    [],
+    [reviewFlowApi],
   );
   // eslint-disable-next-line no-restricted-syntax -- ref mirror so the function can dispatch into its own latest definition
   useEffect(() => {
@@ -706,20 +737,19 @@ export function ReviewGuildApplicationModal({
    * effect below for that case.
    */
   const flushDraftNow = useCallback((): Promise<void> => {
-    const appId = application?.id;
-    if (!shouldHydrateDraft || !draftHydrated || !appId) {
+    if (!shouldHydrateDraft || !draftHydrated || !reviewTargetId) {
       return Promise.resolve();
     }
     if (draftSaveTimerRef.current) {
       clearTimeout(draftSaveTimerRef.current);
       draftSaveTimerRef.current = null;
     }
-    return performDraftSave(latestDraftBodyRef.current, appId);
-  }, [shouldHydrateDraft, draftHydrated, application?.id, performDraftSave]);
+    return performDraftSave(latestDraftBodyRef.current, reviewTargetId);
+  }, [shouldHydrateDraft, draftHydrated, reviewTargetId, performDraftSave]);
 
   // eslint-disable-next-line no-restricted-syntax -- debounced auto-save to external system (server-side draft store)
   useEffect(() => {
-    if (!shouldHydrateDraft || !draftHydrated || !application?.id) return;
+    if (!shouldHydrateDraft || !draftHydrated || !reviewTargetId) return;
     if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
     const body: GuildReviewDraftBody = {
       feedback,
@@ -730,7 +760,7 @@ export function ReviewGuildApplicationModal({
       redFlags,
       stakeAmount,
     };
-    const applicationId = application.id;
+    const applicationId = reviewTargetId;
     draftSaveTimerRef.current = setTimeout(() => {
       void performDraftSave(body, applicationId);
     }, DRAFT_DEBOUNCE_MS);
@@ -740,7 +770,7 @@ export function ReviewGuildApplicationModal({
   }, [
     shouldHydrateDraft,
     draftHydrated,
-    application?.id,
+    reviewTargetId,
     feedback,
     generalScores,
     generalJustifications,
@@ -760,8 +790,9 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- subscribes to page lifecycle events to flush the in-progress draft
   useEffect(() => {
     if (!isOpen) return;
-    if (!shouldHydrateDraft || !application?.id) return;
-    const applicationId = application.id;
+    if (!shouldHydrateDraft || !reviewTargetId) return;
+    const targetId = reviewTargetId;
+    const flow = reviewFlow;
     const wallet = address ?? expertWallet ?? null;
     const flushKeepalive = () => {
       // If a save is already in flight, don't double-fire — the in-flight
@@ -773,7 +804,8 @@ export function ReviewGuildApplicationModal({
       }
       if (!wallet) return; // can't authenticate the keepalive PUT
       flushDraftKeepalive(
-        applicationId,
+        flow,
+        targetId,
         latestDraftBodyRef.current,
         wallet,
         lastSeenModifiedRef.current,
@@ -801,7 +833,7 @@ export function ReviewGuildApplicationModal({
       // handlers) still gets the last keystrokes saved.
       flushKeepalive();
     };
-  }, [isOpen, shouldHydrateDraft, application?.id, address, expertWallet]);
+  }, [isOpen, shouldHydrateDraft, reviewTargetId, reviewFlow, address, expertWallet]);
 
   // Refetch the envelope every time the modal is opened, so a reviewer who
   // closed the modal mid-edit and returned to it sees the freshest BE state
@@ -809,13 +841,13 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- explicit imperative refetch tied to modal open transitions
   useEffect(() => {
     if (!isOpen) return;
-    if (!shouldHydrateDraft || !application?.id) return;
+    if (!shouldHydrateDraft || !reviewTargetId) return;
     reviewState.refetch();
-    // We deliberately depend only on the open transition + application id so
+    // We deliberately depend only on the open transition + review target id so
     // we don't loop on every refetch result. The reviewState reference is
     // stable from useFetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, application?.id, shouldHydrateDraft]);
+  }, [isOpen, reviewTargetId, shouldHydrateDraft]);
 
   // ─── Modal close path: flush before close on every exit ────────────────
   // Wraps the parent's onClose so X-button / outside-click / forced-close
@@ -824,12 +856,12 @@ export function ReviewGuildApplicationModal({
   // debounce so the in-memory state is committed via the await'd path or,
   // failing that, the keepalive on unmount cleanup.
   const handleCloseWithFlush = useCallback(() => {
-    if (shouldHydrateDraft && application?.id && draftHydrated) {
+    if (shouldHydrateDraft && reviewTargetId && draftHydrated) {
       // Fire the in-flow flush; UI proceeds to close immediately.
       void flushDraftNow();
     }
     onClose();
-  }, [shouldHydrateDraft, application?.id, draftHydrated, flushDraftNow, onClose]);
+  }, [shouldHydrateDraft, reviewTargetId, draftHydrated, flushDraftNow, onClose]);
 
   // ESC keypress closes via the flushing path. Some modal hosts/parents
   // already wire ESC themselves; we only act when the modal is open AND
@@ -857,7 +889,7 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- cleanup on unmount fires a keepalive flush so the BE always has the last state
   useEffect(() => {
     return () => {
-      if (!shouldHydrateDraft || !application?.id) return;
+      if (!shouldHydrateDraft || !reviewTargetId) return;
       if (saveInFlightRef.current) return;
       const wallet = address ?? expertWallet ?? null;
       if (!wallet) return;
@@ -866,15 +898,16 @@ export function ReviewGuildApplicationModal({
       // resolves).
       if (!draftHydrated) return;
       flushDraftKeepalive(
-        application.id,
+        reviewFlow,
+        reviewTargetId,
         latestDraftBodyRef.current,
         wallet,
         lastSeenModifiedRef.current,
       );
     };
-    // We intentionally re-bind the cleanup whenever the application changes
+    // We intentionally re-bind the cleanup whenever the review target changes
     // so the captured id matches what we're flushing.
-  }, [shouldHydrateDraft, application?.id, draftHydrated, address, expertWallet]);
+  }, [shouldHydrateDraft, reviewTargetId, reviewFlow, draftHydrated, address, expertWallet]);
 
   const responses = application?.applicationResponses || {};
   const generalResponses = responses.general || {};
@@ -1038,13 +1071,17 @@ export function ReviewGuildApplicationModal({
     !!blockchainSession &&
     (blockchainSession.status === "failed" || blockchainSession.status === "abandoned");
 
-  // Imperative retry handler. POSTs to the new BE endpoint; on success we
-  // refetch the review-state envelope so the banner flips back to pending.
+  // Imperative retry handler. POSTs to the BE retry-session endpoint; on
+  // success we refetch the review-state envelope so the banner flips back to
+  // pending. Only the guild-application (expert) flow exposes a retry-session
+  // route — the candidate-proposal flow has no equivalent, so for candidate
+  // reviews this is a no-op (the e2e candidate path drains the outbox up
+  // front, so a failed/abandoned session never surfaces there).
   const sessionRetryApi = useApi<BlockchainSessionInfo>();
   const handleRetrySessionCreation = useCallback(async () => {
-    if (!application?.id) return;
+    if (!reviewTargetId || reviewFlow !== "guildApplication") return;
     const result = await sessionRetryApi.execute(
-      () => reviewsApi.guildApplication.retrySession(application.id),
+      () => reviewsApi.guildApplication.retrySession(reviewTargetId),
       {
         onSuccess: () => {
           toast.success("On-chain session retry queued");
@@ -1061,7 +1098,7 @@ export function ReviewGuildApplicationModal({
       },
     );
     return result;
-  }, [application, sessionRetryApi, reviewState]);
+  }, [reviewTargetId, reviewFlow, sessionRetryApi, reviewState]);
 
   // Envelope-driven gates. We only act on `false` for `isAssignedReviewer` —
   // older BE versions don't populate it and we surface them as `null`, which
@@ -1257,7 +1294,7 @@ export function ReviewGuildApplicationModal({
     for (let attempt = 0; attempt <= SUBMIT_RETRY_DELAYS_MS.length; attempt++) {
       if (cancelTokenRef.current !== token) return;
       try {
-        await reviewsApi.guildApplication.submit(applicationId, payload);
+        await reviewFlowApi.submit(applicationId, payload);
         return;
       } catch (err: unknown) {
         lastError = err;
@@ -1453,10 +1490,10 @@ export function ReviewGuildApplicationModal({
   useEffect(() => {
     if (hasResumedRef.current) return;
     if (!isOpen || isPracticeMode || isStoryLabPreview) return;
-    if (!application?.id || !address || !publicClient) return;
+    if (!reviewTargetId || !address || !publicClient) return;
     if (!isCommitPhase) return;
     if (submitState.kind !== "ready") return;
-    const pending = loadPendingTx(application.id, address);
+    const pending = loadPendingTx(reviewTargetId, address);
     if (!pending) return;
     hasResumedRef.current = true;
     const token = ++cancelTokenRef.current;
@@ -1487,17 +1524,19 @@ export function ReviewGuildApplicationModal({
       toast.error(reason);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isPracticeMode, isStoryLabPreview, application?.id, address, publicClient, isCommitPhase, submitState.kind]);
+  }, [isOpen, isPracticeMode, isStoryLabPreview, reviewTargetId, address, publicClient, isCommitPhase, submitState.kind]);
 
-  // Reset the one-shot guard when the application id changes (so opening a
-  // different application can trigger recovery for it).
+  // Reset the one-shot guard when the review target changes (so opening a
+  // different application/proposal can trigger recovery for it).
   // eslint-disable-next-line no-restricted-syntax -- ref reset bound to the same prop key as the form-reset effect above
   useEffect(() => {
     hasResumedRef.current = false;
-  }, [application?.id]);
+  }, [reviewTargetId]);
 
   const handleSubmit = async () => {
-    if (!generalTemplate || !levelTemplate) {
+    // `levelTemplate` is legitimately null for guilds with no domain rubric
+    // (e.g. the Testing Guild) — gate on the load state, not its presence.
+    if (!generalTemplate || loadingTemplates || templateError) {
       setValidationError("Review templates are still loading. Please try again in a moment.");
       return;
     }
@@ -1535,7 +1574,7 @@ export function ReviewGuildApplicationModal({
       return;
     }
 
-    if (isCommitPhase && application?.id) {
+    if (isCommitPhase && reviewTargetId) {
       // Resilient Review flow: server derives the salt, we sign on-chain,
       // then the BE verifies the receipt against the recomputed hash.
       if (!sessionReady || !isConnected || !onSepolia || !walletMatches) {
@@ -1570,7 +1609,7 @@ export function ReviewGuildApplicationModal({
       if (commitTxHash) {
         const token = ++cancelTokenRef.current;
         recoveringRef.current = false;
-        const persisted = address ? loadPendingTx(application.id, address) : null;
+        const persisted = address ? loadPendingTx(reviewTargetId, address) : null;
         if (!persisted) {
           const reason =
             "Recovery data lost — your prior on-chain commit can't be matched to a saved score. Please refresh the page and start a new review.";
@@ -1628,7 +1667,7 @@ export function ReviewGuildApplicationModal({
   const handleConfirmCommit = async () => {
     setIsConfirmOpen(false);
     const pending = pendingCommitRef.current;
-    if (!pending || !application?.id || !address) return;
+    if (!pending || !reviewTargetId || !address) return;
 
     const token = ++cancelTokenRef.current;
     recoveringRef.current = false;
@@ -1639,8 +1678,8 @@ export function ReviewGuildApplicationModal({
       setSubmitState({ kind: "awaiting_signature", elapsedMs: 0 });
 
       // 1. Get expected commit hash from BE (server derives the salt).
-      const ch = await reviewsApi.guildApplication.getCommitHash(
-        application.id,
+      const ch = await reviewFlowApi.getCommitHash(
+        reviewTargetId,
         pending.normalizedScore,
       );
       if (cancelTokenRef.current !== token) return;
@@ -1667,7 +1706,7 @@ export function ReviewGuildApplicationModal({
       setCommitTxHash(typedTxHash);
       const record: PendingReviewTx = {
         txHash: typedTxHash,
-        applicationId: application.id,
+        applicationId: reviewTargetId,
         reviewerWallet: address,
         normalizedScore: pending.normalizedScore,
         criteriaScores: pending.criteriaScores,
@@ -1743,8 +1782,8 @@ export function ReviewGuildApplicationModal({
     recoveringRef.current = false;
     setSubmitState({ kind: "ready" });
     if (wasAwaitingSignature) {
-      if (application?.id && address) {
-        clearPendingTx(application.id, address);
+      if (reviewTargetId && address) {
+        clearPendingTx(reviewTargetId, address);
       }
     } else {
       toast.message(

@@ -2024,6 +2024,20 @@ export const commitRevealApi = {
       requiresAuth: false,
     }),
 
+  /**
+   * Same `/api/proposals/:id/commit-reveal/status` route as `getPhaseStatus`,
+   * but typed with the richer `votingPhase` shape the candidate-review modal
+   * needs. The BE response carries `votingPhase` / `blockchainSessionId` /
+   * `blockchainSessionCreated` — mirroring the expert-application commit-reveal
+   * status — so the resilient review modal can drive the same on-chain flow
+   * for candidate guild applications keyed on the linked proposal id.
+   */
+  getProposalPhaseStatus: (proposalId: string) =>
+    apiRequest<import("@/types").ExpertCRPhaseStatus>(
+      `/api/proposals/${proposalId}/commit-reveal/status`,
+      { requiresAuth: false },
+    ),
+
   submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/commit`, {
       method: "POST",
@@ -2115,13 +2129,25 @@ export const reviewsApi = {
         `/api/proposals/${proposalId}/review/draft`,
         { requiresAuth: false }
       ),
-    putDraft: (proposalId: string, body: Record<string, unknown>) =>
+    putDraft: (
+      proposalId: string,
+      body: Record<string, unknown>,
+      options?: { lastSeenModified?: string | null },
+    ) =>
       apiRequest<ReviewDraftResponse>(
         `/api/proposals/${proposalId}/review/draft`,
         {
           method: "PUT",
           requiresAuth: false,
-          body: JSON.stringify({ body }),
+          // `lastSeenModified` is the concurrent-tab conflict probe — the BE's
+          // shared `ReviewDraftsController.upsert` accepts it on both the
+          // proposal and guild-application routes. Symmetric with
+          // `guildApplication.putDraft` so the review modal can switch flows.
+          body: JSON.stringify(
+            options?.lastSeenModified
+              ? { body, lastSeenModified: options.lastSeenModified }
+              : { body },
+          ),
         }
       ),
     getCommitHash: (proposalId: string, score: number) =>

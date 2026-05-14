@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { expertApi, guildsApi, guildApplicationsApi, extractApiError } from "@/lib/api";
+import { expertApi, guildsApi, guildApplicationsApi, commitRevealApi, extractApiError } from "@/lib/api";
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { useApplicationsData } from "@/lib/hooks/useApplicationsData";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -132,18 +132,32 @@ export default function ApplicationsPage() {
     let alive = true;
     let intervalId: number | null = null;
 
+    // Expert reviews poll the expert-application commit-reveal status; candidate
+    // reviews poll the linked proposal's commit-reveal status (Pipeline B). Both
+    // share the same `votingPhase` / `blockchainSessionCreated` shape.
+    const pollTargetId =
+      reviewType === "expert"
+        ? selectedReviewApp?.id
+        : reviewType === "candidate"
+          ? selectedReviewApp?.candidateProposalId
+          : undefined;
+    const pollPhaseStatus =
+      reviewType === "candidate"
+        ? commitRevealApi.getProposalPhaseStatus
+        : expertApi.expertCommitReveal.getPhaseStatus;
+
     const shouldPoll =
       showReviewModal &&
-      reviewType === "expert" &&
-      !!selectedReviewApp?.id &&
+      (reviewType === "expert" || reviewType === "candidate") &&
+      !!pollTargetId &&
       crPhaseStatus?.votingPhase === "commit" &&
       !crPhaseStatus?.blockchainSessionCreated;
 
-    if (shouldPoll && selectedReviewApp?.id) {
-      const appId = selectedReviewApp.id;
+    if (shouldPoll && pollTargetId) {
+      const targetId = pollTargetId;
       intervalId = window.setInterval(async () => {
         try {
-          const updated = await expertApi.expertCommitReveal.getPhaseStatus(appId);
+          const updated = await pollPhaseStatus(targetId);
           if (alive) setCrPhaseStatus(updated);
         } catch {
           /* transient — keep polling */
@@ -159,6 +173,7 @@ export default function ApplicationsPage() {
     showReviewModal,
     reviewType,
     selectedReviewApp?.id,
+    selectedReviewApp?.candidateProposalId,
     crPhaseStatus?.votingPhase,
     crPhaseStatus?.blockchainSessionCreated,
   ]);
@@ -182,11 +197,27 @@ export default function ApplicationsPage() {
     setShowReviewModal(true);
   };
 
-  const handleReviewCandidate = (candidateApp: CandidateGuildApplication) => {
+  const handleReviewCandidate = async (candidateApp: CandidateGuildApplication) => {
     if (candidateApp.expertHasReviewed) return;
     if (!data.isStakedInGuild(candidateApp.guildId)) {
       toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
+    }
+    // Candidate guild-applications now run on Pipeline B (commit-reveal). Pull
+    // the linked proposal's commit-reveal phase so the review modal drives the
+    // same on-chain commit flow the expert path uses. Missing proposal id /
+    // failed fetch → null phase, which the modal treats as direct submission.
+    if (candidateApp.candidateProposalId) {
+      try {
+        const phaseStatus = await commitRevealApi.getProposalPhaseStatus(
+          candidateApp.candidateProposalId,
+        );
+        setCrPhaseStatus(phaseStatus);
+      } catch {
+        setCrPhaseStatus(null);
+      }
+    } else {
+      setCrPhaseStatus(null);
     }
     const mapped = mapCandidateToReviewApplication(candidateApp);
     setSelectedReviewApp(mapped);
@@ -229,6 +260,15 @@ export default function ApplicationsPage() {
     if (appId && reviewType === "expert") {
       expertApi.expertCommitReveal
         .getPhaseStatus(appId)
+        .then((status) => setCrPhaseStatus(status))
+        .catch(() => {
+          /* leave stale phase status; modal will re-fetch on next open */
+        });
+    } else if (reviewType === "candidate" && selectedReviewApp?.candidateProposalId) {
+      // Re-pull the linked proposal's commit-reveal status so a commit→reveal
+      // advancement propagates to the modal banner, mirroring the expert path.
+      commitRevealApi
+        .getProposalPhaseStatus(selectedReviewApp.candidateProposalId)
         .then((status) => setCrPhaseStatus(status))
         .catch(() => {
           /* leave stale phase status; modal will re-fetch on next open */
@@ -280,7 +320,7 @@ export default function ApplicationsPage() {
         if (match.expertHasReviewed) {
           handleViewCandidateReview(match);
         } else {
-          handleReviewCandidate(match);
+          void handleReviewCandidate(match);
         }
         opened = true;
       }
@@ -526,9 +566,9 @@ export default function ApplicationsPage() {
         onSubmitReview={handleSubmitReview}
         isReviewing={isReviewing}
         proposalContext={reviewType === "proposal" ? reviewProposalContext : undefined}
-        commitRevealPhase={reviewType === "expert" ? crPhaseStatus?.votingPhase : undefined}
-        blockchainSessionId={reviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
-        blockchainSessionCreated={reviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
+        commitRevealPhase={reviewType === "expert" || reviewType === "candidate" ? crPhaseStatus?.votingPhase : undefined}
+        blockchainSessionId={reviewType === "expert" || reviewType === "candidate" ? crPhaseStatus?.blockchainSessionId : undefined}
+        blockchainSessionCreated={reviewType === "expert" || reviewType === "candidate" ? crPhaseStatus?.blockchainSessionCreated : undefined}
         reviewerId={data.expertData?.id}
         expertWallet={data.address || undefined}
         onReviewSuccess={handleReviewSuccess}
