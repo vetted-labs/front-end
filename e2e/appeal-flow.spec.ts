@@ -248,161 +248,147 @@ async function setupMocks(page: Page) {
 test.describe("Appeal flow: Guild → Proposals → Rejected Application → Appeal", () => {
 
   test("navigates from guild detail to rejected proposal and sees appeal form", async ({ page }) => {
-    // Set up expert session and mocks
-    await page.goto("/", { waitUntil: "networkidle" });
-    await setExpertSession(page, EXPERT);
-    await setupMocks(page);
+    await test.step("expert session and API mocks are established", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page, EXPERT);
+      await setupMocks(page);
+    });
 
-    // Step 1: Navigate to guild detail page
-    await page.goto(`/expert/guilds/${ENGINEERING_GUILD_ID}`, { waitUntil: "networkidle" });
+    await test.step("expert opens the Engineering guild detail page", async () => {
+      await page.goto(`/expert/guilds/${ENGINEERING_GUILD_ID}`, { waitUntil: "networkidle" });
+      await expect(page.getByText("Engineering").first()).toBeVisible({ timeout: 15000 });
+    });
 
-    // Should see guild name
-    await expect(page.getByText("Engineering").first()).toBeVisible({ timeout: 15000 });
+    await test.step("expert opens the Candidate Proposals sub-tab and sees the rejected application", async () => {
+      const proposalsTab = page.getByRole("button", { name: "Candidate Proposals" });
+      await expect(proposalsTab).toBeVisible({ timeout: 10000 });
+      await proposalsTab.click();
 
-    // Step 2: Click "Candidate Proposals" sub-tab
-    const proposalsTab = page.getByRole("button", { name: "Candidate Proposals" });
-    await expect(proposalsTab).toBeVisible({ timeout: 10000 });
-    await proposalsTab.click();
+      await expect(page.getByText("Dr. Stewart Weimann")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Rejected").first()).toBeVisible();
+    });
 
-    // Step 3: Should see the rejected proposal
-    await expect(page.getByText("Dr. Stewart Weimann")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Rejected").first()).toBeVisible();
+    await test.step("expert clicks View on the rejected proposal and the appeal form is shown", async () => {
+      const viewButton = page.getByRole("button", { name: "View" }).first();
+      await expect(viewButton).toBeVisible();
+      await viewButton.click();
 
-    // Step 4: Click the View button on the rejected proposal
-    const viewButton = page.getByRole("button", { name: "View" }).first();
-    await expect(viewButton).toBeVisible();
-    await viewButton.click();
+      await page.waitForURL(`**/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { timeout: 10000 });
 
-    // Step 5: Should navigate to proposal detail page
-    await page.waitForURL(`**/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { timeout: 10000 });
-
-    // Step 6: Should see the candidate name
-    await expect(page.getByText("Dr. Stewart Weimann").first()).toBeVisible({ timeout: 15000 });
-
-    // Step 7: Should see finalization display with "Rejected" outcome
-    await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("REJECTED").first()).toBeVisible();
-
-    // Step 8: Should see the appeal form
-    await expect(page.getByText("Believe this rejection was incorrect?")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).toBeVisible();
+      await expect(page.getByText("Dr. Stewart Weimann").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("REJECTED").first()).toBeVisible();
+      await expect(page.getByText("Believe this rejection was incorrect?")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).toBeVisible();
+    });
   });
 
   test("proposal detail page renders finalization data correctly", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await setExpertSession(page, EXPERT);
-    await setupMocks(page);
+    await test.step("expert session and API mocks are established", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page, EXPERT);
+      await setupMocks(page);
+    });
 
-    // Go directly to the proposal detail page
-    await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
+    await test.step("expert navigates directly to the rejected proposal detail page", async () => {
+      await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
+      await expect(page.getByText("Dr. Stewart Weimann").first()).toBeVisible({ timeout: 15000 });
+    });
 
-    // Candidate header
-    await expect(page.getByText("Dr. Stewart Weimann").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText("Engineering").first()).toBeVisible();
-
-    // Finalization section
-    await expect(page.getByText("Application Rejected")).toBeVisible({ timeout: 10000 });
-
-    // Consensus score
-    await expect(page.getByText("9.5")).toBeVisible();
-
-    // Participation count
-    await expect(page.getByText("3").first()).toBeVisible();
-
-    // Your Performance section
-    await expect(page.getByText("Your Performance")).toBeVisible();
-    await expect(page.getByText("10/100")).toBeVisible(); // my vote score
+    await test.step("finalization section shows the rejection outcome, consensus score, and expert performance", async () => {
+      await expect(page.getByText("Engineering").first()).toBeVisible();
+      await expect(page.getByText("Application Rejected")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("9.5")).toBeVisible();
+      await expect(page.getByText("3").first()).toBeVisible();
+      await expect(page.getByText("Your Performance")).toBeVisible();
+      await expect(page.getByText("10/100")).toBeVisible();
+    });
   });
 
   test("appeal submission form opens and validates", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await setExpertSession(page, EXPERT);
-    await setupMocks(page);
+    await test.step("expert session and API mocks are established", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page, EXPERT);
+      await setupMocks(page);
+    });
 
-    await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
+    await test.step("expert opens the proposal detail page and expands the appeal form", async () => {
+      await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
 
-    // Wait for the appeal section
-    const appealButton = page.getByRole("button", { name: /Appeal This Rejection/i });
-    await expect(appealButton).toBeVisible({ timeout: 15000 });
+      const appealButton = page.getByRole("button", { name: /Appeal This Rejection/i });
+      await expect(appealButton).toBeVisible({ timeout: 15000 });
+      await appealButton.click();
 
-    // Click to expand appeal form
-    await appealButton.click();
+      await expect(page.getByText("File Appeal")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("Justification")).toBeVisible();
+      await expect(page.getByText("Stake Amount")).toBeVisible();
+      await expect(page.getByPlaceholder(/Explain specifically/i)).toBeVisible();
+    });
 
-    // Should see the form elements
-    await expect(page.getByText("File Appeal")).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText("Justification")).toBeVisible();
-    await expect(page.getByText("Stake Amount")).toBeVisible();
-    await expect(page.getByPlaceholder(/Explain specifically/i)).toBeVisible();
+    await test.step("submit button stays disabled until the justification meets the minimum length", async () => {
+      const submitButton = page.getByRole("button", { name: /File Appeal/i }).first();
+      await expect(submitButton).toBeDisabled();
 
-    // Submit button should be disabled (no justification yet)
-    const submitButton = page.getByRole("button", { name: /File Appeal/i }).first();
-    await expect(submitButton).toBeDisabled();
+      await page.getByPlaceholder(/Explain specifically/i).fill("Too short");
+      await expect(submitButton).toBeDisabled();
 
-    // Type a short justification (< 100 chars)
-    await page.getByPlaceholder(/Explain specifically/i).fill("Too short");
+      const longJustification = "This candidate was incorrectly rejected. Their extensive experience in distributed systems and blockchain development is well-documented and meets guild standards.";
+      await page.getByPlaceholder(/Explain specifically/i).fill(longJustification);
+      await expect(submitButton).toBeEnabled();
+    });
 
-    // Submit button should still be disabled
-    await expect(submitButton).toBeDisabled();
-
-    // Type a valid justification (100+ chars)
-    const longJustification = "This candidate was incorrectly rejected. Their extensive experience in distributed systems and blockchain development is well-documented and meets guild standards.";
-    await page.getByPlaceholder(/Explain specifically/i).fill(longJustification);
-
-    // Submit button should now be enabled
-    await expect(submitButton).toBeEnabled();
-
-    // Cancel button should work
-    await page.getByRole("button", { name: "Cancel" }).click();
-
-    // Should go back to the collapsed state
-    await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).toBeVisible();
+    await test.step("Cancel collapses the form back to the appeal trigger button", async () => {
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).toBeVisible();
+    });
   });
 
   test("existing appeal shows status banner instead of form", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await setExpertSession(page, EXPERT);
-    await setupMocks(page);
+    await test.step("expert session, API mocks, and an existing appeal are established", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page, EXPERT);
+      await setupMocks(page);
 
-    // Override the appeal endpoint to return an existing appeal
-    await page.route(`**/api/guilds/appeals/by-application/${REJECTED_PROPOSAL_ID}`, (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          success: true,
-          data: {
-            id: "appeal-001",
-            application_id: REJECTED_PROPOSAL_ID,
-            status: "panel_assigned",
-            appeal_reason: "This candidate was incorrectly rejected.",
-            stake_amount: "50.00000000",
-            appeal_number: 1,
-            appealed_by_expert_id: EXPERT.expertId,
-            guild_id: ENGINEERING_GUILD_ID,
-            guild_name: "Engineering",
-            panel_members: [
-              {
-                expert_id: "a0000000-0000-0000-0000-000000000001",
-                expert_name: "Taieb Chaouch",
-                vote: null,
-                reasoning: null,
-              },
-            ],
-            created_at: "2026-02-26T13:00:00Z",
-          },
-        }),
+      // Override the appeal endpoint to return an existing appeal
+      await page.route(`**/api/guilds/appeals/by-application/${REJECTED_PROPOSAL_ID}`, (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            data: {
+              id: "appeal-001",
+              application_id: REJECTED_PROPOSAL_ID,
+              status: "panel_assigned",
+              appeal_reason: "This candidate was incorrectly rejected.",
+              stake_amount: "50.00000000",
+              appeal_number: 1,
+              appealed_by_expert_id: EXPERT.expertId,
+              guild_id: ENGINEERING_GUILD_ID,
+              guild_name: "Engineering",
+              panel_members: [
+                {
+                  expert_id: "a0000000-0000-0000-0000-000000000001",
+                  expert_name: "Taieb Chaouch",
+                  vote: null,
+                  reasoning: null,
+                },
+              ],
+              created_at: "2026-02-26T13:00:00Z",
+            },
+          }),
+        });
       });
     });
 
-    await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
+    await test.step("expert opens the rejected proposal detail page", async () => {
+      await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
+      await expect(page.getByText("Application Rejected")).toBeVisible({ timeout: 15000 });
+    });
 
-    // Should NOT show the appeal submission form
-    await expect(page.getByText("Application Rejected")).toBeVisible({ timeout: 15000 });
-
-    // Should show appeal status banner instead
-    await expect(page.getByText(/Appeal/i).first()).toBeVisible({ timeout: 10000 });
-
-    // Should NOT show "Appeal This Rejection" button
-    await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).not.toBeVisible();
+    await test.step("appeal status banner is shown and the submission form is not available", async () => {
+      await expect(page.getByText(/Appeal/i).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("button", { name: /Appeal This Rejection/i })).not.toBeVisible();
+    });
   });
 });
