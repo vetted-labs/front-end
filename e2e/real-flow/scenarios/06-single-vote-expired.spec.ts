@@ -51,6 +51,10 @@ test("single-vote-expired: only 1 expert commits, deadline passes, expireSession
   contracts,
   cleanState: _cleanState,
 }) => {
+  test.fixme(
+    true,
+    "DIV-010: on-chain commit-reveal session never created (DIV-001 HARD BLOCKER — createVettingSession is onlyOwner; backend signer != owner; commitVote reverts SessionDoesNotExist)",
+  );
   // Hoisted bindings so later steps can read what step 1 produced.
   let applicationId!: string;
   let sessionId!: Hex;

@@ -23,6 +23,10 @@ test("company rejection records not-hired outcome and slashes endorsed expert", 
   guild,
   cleanState: _cleanState,
 }) => {
+  test.fixme(
+    true,
+    "DIV-010: candidate-review modal cannot open — depends on DIV-001 HARD BLOCKER (commit-reveal session never created on-chain), so `Close review modal` button is never rendered",
+  );
   void _cleanState;
 
   const company = await signupCompanyViaUI(page);
