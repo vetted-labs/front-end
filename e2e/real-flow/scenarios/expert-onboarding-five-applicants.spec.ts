@@ -371,6 +371,20 @@ test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () =>
     [55, 60, 58, 62, 57], // applicant 4: borderline → depends on IQR; oracle decides
   ] as const;
 
+  // This scenario uses `test` from `@playwright/test` (no project-fixture
+  // `cleanState` activation, no anvil snapshot/revert) because it's a pure
+  // API-driven flow. Without an explicit cleanup it would leave applicants,
+  // reviews, and reviewer assignments in the shared `vetted_e2e` DB and
+  // pollute the next file's tests (open task #41). Truncate the DB
+  // ourselves after this file's test runs — same endpoint `cleanState`
+  // calls in its cleanup, just invoked directly with Playwright's built-in
+  // `request` fixture so no fixture-import surgery is needed.
+  test.afterEach(async ({ request }) => {
+    await request.post(`${BACKEND_URL}/api/test/reset`).catch(() => {
+      /* best-effort cleanup; the next scenario's cleanState will re-reset */
+    });
+  });
+
   test(
     "5 expert applicants are submitted, panel-reviewed, and IQR-finalized",
     async ({ request }) => {

@@ -106,6 +106,7 @@ async function apiSeedExpert(body: {
   status: string;
   guildId: string;
   stakeAmount: string;
+  reputationScore?: number;
 }): Promise<{ id: string }> {
   return postJson<{ id: string }>("/api/test/seed/expert", body);
 }
@@ -397,6 +398,10 @@ async function main(): Promise<void> {
         status: "approved",
         guildId: guildRow.id,
         stakeAmount: STAKE.toString(),
+        // Seed at 100 so the slashing scenario's -20 misaligned delta isn't
+        // clamped by the SQL floor (GREATEST(rep - 20, 0)). Distinguishes
+        // "not slashed" from "slashed but already at 0".
+        reputationScore: 100,
       });
 
       expertsManifest.push({
