@@ -94,6 +94,23 @@ const headlessE2eWallet = (): Wallet => ({
   },
 });
 
+// In E2E mode we need a sepolia-shaped chain (same chainId, RPC fee token,
+// ABI conventions) but WITHOUT the Multicall3 address.  The real sepolia chain
+// definition ships with contracts.multicall3 = { address: "0xca11b..." }.
+// When wagmi uses that definition it tries to batch every useReadContract call
+// through the Multicall3 contract — which is NOT deployed on a fresh anvil
+// instance.  The batched eth_call returns 0x, viem fails to decode the ABI
+// response, and the hook stays in its undefined/loading state forever.
+// Clearing contracts on our local chain definition disables multicall
+// batching for E2E reads, so each call goes direct to anvil.  (DIV-009 fix.)
+const e2eSepoliaChain = {
+  ...sepolia,
+  contracts: {
+    ...sepolia.contracts,
+    multicall3: undefined,
+  },
+} as unknown as typeof sepolia;
+
 // cookieStorage + ssr:true enables the SSR hydration pattern required by
 // Next.js App Router. Combined with cookieToInitialState() in layout.tsx and
 // <WagmiProvider initialState={...}>, this guarantees that useConnectModal(),
@@ -103,9 +120,16 @@ export const config = isE2E
   ? getDefaultConfig({
       appName: "Vetted",
       projectId,
-      chains: [sepolia, foundry] as const,
+      chains: [e2eSepoliaChain, foundry] as const,
       transports: {
-        [sepolia.id]: sepoliaTransport,
+        // In E2E mode, bypass the ranked fallback entirely — the rank probe
+        // promotes public sepolia RPCs ahead of localhost:8545 within seconds
+        // of page load, causing every useReadContract call to hit a node that
+        // has no code at the locally-deployed contract addresses (returns "0x"
+        // → UI stays in Loading forever).  A plain http() transport pointing
+        // at the local anvil node is deterministic and has no public-RPC
+        // attack surface.  (DIV-009 fix — production is unchanged.)
+        [sepolia.id]: foundryTransport,
         [foundry.id]: foundryTransport,
       },
       // E2E: append a "Testing" group with our headless wallet. The default
