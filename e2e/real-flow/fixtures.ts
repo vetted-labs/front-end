@@ -98,6 +98,15 @@ type TestFixtures = {
       page: Page,
       privateKey: `0x${string}`,
     ) => Promise<InjectedWalletHandle>;
+    /**
+     * Cause the next request matching `method` (or any request when `method`
+     * is omitted) to fail with EIP-1193 error code 4001 ("User rejected").
+     *
+     * Must be called AFTER `wallet.attach()` — forwards to the underlying
+     * HeadlessWallet for the most-recently-attached page. For multi-actor
+     * tests, call it on the specific `InjectedWalletHandle.wallet` directly.
+     */
+    rejectNextRequest: (method?: string) => void;
   };
 };
 
@@ -376,6 +385,9 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     // scenarios legitimately attach a wallet to one fresh page/context per
     // expert — so the guard is keyed on the page, not the whole test.
     const handles = new Map<Page, InjectedWalletHandle>();
+    // lastHandle tracks the most recently attached wallet so rejectNextRequest()
+    // can forward to it without requiring the caller to hold the handle themselves.
+    let lastHandle: InjectedWalletHandle | null = null;
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use({
       attach: async (page, privateKey) => {
@@ -388,7 +400,16 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
           rpcUrl: process.env.ANVIL_RPC_URL,
         });
         handles.set(page, handle);
+        lastHandle = handle;
         return handle;
+      },
+      rejectNextRequest: (method?: string) => {
+        if (!lastHandle) {
+          throw new Error(
+            "wallet.rejectNextRequest called before wallet.attach — attach a wallet first",
+          );
+        }
+        lastHandle.wallet.rejectNextRequest(method);
       },
     });
     // No teardown — pages close at end of test, taking exposeFunction with them.
