@@ -32,13 +32,11 @@ test(
     const creds = await signupCandidate(page);
 
     // ── 2. Seed a message thread (stub until BE wires the endpoint) ───────────
-    let thread: Awaited<ReturnType<typeof testApi.seedMessageThread>>;
-
     await test.step(
       "seed a message thread between candidate and recruiter via test API",
       async () => {
         try {
-          thread = await testApi.seedMessageThread(request, {
+          await testApi.seedMessageThread(request, {
             candidateEmail: creds.email,
             recruiterName: "Sam Recruiter",
             initialBody: "Hi! Are you open to chat next week?",
