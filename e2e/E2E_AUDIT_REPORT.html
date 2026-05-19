@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted E2E Suite — Coverage &amp; Quality Audit (May 2026)</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --panel-2: #1d2230;
+    --border: #2a3142;
+    --text: #e7ecf3;
+    --muted: #8b95a7;
+    --accent: #ff8a3c;
+    --accent-soft: rgba(255,138,60,0.12);
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.12);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.14);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.14);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.14);
+    --purple: #c084fc;
+    --purple-bg: rgba(192,132,252,0.14);
+    --gray-bg: rgba(139,149,167,0.14);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; line-height: 1.55; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 96px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 40px; }
+  h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 56px 0 18px; letter-spacing: -0.01em; border-left: 3px solid var(--accent); padding-left: 12px; }
+  h3 { font-size: 16px; margin: 28px 0 12px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  h4 { font-size: 14px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  p, li { color: var(--text); }
+  .lede { color: var(--muted); font-size: 15px; max-width: 800px; }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11.5px; }
+  tr:hover td { background: var(--panel-2); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+  .b-strong { background: var(--green-bg); color: var(--green); }
+  .b-decent { background: var(--blue-bg); color: var(--blue); }
+  .b-weak { background: var(--amber-bg); color: var(--amber); }
+  .b-missing { background: var(--red-bg); color: var(--red); }
+  .b-blocked { background: var(--purple-bg); color: var(--purple); }
+  .b-quarantine { background: var(--purple-bg); color: var(--purple); }
+  .b-covered { background: var(--green-bg); color: var(--green); }
+  .b-mocked { background: var(--blue-bg); color: var(--blue); }
+  .b-partial { background: var(--amber-bg); color: var(--amber); }
+  .b-none { background: var(--red-bg); color: var(--red); }
+  .b-p0 { background: var(--red-bg); color: var(--red); }
+  .b-p1 { background: var(--amber-bg); color: var(--amber); }
+  .b-p2 { background: var(--blue-bg); color: var(--blue); }
+  .b-p3 { background: var(--gray-bg); color: var(--muted); }
+  .scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 24px 0; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card .num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .card .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .grade-strong .num { color: var(--green); }
+  .grade-decent .num { color: var(--blue); }
+  .grade-weak .num { color: var(--amber); }
+  .grade-red .num { color: var(--red); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; margin: 18px 0; }
+  .axis-row { display: grid; grid-template-columns: 200px 1fr 120px; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: center; }
+  .axis-row:last-child { border-bottom: none; }
+  .axis-name { font-weight: 600; }
+  .axis-bar { background: var(--panel-2); border-radius: 99px; height: 8px; overflow: hidden; position: relative; }
+  .axis-fill { height: 100%; border-radius: 99px; }
+  .fill-strong { background: var(--green); }
+  .fill-decent { background: var(--blue); }
+  .fill-weak { background: var(--amber); }
+  .axis-score { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 99px; display: inline-block; }
+  .heatmap th, .heatmap td { padding: 8px 10px; font-size: 12.5px; }
+  .heatmap td.cell { text-align: center; }
+  ul.tight { padding-left: 22px; margin: 6px 0; }
+  ul.tight li { margin: 3px 0; }
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 14px 18px; border-radius: 6px; margin: 16px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } .axis-row { grid-template-columns: 1fr; } }
+  .footer { color: var(--muted); font-size: 12px; margin-top: 60px; border-top: 1px solid var(--border); padding-top: 18px; }
+  .anchor { color: var(--muted); text-decoration: none; }
+  .anchor:hover { color: var(--accent); }
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 20px 0; }
+  .toc ul { columns: 2; column-gap: 30px; padding-left: 18px; margin: 0; }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Vetted E2E Suite — Coverage &amp; Quality Audit</h1>
+  <div class="meta">Generated 2026-05-19 · Refreshed 2026-05-19 (post coverage-completion sprint) · Branch <code>test/e2e-hardening-workstream-a</code> · Scope: <code>e2e/</code> (mocked lane + real-flow lane)</div>
+  <p class="lede">A consolidated, evidence-driven audit of the Playwright suite. Maps every spec to a product flow, grades the test infrastructure across 8 axes, traces every smart contract interaction the suite exercises, and surfaces the highest-impact missing coverage. Findings synthesized from four parallel read-only investigations.</p>
+  <div class="callout" style="margin-top:18px;">
+    <strong>2026-05-19 sprint result — 31 commits landed on this branch.</strong> Wave A foundation cleanups (5), DIV-010 fix in <code>vetted/smart-contracts</code> (forge tests 140/140 green), and 22 new real-flow specs across Waves C–J. <strong>5 specs verified passing live</strong> against the local stack (D2 candidate-login, D3 candidate-browse-and-apply, C2 review-wizard-states, J4 signup-500, E1 governance-create — functional); the remaining specs landed as compiling scaffolds awaiting either BE seed endpoints (governance/messaging/notifications/company stubs) or quiet stack time for verification. New divergences surfaced: DIV-011 (no past-deadline UI state in ReviewQueue), DIV-012 (Postgres deadlines bypass <code>evm_increaseTime</code>); DIV-008 confirmed open (WithdrawalManager unmounted).
+  </div>
+</header>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ul>
+    <li><a href="#tldr">1. Executive summary</a></li>
+    <li><a href="#scorecard">2. Scorecard</a></li>
+    <li><a href="#heatmap">3. Coverage heatmap by role</a></li>
+    <li><a href="#strong-weak">4. Strong / weak / missing flows</a></li>
+    <li><a href="#mocked">5. Mocked-lane inventory</a></li>
+    <li><a href="#realflow">6. Real-flow inventory</a></li>
+    <li><a href="#contracts">7. Smart contract interaction map</a></li>
+    <li><a href="#infra">8. Test infrastructure quality</a></li>
+    <li><a href="#gaps">9. Top missing tests</a></li>
+    <li><a href="#cleanup">10. Top cleanup wins</a></li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="tldr">1. Executive summary</h2>
+
+<div class="callout">
+  <strong>Verdict — overall 78/100.</strong> The real-flow infrastructure is genuinely good: a working headless EIP-1193 wallet shim, deterministic anvil snapshot/revert, end-to-end-typed helpers, and product-language <code>test.step()</code> labels. The mocked lane was recently triaged (13 render-smokes deleted, 29 re-segmented). The suite's weak points are <em>coverage holes</em>, not infrastructure: candidate signup, messaging, notifications, governance, and the company hiring pipeline have <strong>no real-flow coverage at all</strong>, and 8 vetting scenarios are <strong>quarantined</strong> behind backend divergence DIV-010 (<code>VettingManager.createVettingSession</code> is <code>onlyOwner</code>, BE signer ≠ owner). Endorsement coverage is the strongest end-to-end story — 8/8 outcome states wired to chain + BE invariants.
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h4>What's strong</h4>
+    <ul class="tight">
+      <li>Wallet shim foundation — 28 smoke tests all green, <em>provably</em> drives RainbowKit→wagmi→on-chain.</li>
+      <li>Fixture composition (<code>fixtures.ts</code>) — worker-scoped manifest + test-scoped <code>cleanState</code> snapshot/revert is textbook.</li>
+      <li>Endorsement suite — 8 scenarios cover the full bid→hire→reward/refund/dispute/retention lifecycle with on-chain assertions.</li>
+      <li>Oracle layer — 27 pure tests independently implement protocol math (consensus, slashing, rewards) per the CEO consensus spec.</li>
+      <li>Typed helpers — real-flow contract handles, viem types, and finalization payloads propagate without <code>any</code>.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>What's weak / missing</h4>
+    <ul class="tight">
+      <li><strong>8 vetting scenarios quarantined</strong> (DIV-010) — the entire core review-chain at-rest until BE/contract owner aligns.</li>
+      <li>No candidate signup / login real-flow. No messaging or notifications interaction tests anywhere.</li>
+      <li>Governance flow — mocked only; zero on-chain coverage.</li>
+      <li>Withdrawal finalization (Phase 5) — pending, blocked by DIV-008/009.</li>
+      <li>Rubric-score scraping in <code>ui-review.ts</code> has 4 fallback patterns — symptom of missing <code>data-testid</code>.</li>
+      <li><code>guild-mocks.ts</code> — 38 KB / 1378 LOC monolith of nested fixture objects; difficult to maintain.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="scorecard">2. Scorecard</h2>
+
+<div class="scorecard">
+  <div class="card grade-strong"><div class="num">~100</div><div class="label">Total test cases</div><div class="sub">Across both lanes</div></div>
+  <div class="card grade-strong"><div class="num">51</div><div class="label">Real-flow spec files</div><div class="sub">8 868 LOC</div></div>
+  <div class="card grade-decent"><div class="num">30</div><div class="label">Mocked specs (post-triage)</div><div class="sub">169 tests · 13 deleted</div></div>
+  <div class="card grade-red"><div class="num">8</div><div class="label">Quarantined</div><div class="sub"><code>test.fixme</code> · DIV-010 + DIV-002</div></div>
+  <div class="card grade-strong"><div class="num">28 / 28</div><div class="label">Smoke tests green</div><div class="sub">Wallet-shim gate</div></div>
+  <div class="card grade-strong"><div class="num">8</div><div class="label">Contracts touched</div><div class="sub">VettingMgr, Staking, Slash, Token, Bidding, Rewards, Rep, GuildReg</div></div>
+  <div class="card grade-weak"><div class="num">5</div><div class="label">Phases pending</div><div class="sub">2B, 3, 5, 6, 7</div></div>
+  <div class="card grade-red"><div class="num">10+</div><div class="label">DIVs tracked</div><div class="sub">Backend / contract divergences</div></div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="heatmap">3. Coverage heatmap by role</h2>
+
+<div class="legend">
+  <span><i style="background:var(--green)"></i>covered (real-flow)</span>
+  <span><i style="background:var(--blue)"></i>covered (mocked only)</span>
+  <span><i style="background:var(--amber)"></i>partial</span>
+  <span><i style="background:var(--red)"></i>none</span>
+  <span><i style="background:var(--purple)"></i>blocked / quarantined</span>
+</div>
+
+<h3>Candidate</h3>
+<table class="heatmap">
+  <thead><tr><th>Flow</th><th>Coverage</th><th>Severity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Signup / login</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>D1 (signup) + D2 (login + bad-password). D2 passing live ✅. Adapted to real form (TOS checkbox, /auth/signup?type=candidate, "Create Account" button).</td></tr>
+    <tr><td>Profile (view / edit)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p1">P1</span></td><td>Tab nav + empty-state CTA only.</td></tr>
+    <tr><td>Browse jobs</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>D3 candidate-browse-and-apply passing live ✅ — drives 12-substep guild apply wizard.</td></tr>
+    <tr><td>Apply to job</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Covered by D3.</td></tr>
+    <tr><td>Guild application (multi-step form)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>9 mocked tests + real-flow <code>applyToGuildViaUI</code>.</td></tr>
+    <tr><td>Guild tracking (status buckets, grouping)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p2">P2</span></td><td>5 tests with fixture-driven assertions.</td></tr>
+    <tr><td>Dashboard (application status)</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p1">P1</span></td><td>Deleted as render-smoke.</td></tr>
+    <tr><td>Messages (inbox, thread, compose)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>F1 scaffold landed; awaits BE <code>POST /api/test/seed/message-thread</code>.</td></tr>
+    <tr><td>Notifications (view, filter)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>F2 scaffold landed; awaits BE <code>POST /api/test/seed/notifications</code>.</td></tr>
+    <tr><td>Analytics / stats</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p2">P2</span></td><td>No spec exists.</td></tr>
+    <tr><td>Endorsements received</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td><td>Bid flow covered indirectly via cross-role scenarios.</td></tr>
+  </tbody>
+</table>
+
+<h3>Company</h3>
+<table class="heatmap">
+  <thead><tr><th>Flow</th><th>Coverage</th><th>Severity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Signup / login</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p0">P0</span></td><td>6 tests: role toggle, token storage, errors. No real-flow.</td></tr>
+    <tr><td>Post job (multi-section form)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Mocked + real-flow <code>publishJobViaUI</code>.</td></tr>
+    <tr><td>Edit / update job</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p2">P2</span></td><td>No spec.</td></tr>
+    <tr><td>Dashboard (job list, status)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p1">P1</span></td><td>7 tests: unauth, empty-state, API-500.</td></tr>
+    <tr><td>View applicants</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td><td>H2 scaffold landed; awaits BE <code>POST /api/test/seed/applicants-for-job</code>.</td></tr>
+    <tr><td>Accept / reject candidate</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>H3 scaffold landed; awaits BE <code>POST /api/test/seed/approved-candidate</code>. <code>job-to-hire-ui</code> un-fixme'd post DIV-010.</td></tr>
+    <tr><td>Profile (edit company info)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p2">P2</span></td><td>8 tests: edit/save/cancel cycle.</td></tr>
+    <tr><td>Team management (invite, roles)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td><td>H1 scaffold landed driving Settings → Team tab → InviteTeamMemberDialog.</td></tr>
+    <tr><td>Interview / offer flows</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p1">P1</span></td><td>No spec.</td></tr>
+    <tr><td>Analytics / insights</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p2">P2</span></td><td>No spec.</td></tr>
+  </tbody>
+</table>
+
+<h3>Expert</h3>
+<table class="heatmap">
+  <thead><tr><th>Flow</th><th>Coverage</th><th>Severity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Wallet login (SIWE via UI)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Smoke + Phase 1 complete.</td></tr>
+    <tr><td>Stake for guild (EIP-2612 permit, on-chain)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td><code>expert-stake.smoke</code> Phase 4. Shim trace, not balance delta.</td></tr>
+    <tr><td>Withdraw stake (request, cooldown, claim)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>I2: requestUnstake driven via UI ✅; completion gated by <code>DIV_008_OPEN</code> (WithdrawalManager.tsx exists but unmounted by any route).</td></tr>
+    <tr><td>Voting queue (sort, filter, badge)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p1">P1</span></td><td>8 tests covering state variants.</td></tr>
+    <tr><td>Vote on candidate (rubric, commit-reveal)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>C1 + C2 land Phase 2B (4-step wizard driver, state machine asserted). C2 passing live ✅.</td></tr>
+    <tr><td>Vote detail (UI states)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p1">P1</span></td><td>9 tests covering each phase state.</td></tr>
+    <tr><td>Endorsement bidding</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>8 endorsement scenarios cover the full lifecycle.</td></tr>
+    <tr><td>Endorsement disputes</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td><td>Scenarios 05/06 assert indirectly (no public dispute-status endpoint).</td></tr>
+    <tr><td>Earnings (filter, refetch)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Mocked + real-flow earnings nav.</td></tr>
+    <tr><td>Claim rewards</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td><code>expert-reward-claim-ui.spec.ts</code>.</td></tr>
+    <tr><td>Reputation (score, tier, timeline)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Mocked + slashing-misalignment real-flow.</td></tr>
+    <tr><td>Slashing (impact, banners)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>Mocked + scenarios 04 / 07 + oracle.</td></tr>
+    <tr><td>Governance (create proposal, vote)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>E1 create proposal verified functional ✅. E2 vote + E3 outcome scaffolds await BE seed endpoints.</td></tr>
+    <tr><td>Profile (edit personal / professional)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p2">P2</span></td><td>5 tests: no-error-toast, stat cards.</td></tr>
+    <tr><td>Guild ranks / guild detail</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>I3 covers <code>/expert/guild/[id]</code> — KPI tiles, tab bar, members/leaderboard sections.</td></tr>
+    <tr><td>Leaderboard</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>I1 covers rank order, custom guild dropdown filter, role chip filter.</td></tr>
+    <tr><td>Notifications</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td><td>F3 scaffold (dismiss flow); awaits BE seed endpoint.</td></tr>
+    <tr><td>Story Lab / onboarding tour</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Highest-value mocked spec (36 KB; needs segmentation).</td></tr>
+  </tbody>
+</table>
+
+<h3>Cross-role &amp; system flows</h3>
+<table class="heatmap">
+  <thead><tr><th>Flow</th><th>Coverage</th><th>Severity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Candidate → expert review chain (multi-actor isolation)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td><td>Phase 1 smoke + mocked cross-role spec.</td></tr>
+    <tr><td>Guild application → consensus assignment</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>D3 + C3 + multi-reviewer-consensus-ui exercise the path post DIV-010.</td></tr>
+    <tr><td>Commit-reveal consensus (3+ experts via UI)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>C3 multi-reviewer-consensus-ui landed (Phase 3); awaits stack-quiet verification.</td></tr>
+    <tr><td>Consensus finalization (approve / reject / borderline)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>Scenarios 01–07 (quarantined) + headline UI scenario.</td></tr>
+    <tr><td>Slashing finalization edge cases</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>Mocked + scenarios 04/06/07 + oracle.</td></tr>
+    <tr><td>Reward distribution end-to-end</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>Oracle math + endorsement scenarios 01/07 + UI claim.</td></tr>
+    <tr><td>Job posting → applicant → review → hire</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td><td>G1 + G2 un-fixme'd post DIV-010 contract fix (SESSION_CREATOR_ROLE granted to BE wallet).</td></tr>
+    <tr><td>Appeal flow (rejected proposal → submission)</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p1">P1</span></td><td>4 mocked tests; no real-flow.</td></tr>
+    <tr><td>Messaging (candidate ↔ expert / company)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>F1 scaffold; awaits BE seed endpoint.</td></tr>
+    <tr><td>Candidate notifications (status, review feedback)</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p1">P1</span></td><td>F2 scaffold; awaits BE seed endpoint.</td></tr>
+  </tbody>
+</table>
+
+<h3>Negative paths</h3>
+<table class="heatmap">
+  <thead><tr><th>Scenario</th><th>Coverage</th><th>Severity</th></tr></thead>
+  <tbody>
+    <tr><td>Wallet rejection mid-tx</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Wallet disconnect during multi-step flow</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Insufficient gas / stale nonce on permit</td><td><span class="badge b-none">none</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Voting after deadline expires</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Stake below threshold blocks voting</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Concurrent expert votes (race condition)</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Backend 500 during signup / submit</td><td><span class="badge b-covered">covered</span></td><td><span class="badge b-p3">P3</span></td></tr>
+    <tr><td>Guild member duplicate application</td><td><span class="badge b-mocked">mocked only</span></td><td><span class="badge b-p2">P2</span></td></tr>
+    <tr><td>Slashing edge: single voter, tied vote, no votes</td><td><span class="badge b-partial">partial</span></td><td><span class="badge b-p2">P2</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="strong-weak">4. Strong / weak / missing flows — at a glance</h2>
+<div class="grid-2">
+  <div class="panel">
+    <h4 style="color:var(--green)">Strong (covered + asserted)</h4>
+    <ul class="tight">
+      <li><strong>Endorsement lifecycle</strong> — 8 outcome states, UI + on-chain invariants.</li>
+      <li><strong>Wallet shim</strong> — 28-test smoke gate covers shim/RK/wagmi/SIWE.</li>
+      <li><strong>Expert stake</strong> — real EIP-2612 permit + <code>stakeWithPermit</code> via UI.</li>
+      <li><strong>Reputation &amp; slashing display</strong> — exact numeric assertions from fixtures.</li>
+      <li><strong>Guild application form</strong> — multi-step validation in mocked + real-flow.</li>
+      <li><strong>Cross-role isolation</strong> — multi-actor cookies/localStorage per browser context.</li>
+      <li><strong>Oracle math</strong> — 27 pure tests for consensus/slashing/rewards.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4 style="color:var(--amber)">Weak / partial (covered but needs upgrade)</h4>
+    <ul class="tight">
+      <li><strong>Review rubric wizard</strong> — score scraping has 4 fallback patterns; needs <code>data-testid</code>.</li>
+      <li><strong>Vote UI in real-flow</strong> — Phase 2 used API shortcut, Phase 2B (field-by-field) pending.</li>
+      <li><strong>Multi-reviewer consensus UI</strong> — Phase 3 pending; backend logic OK, UI assertion gap.</li>
+      <li><strong>Endorsement disputes 05/06</strong> — assert indirectly; no public dispute-status endpoint.</li>
+      <li><strong>Company hiring pipeline</strong> — <code>job-to-hire-ui</code> exists but <code>.fixme()</code>'d.</li>
+      <li><strong>Slashing scenarios 04/07</strong> — covered, but edge cases (tied vote, single voter) thin.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4 style="color:var(--red)">Missing (zero coverage anywhere)</h4>
+    <ul class="tight">
+      <li><strong>Candidate signup &amp; login</strong> — no spec at all.</li>
+      <li><strong>Messaging</strong> — candidate ↔ expert, candidate ↔ company.</li>
+      <li><strong>Notifications</strong> — view, filter, mark-read, dismiss.</li>
+      <li><strong>Governance</strong> — proposal lifecycle in real-flow.</li>
+      <li><strong>Withdrawal finalization UI</strong> — Phase 5 (blocked).</li>
+      <li><strong>Company team management</strong> — invite, roles, remove.</li>
+      <li><strong>Leaderboard, guild ranks, guild detail</strong> — render-smokes deleted with no replacement.</li>
+      <li><strong>Negative paths</strong> — wallet rejection, deadline expiry, concurrent votes.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4 style="color:var(--purple)">Quarantined / blocked (test exists but disabled)</h4>
+    <ul class="tight">
+      <li><strong>scenarios/01-07</strong> (6 specs) — <code>.fixme()</code>'d by DIV-010 (<code>createVettingSession</code> owner mismatch).</li>
+      <li><strong>cross-role/job-to-hire-ui</strong> + <strong>job-to-not-hired</strong> — same DIV-010.</li>
+      <li><strong>expert-onboarding-five-applicants</strong> — DIV-002 (expert email seeding gap).</li>
+      <li><strong>Phase 5 withdrawal UI</strong> — DIV-008 (no UI for <code>completeUnstake</code>) + DIV-009 (RPC fallback).</li>
+      <li><strong>Phase 7</strong> — BE-side gating; unlocks scenarios 01–07.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="mocked">5. Mocked-lane inventory (<code>e2e/*.spec.ts</code>)</h2>
+<p class="lede">30 surviving specs · 169 tests · post-triage (13 render-smokes deleted in commit <code>d051fc3</code>, 29 re-segmented with product-language steps). 21/30 files have <em>strong</em> coverage; the rest are decent.</p>
+
+<table>
+  <thead><tr><th>File</th><th>Tests</th><th>Flow area</th><th>Strength</th><th>Depth</th><th>What it proves</th></tr></thead>
+  <tbody>
+    <tr><td><code>appeal-flow</code></td><td>4</td><td>appeal</td><td><span class="badge b-strong">strong</span></td><td>form-fill</td><td>Char-count validation gating submit, existing-appeal branch.</td></tr>
+    <tr><td><code>bug-regressions</code></td><td>7</td><td>regression</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Stale expert wallet bleed into candidate session.</td></tr>
+    <tr><td><code>candidate-applications</code></td><td>4</td><td>candidate-job</td><td><span class="badge b-decent">decent</span></td><td>form-fill</td><td>Browse Jobs nav + empty-state copy.</td></tr>
+    <tr><td><code>candidate-guild-application</code></td><td>10</td><td>candidate-guild</td><td><span class="badge b-strong">strong</span></td><td>multi-step</td><td>Resume requirement, conditional steps, step preservation.</td></tr>
+    <tr><td><code>candidate-guild-tracking</code></td><td>5</td><td>candidate-guild</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Grouping logic, status buckets, ARIA names.</td></tr>
+    <tr><td><code>candidate-job-application</code></td><td>3</td><td>candidate-job</td><td><span class="badge b-decent">decent</span></td><td>multi-step</td><td>Two-context cross-role nav.</td></tr>
+    <tr><td><code>candidate-profile</code></td><td>6</td><td>candidate-profile</td><td><span class="badge b-decent">decent</span></td><td>read-only</td><td>Tab navigation, API-500 detection.</td></tr>
+    <tr><td><code>commit-reveal-voting</code></td><td>7</td><td>commit-reveal</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>State machine + localStorage nonce auto-fill + lost-nonce warning.</td></tr>
+    <tr><td><code>company-auth</code></td><td>6</td><td>auth</td><td><span class="badge b-strong">strong</span></td><td>form-fill</td><td>Signup → dashboard, duplicate-email errors, role toggle.</td></tr>
+    <tr><td><code>company-dashboard</code></td><td>7</td><td>company</td><td><span class="badge b-decent">decent</span></td><td>form-fill</td><td>Unauth redirect, empty-state CTA + URL nav.</td></tr>
+    <tr><td><code>company-job-posting</code></td><td>4</td><td>company</td><td><span class="badge b-strong">strong</span></td><td>multi-step</td><td>Multi-section job form end-to-end + required-field validation.</td></tr>
+    <tr><td><code>company-profile</code></td><td>9</td><td>company</td><td><span class="badge b-strong">strong</span></td><td>form-fill</td><td>Edit/save/cancel cycle with success assert.</td></tr>
+    <tr><td><code>expert-earnings</code></td><td>5</td><td>expert-earnings</td><td><span class="badge b-decent">decent</span></td><td>read-only</td><td>401 → connect-wallet redirect + time-range filter refetch counter.</td></tr>
+    <tr><td><code>expert-login</code></td><td>6</td><td>auth</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>UI contracts: Expert tab hides email, no Expert on signup.</td></tr>
+    <tr><td><code>expert-navigation-flow</code></td><td>2</td><td>navigation</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Sidebar link completeness + URL asserts.</td></tr>
+    <tr><td><code>expert-onboarding-tour</code></td><td>2</td><td>story-lab</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Story modal non-dismissable, deep-link redirect.</td></tr>
+    <tr><td><code>expert-profile</code></td><td>5</td><td>expert-profile</td><td><span class="badge b-decent">decent</span></td><td>read-only</td><td>No-error-toast + stat cards/headings contract.</td></tr>
+    <tr><td><code>expert-reputation</code></td><td>6</td><td>reputation</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Computed values (350 score, tier, alignment %).</td></tr>
+    <tr><td><code>expert-route-protection</code></td><td>4</td><td>navigation</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Role-based routing, no-crash, wallet-disconnected.</td></tr>
+    <tr><td><code>expert-session</code></td><td>5</td><td>regression</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Cross-role session isolation, multi-key localStorage invariants.</td></tr>
+    <tr><td><code>expert-story-lab</code></td><td>8</td><td>story-lab</td><td><span class="badge b-strong">strong</span></td><td>multi-step</td><td>All 15 story-lab steps, aria/inert, leak detector (36 KB — needs segmentation).</td></tr>
+    <tr><td><code>expert-voting-detail</code></td><td>10</td><td>voting</td><td><span class="badge b-strong">strong</span></td><td>form-fill</td><td>Each phase state + real vote-API assertion.</td></tr>
+    <tr><td><code>expert-voting-flow</code></td><td>4</td><td>voting</td><td><span class="badge b-decent">decent</span></td><td>read-only</td><td>Role-gated voting page across mock states.</td></tr>
+    <tr><td><code>expert-voting-queue</code></td><td>8</td><td>voting</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>State variants: staking warning, empty, filter tabs, lock badge.</td></tr>
+    <tr><td><code>navigation</code></td><td>8</td><td>navigation</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Cross-role auth-guard redirects, homepage console-error assert.</td></tr>
+    <tr><td><code>negative-tests</code></td><td>7</td><td>negative</td><td><span class="badge b-strong">strong</span></td><td>form-fill</td><td>Auth-guard enforcement, guild-member validation.</td></tr>
+    <tr><td><code>slashing-finalization</code></td><td>4</td><td>slashing</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Tier banners, exact rep changes, slash %, IQR stats.</td></tr>
+    <tr><td><code>slashing-reputation</code></td><td>6</td><td>slashing</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Score / tier / gains / losses / timeline display invariants.</td></tr>
+    <tr><td><code>slashing-vote-weight</code></td><td>4</td><td>reputation</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>1500 rep → 2.50× weight, tier label.</td></tr>
+    <tr><td><code>staking-ui</code></td><td>4</td><td>voting</td><td><span class="badge b-strong">strong</span></td><td>read-only</td><td>Vote button enable/disable boundary under staking conditions.</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="realflow">6. Real-flow inventory (<code>e2e/real-flow/</code>)</h2>
+
+<h3>Smoke (foundation gate — 28 tests, all green)</h3>
+<table>
+  <thead><tr><th>Spec</th><th>Tests</th><th>Layer proven</th><th>Strength</th></tr></thead>
+  <tbody>
+    <tr><td><code>headless-wallet</code></td><td>7</td><td>Node-side EIP-1193 wallet (sign, send, chainId)</td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>wallet-injection</code></td><td>5</td><td>Browser bridge (<code>window.ethereum</code>, EIP-6963)</td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>wagmi-connect</code></td><td>3</td><td>Wagmi programmatic via <code>__wagmiTest</code></td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>rk-modal</code></td><td>1</td><td>RainbowKit modal → shim click path</td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>ui-detect</code></td><td>2</td><td>Shim surfaces as "Installed" in RK modal</td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>ui-connect</code></td><td>3</td><td>Connect → <code>useAccount</code> populated</td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>ui-diag</code></td><td>2</td><td>Diagnostic prints (manual debugging)</td><td><span class="badge b-decent">decent</span></td></tr>
+    <tr><td><code>expert-login</code></td><td>2</td><td>SIWE-equivalent login → <code>/expert/dashboard</code></td><td><span class="badge b-strong">strong</span></td></tr>
+    <tr><td><code>candidate-to-expert-review</code></td><td>1</td><td>Multi-actor candidate → expert review (Phase 1+2)</td><td><span class="badge b-decent">decent</span></td></tr>
+    <tr><td><code>expert-stake</code></td><td>1</td><td>Real on-chain tx via UI (Phase 4 — shim trace only)</td><td><span class="badge b-decent">decent</span></td></tr>
+    <tr><td><code>fixtures-smoke</code></td><td>1</td><td>Fixture sanity</td><td><span class="badge b-decent">decent</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Scenarios — review chain &amp; UI / cross-role</h3>
+<table>
+  <thead><tr><th>Scenario</th><th>Flow</th><th>Invariants</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>scenarios/01-approve-consensus</code></td><td>Apply → 3 commit high → reveal → approved</td><td>UI + on-chain phase</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/02-reject-consensus</code></td><td>Apply → 3 commit low → reveal → rejected</td><td>UI + on-chain phase</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/03-partial-reveal</code></td><td>3 commit, 1 reveals, 1 no-show, slash</td><td>UI + vote slots</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/04-no-reveal-slashing</code></td><td>3 commit, 1 no-reveal, explicit slash</td><td>UI + stake reduced</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/05-borderline-mid</code></td><td>IQR at approval threshold</td><td>UI + on-chain phase</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/06-single-vote-expired</code></td><td>1 commit, deadline expires → <code>expireSession</code></td><td>UI + on-chain phase</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>scenarios/07-no-commits-expired</code></td><td>No commits, deadline → <code>expireSession</code></td><td>UI + on-chain phase</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>headline-candidate-guild-review</code></td><td>5-expert rubric wizard → finalize → oracle match</td><td>UI + oracle consensus</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>expert-onboarding-five-applicants</code></td><td>5 candidate panels with expert modal reviews</td><td>UI + BE rep delta</td><td><span class="badge b-quarantine">.fixme (DIV-002)</span></td></tr>
+    <tr><td><code>slashing-misalignment-panel</code></td><td>Slash → <code>ReputationManager</code> delta</td><td>UI + on-chain rep</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>candidate-rejected-consensus</code></td><td>Lower scores → rejection</td><td>UI</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>cross-role/job-to-hire-ui</code></td><td>Company job → guild app → expert approval → endorsement → hire</td><td>End-to-end UI + chain</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>cross-role/job-to-not-hired-slashing</code></td><td>Same flow, not-hired branch → slash</td><td>End-to-end UI + chain</td><td><span class="badge b-quarantine">.fixme (DIV-010)</span></td></tr>
+    <tr><td><code>expert/expert-reward-claim-ui</code></td><td>Dashboard rewards → claim</td><td>UI + chain</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>expert/expert-stake-withdrawal</code></td><td>Request → 7-day cooldown → complete → balance restored</td><td>UI + token balance</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>expert/expert-workspace-tabs-ui</code></td><td>Dashboard tab navigation</td><td>UI</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td><code>company/company-job-publication-ui</code></td><td>Company signup → publish → browse</td><td>UI</td><td><span class="badge b-covered">active</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Endorsement (all 8 outcome states — strongest end-to-end coverage)</h3>
+<table>
+  <thead><tr><th>#</th><th>Scenario</th><th>State</th><th>Assertion</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>01</td><td>happy-bid-and-hire</td><td>Happy path</td><td>Both: <code>EndorsementBidding.getTopEndorsers</code> + <code>RewardDistributor</code> events</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td>02</td><td>bid-and-not-hired</td><td>Not hired, bid forfeited</td><td>Both: <code>pending_refunds</code> on-chain + <code>slashing_records</code> BE row</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td>03</td><td>loser-bid-refund</td><td>Loser refund</td><td>Both: <code>pendingRefunds</code> read + <code>token.balanceOf</code> delta</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td>04</td><td>performance-issue-no-dispute</td><td>Perf issue, no dispute</td><td>BE-only: <code>endorsement_rewards.status</code> (soft-pass UI)</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td>05</td><td>dispute-resolved-for-expert</td><td>Expert challenges, dismissed</td><td>Indirect: <code>allVoted=true</code> + revote rejection (no public endpoint)</td><td><span class="badge b-partial">indirect</span></td></tr>
+    <tr><td>06</td><td>dispute-resolved-against-expert</td><td>Expert challenges, upheld</td><td>Indirect: same pattern; upheld is a no-op per code</td><td><span class="badge b-partial">indirect</span></td></tr>
+    <tr><td>07</td><td>retention-success</td><td>Retention expires cleanly</td><td>Both: <code>RewardDistributor</code> events + <code>pending_blockchain_ops</code> empty</td><td><span class="badge b-covered">active</span></td></tr>
+    <tr><td>08</td><td>bid-already-exists-rejection</td><td>Duplicate bid</td><td>On-chain: <code>EndorsementBidding.bids</code> (single entry)</td><td><span class="badge b-covered">active</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Oracle &amp; experiments</h3>
+<div class="grid-2">
+  <div class="panel">
+    <h4>Oracle layer (<code>e2e/real-flow/oracle/</code>)</h4>
+    <p>27 pure tests, no backend / chain dependency. Independent re-implementation of protocol math from the Technical Appendix.</p>
+    <ul class="tight">
+      <li><code>consensus.spec.ts</code> — 5 tests, IQR (inclusive-halves)</li>
+      <li><code>ceo-consensus-scenarios.spec.ts</code> — 10 tests, authoritative CEO regression</li>
+      <li><code>slashing.spec.ts</code> — 3 tests, review-vote slash formulas</li>
+      <li><code>rewards.spec.ts</code> — 5 tests, tier-weight distribution</li>
+      <li><code>endorsement.spec.ts</code> — 4 tests, payout + perf-slash</li>
+    </ul>
+    <p class="meta"><strong>DIV-003 open:</strong> Oracle uses inclusive-halves quartiles; BE uses exclusive. All 10 CEO scenarios reproducible only with inclusive-halves.</p>
+  </div>
+  <div class="panel">
+    <h4>Experiments harness (<code>e2e/real-flow/experiments/</code>)</h4>
+    <p>Parameterized volume runner: N candidate panels, diff against oracle.</p>
+    <ul class="tight">
+      <li>20-app baseline: 1.7 s total, ~86 ms/app (API path).</li>
+      <li>Extrapolated 100-app: ~9 s.</li>
+      <li>Consensus mismatches: 0.</li>
+    </ul>
+    <p class="meta"><strong>DIV-001 blocker:</strong> all volume runs use API (Pipeline C) regardless of <code>--uiSampleRate</code>. Once DIV-001 lifts, UI sampling auto-engages.</p>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="contracts">7. Smart contract interaction map</h2>
+
+<p class="lede">Eight contracts touched across the suite. The shim-signing pipeline is the durable proof for UI-driven txs; balance deltas are asserted where deterministic, RPC traces where not.</p>
+
+<table>
+  <thead><tr><th>Contract</th><th>Methods exercised</th><th>Tested by</th><th>State assertions</th></tr></thead>
+  <tbody>
+    <tr><td><strong>VettingManager</strong></td><td><code>createVettingSession</code> (BLOCKED), <code>commitVote</code>, <code>revealVote</code>, <code>expireSession</code>, read <code>sessions</code>, read <code>getVote</code></td><td>scenarios 01–07, headline</td><td>Phase slot = FINALIZED; session tuple</td></tr>
+    <tr><td><strong>ExpertStaking</strong></td><td><code>stake</code>, <code>requestUnstake</code>, <code>completeUnstake</code>, ERC20 <code>approve</code>, read <code>getStakeInfo</code>, read <code>getUnstakeRequest</code></td><td><code>expert-stake.smoke</code>, scenario 04, <code>expert-stake-withdrawal</code></td><td>Balance delta, stake reduced post-slash, unstake-request lifecycle</td></tr>
+    <tr><td><strong>SlashingManager</strong></td><td><code>slashExpert</code> (onlyOwner)</td><td><code>scenarios/04-no-reveal-slashing</code></td><td><code>ExpertStaking.getStakeInfo</code> reduced</td></tr>
+    <tr><td><strong>VettedToken</strong> (ERC-20)</td><td><code>approve</code>, <code>mint</code> (bootstrap), <code>balanceOf</code>, EIP-2612 permit</td><td>All endorsement + staking scenarios</td><td>Balance restored (refund), balance increased (unstake)</td></tr>
+    <tr><td><strong>EndorsementBidding</strong></td><td><code>createJob</code>, <code>placeBid</code>, <code>recordHire</code>, <code>withdrawRefund</code>, read <code>getTopEndorsers</code>, read <code>bids</code>, read <code>pendingRefunds</code>, read <code>jobs</code></td><td>All 8 endorsement scenarios</td><td>Bids recorded, top-3 list, pending refunds, dup-bid handling</td></tr>
+    <tr><td><strong>RewardDistributor</strong></td><td>read <code>rewards</code> (via UI soft-pass)</td><td>endorsement 01, 07</td><td>Reward events post-drain</td></tr>
+    <tr><td><strong>ReputationManager</strong></td><td>read <code>getExpertReputation</code></td><td><code>slashing-misalignment-panel</code></td><td>Reputation delta post-slash</td></tr>
+    <tr><td><strong>GuildRegistry</strong></td><td>read <code>isMember</code> (implicit)</td><td>All vetting scenarios</td><td>Implicit; assertion on session success</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Phase 4 caveat (documented in <code>TESTING_PHASES.md</code>):</strong> <code>expert-stake.smoke</code> asserts the shim RPC trace (<code>eth_signTypedData_v4</code> + <code>eth_sendTransaction</code>) — <em>not</em> the on-chain balance delta. Worker-scoped <code>seedExperts</code> + permit-nonce reuse can quietly revert a tx that was still signed and submitted. Follow-up: bundle multicall3 + Vetted contracts in a single deterministic fixture init so the on-chain delta becomes a reliable assertion.
+</div>
+
+<h3>Known divergences (DIVs) blocking real-flow coverage</h3>
+<table>
+  <thead><tr><th>DIV</th><th>Affects</th><th>Root cause</th><th>Quarantined</th><th>Remediation</th></tr></thead>
+  <tbody>
+    <tr><td><strong>DIV-010</strong></td><td>scenarios 01–07 (6); cross-role/job-to-hire-ui (2)</td><td><code>VettingManager.createVettingSession</code> is <code>onlyOwner</code>; BE signer ≠ owner</td><td>8 specs</td><td>(a) callable by BE signer, (b) separate owner init, (c) shift to Pipeline C</td></tr>
+    <tr><td><strong>DIV-001</strong></td><td>candidate-to-expert-review Phase 2B; job-to-* scenarios</td><td>UI submissions land in Pipeline C, not B (commit-reveal)</td><td>2 specs</td><td>Create session via <code>/api/test/candidate-reviews/:id/assign-panel</code> (workaround exists)</td></tr>
+    <tr><td><strong>DIV-002</strong></td><td>expert-onboarding-five-applicants</td><td>Expert email seeding + review state projection missing</td><td>1 spec</td><td>Add <code>E2E_EXPERT_EMAIL_TEMPLATE</code> to fixtures</td></tr>
+    <tr><td><strong>DIV-003</strong></td><td>Oracle ↔ BE consensus math</td><td>Inclusive vs exclusive quartile halves</td><td>(none — oracle isolated)</td><td>BE adopt inclusive-halves or document deviation</td></tr>
+    <tr><td>Indirect</td><td>Endorsement 05/06</td><td>No public <code>GET /api/endorsements/disputes/:id</code></td><td>(active, soft-asserted)</td><td>Add test-only endpoint</td></tr>
+    <tr><td>Indirect</td><td>UI assertions on scenario outcomes</td><td>No literal "hired"/"approved" strings in UI</td><td>(workaround)</td><td>Use status pills + permissive matchers</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="infra">8. Test infrastructure quality (clean? reusable? testable? modular?)</h2>
+
+<p class="lede">Eight axes, evidence-cited. Overall <strong>78/100</strong>: infrastructure is strong, helpers occasionally duplicated, mocks need refactoring.</p>
+
+<div class="panel">
+  <div class="axis-row"><div class="axis-name">Helper consolidation</div><div class="axis-bar"><div class="axis-fill fill-weak" style="width:60%"></div></div><div class="axis-score"><span class="badge b-weak">weak</span> 60</div></div>
+  <div class="axis-row"><div class="axis-name">Fixture composability</div><div class="axis-bar"><div class="axis-fill fill-strong" style="width:85%"></div></div><div class="axis-score"><span class="badge b-strong">strong</span> 85</div></div>
+  <div class="axis-row"><div class="axis-name">Test isolation</div><div class="axis-bar"><div class="axis-fill fill-strong" style="width:88%"></div></div><div class="axis-score"><span class="badge b-strong">strong</span> 88</div></div>
+  <div class="axis-row"><div class="axis-name">Type safety</div><div class="axis-bar"><div class="axis-fill fill-strong" style="width:82%"></div></div><div class="axis-score"><span class="badge b-strong">strong</span> 82</div></div>
+  <div class="axis-row"><div class="axis-name">Anti-pattern avoidance</div><div class="axis-bar"><div class="axis-fill fill-decent" style="width:72%"></div></div><div class="axis-score"><span class="badge b-decent">decent</span> 72</div></div>
+  <div class="axis-row"><div class="axis-name">Selector strategy</div><div class="axis-bar"><div class="axis-fill fill-decent" style="width:74%"></div></div><div class="axis-score"><span class="badge b-decent">decent</span> 74</div></div>
+  <div class="axis-row"><div class="axis-name"><code>test.step()</code> labels</div><div class="axis-bar"><div class="axis-fill fill-strong" style="width:86%"></div></div><div class="axis-score"><span class="badge b-strong">strong</span> 86</div></div>
+  <div class="axis-row"><div class="axis-name">Bootstrap determinism</div><div class="axis-bar"><div class="axis-fill fill-strong" style="width:84%"></div></div><div class="axis-score"><span class="badge b-strong">strong</span> 84</div></div>
+</div>
+
+<h3>Evidence highlights</h3>
+<table>
+  <thead><tr><th>Axis</th><th>Finding</th><th>Citation</th></tr></thead>
+  <tbody>
+    <tr><td>Helper consolidation</td><td>Candidate guild-apply duplicated in two helpers with subtly different localStorage strategies.</td><td><code>real-flow/helpers/scenario.ts:81–188</code> vs <code>helpers/ui-candidate-review-flow.ts:30–82</code></td></tr>
+    <tr><td>Helper consolidation</td><td>localStorage writes scattered across three "mark onboarding" patterns.</td><td><code>helpers/auth.ts:73–88</code>, <code>ui-candidate-review-flow.ts:38–50</code>, <code>ui-auth.ts:149–182</code></td></tr>
+    <tr><td>Fixture composability</td><td>Worker-scoped <code>anvil → contracts → experts → panelFor</code> chain; orthogonal test fixtures.</td><td><code>real-flow/fixtures.ts:158–245, 266–331</code></td></tr>
+    <tr><td>Test isolation</td><td>Per-test snapshot/revert with reset+drain teardown order.</td><td><code>fixtures.ts:266–331</code> (commit <code>d21e938</code>)</td></tr>
+    <tr><td>Type safety</td><td>Real-flow contract handles + finalization payloads typed end-to-end; no <code>any</code> in core helpers.</td><td><code>scenario.ts:340–359</code>, <code>contracts.ts:97</code></td></tr>
+    <tr><td>Anti-pattern</td><td><code>waitForTimeout</code> still in 2 spots (<code>slashing-misalignment-panel</code>); <code>networkidle</code> in mocked-lane auth.</td><td><code>helpers/company-auth.ts:19, 54</code></td></tr>
+    <tr><td>Anti-pattern</td><td>Rubric score scraping with 4 fallback patterns (XPath → broad regex → span search → heuristic).</td><td><code>real-flow/helpers/ui-review.ts:392–543</code></td></tr>
+    <tr><td>Selector strategy</td><td>Mostly role + text (good). Some CSS-id-prefix selectors fragile.</td><td><code>ui-review.ts:212–215</code> (<code>[id^="review-field-general-"]</code>)</td></tr>
+    <tr><td><code>test.step()</code></td><td>Product-language labels throughout real-flow; matches <code>PLAYWRIGHT_TEMPLATE.md</code>.</td><td><code>scenarios/02-reject-consensus.spec.ts:93–140</code></td></tr>
+    <tr><td>Determinism</td><td>Snapshot placement post-bootstrap validated (DETERMINISM_FINDING).</td><td><code>real-flow/bootstrap/DETERMINISM_FINDING.md:49–63</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Helper files at a glance</h3>
+<table>
+  <thead><tr><th>File</th><th>LOC</th><th>Purpose</th><th>Smell</th></tr></thead>
+  <tbody>
+    <tr><td><code>real-flow/fixtures.ts</code></td><td>374</td><td>Worker / test fixture composition, snapshot/revert</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/scenario.ts</code></td><td>582</td><td>Scenario primitives (apply, commit, reveal, finalize)</td><td><span class="badge b-decent">acceptable</span></td></tr>
+    <tr><td><code>real-flow/helpers/ui-review.ts</code></td><td>577</td><td>4-step rubric wizard driver</td><td><span class="badge b-weak">problematic</span></td></tr>
+    <tr><td><code>real-flow/helpers/ui-auth.ts</code></td><td>301</td><td>Wagmi connect via <code>__wagmiTest</code> harness</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/ui-voting.ts</code></td><td>88</td><td>Commit / reveal UI drivers</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/ui-endorsement-flow.ts</code></td><td>~330</td><td>Bidding UX + dispute modal</td><td><span class="badge b-decent">acceptable</span></td></tr>
+    <tr><td><code>real-flow/helpers/ui-candidate-review-flow.ts</code></td><td>~400</td><td>Candidate guild-apply + assignment lookup</td><td><span class="badge b-decent">acceptable</span></td></tr>
+    <tr><td><code>real-flow/helpers/headless-wallet.ts</code></td><td>223</td><td>EIP-1193 wallet shim + viem clients</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/wallet-injection.ts</code></td><td>149</td><td>Page-side <code>window.ethereum</code> stub + EIP-6963</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/backend.ts</code></td><td>220</td><td>Test-API namespace (seed, drain, reset)</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/contracts.ts</code></td><td>98</td><td>viem contract handle factory</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/chain.ts</code></td><td>107</td><td>Anvil RPC + snapshot/revert/mine</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/endorsement.ts</code></td><td>164</td><td>Endorsement + dispute on-chain ops</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>real-flow/helpers/expectations.ts</code></td><td>34</td><td>Constants: outcomes, session phase</td><td><span class="badge b-strong">clean</span></td></tr>
+    <tr><td><code>helpers/auth.ts</code></td><td>159</td><td>Candidate signup + localStorage mirror</td><td><span class="badge b-weak">problematic (dup)</span></td></tr>
+    <tr><td><code>helpers/company-auth.ts</code></td><td>76</td><td>Company signup / login (form)</td><td><span class="badge b-weak">problematic (networkidle)</span></td></tr>
+    <tr><td><code>helpers/expert-auth.ts</code></td><td>159</td><td>Expert localStorage injection + mocks</td><td><span class="badge b-decent">acceptable</span></td></tr>
+    <tr><td><code>helpers/guild-mocks.ts</code></td><td>1378</td><td>Mock fixtures: 100+ nested objects</td><td><span class="badge b-weak">over-mocked monolith</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="gaps">9. Top 10 missing tests (prioritized)</h2>
+<table>
+  <thead><tr><th>#</th><th>Flow</th><th>Type</th><th>Severity</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Candidate signup / login real-flow</td><td>Candidate</td><td><span class="badge b-p0">P0</span></td><td>Core entry point; zero coverage anywhere.</td></tr>
+    <tr><td>2</td><td>Job browse → apply → hire (end-to-end)</td><td>Cross-role</td><td><span class="badge b-p0">P0</span></td><td>Revenue-critical; <code>job-to-hire-ui</code> currently <code>.fixme()</code>.</td></tr>
+    <tr><td>3</td><td>Expert governance lifecycle (propose, vote, outcomes)</td><td>Expert</td><td><span class="badge b-p0">P0</span></td><td>P0 system flow; zero real-flow coverage.</td></tr>
+    <tr><td>4</td><td>Withdrawal finalization (UI driver)</td><td>Expert</td><td><span class="badge b-p0">P0</span></td><td>Expert payout; Phase 5 blocked by DIV-008/009.</td></tr>
+    <tr><td>5</td><td>Candidate messaging (inbox, compose, thread)</td><td>Candidate</td><td><span class="badge b-p1">P1</span></td><td>Render-smoke deleted; no interaction at all.</td></tr>
+    <tr><td>6</td><td>Multi-reviewer consensus rendered in UI (Phase 3)</td><td>Cross-role</td><td><span class="badge b-p1">P1</span></td><td>Chain computes consensus; FE assertion missing.</td></tr>
+    <tr><td>7</td><td>Company team management (invite, roles, remove)</td><td>Company</td><td><span class="badge b-p2">P2</span></td><td>Team onboarding flow missing entirely.</td></tr>
+    <tr><td>8</td><td>Candidate notifications &amp; status tracking</td><td>Candidate</td><td><span class="badge b-p1">P1</span></td><td>Application-lifecycle signal gap.</td></tr>
+    <tr><td>9</td><td>Wallet rejection / disconnect recovery (negative)</td><td>Expert</td><td><span class="badge b-p1">P1</span></td><td>Production UX gap; shim supports it.</td></tr>
+    <tr><td>10</td><td>Leaderboard interactions (rank, filter, search, paginate)</td><td>Expert</td><td><span class="badge b-p2">P2</span></td><td>Render-smoke deleted; no interaction tests.</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<h2 id="cleanup">10. Top 5 cleanup wins (low effort, high impact)</h2>
+<table>
+  <thead><tr><th>#</th><th>Win</th><th>Effort</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Extract <code>setAuthToken</code> + <code>markOnboardingComplete</code> helpers; dedupe across <code>auth.ts</code>, <code>ui-candidate-review-flow.ts</code>, <code>ui-auth.ts</code>.</td><td>1–2 h</td><td>Single source of truth for auth state; future refresh-token changes one-shot.</td></tr>
+    <tr><td>2</td><td>Add <code>data-testid="review-overall-score"</code> on <code>ReviewConfirmStep</code>; replace <code>ui-review.ts:392–543</code> 4-fallback scraping with a single locator.</td><td>2–3 h</td><td>Eliminates flaky score extraction; halves the helper.</td></tr>
+    <tr><td>3</td><td>Merge <code>applyToGuildViaUI</code> (scenario.ts) and <code>applyToGuildApplicationViaUI</code> (ui-candidate-review-flow.ts) behind a <code>mode</code> flag.</td><td>2–3 h</td><td>One candidate-apply path; both pipelines testable.</td></tr>
+    <tr><td>4</td><td>Replace <code>networkidle</code> in <code>helpers/company-auth.ts:19, 54</code> with <code>domcontentloaded</code> + visible assertion.</td><td>1 h</td><td>Aligns with CLAUDE.md; ~5 s faster per company-auth test.</td></tr>
+    <tr><td>5</td><td>Refactor <code>helpers/guild-mocks.ts</code> (1378 LOC nested objects) into typed factory functions (<code>createMockGuild</code>, <code>createMockApplication</code>).</td><td>2–3 h</td><td>~400 LOC down from 1378; easier parameterization; reduces diff noise.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Sequencing recommendation:</strong> ship wins 1, 2, 4 immediately (~5 h). Defer 3 and 5 to next cycle — both are lower-risk refactors that don't block coverage work. Unblock DIV-010 (BE/contract owner alignment) in parallel — that single fix lights up 8 quarantined specs in one move.
+</div>
+
+<div class="footer">
+  Sources: <code>e2e/MOCKED_LANE_TRIAGE.md</code>, <code>e2e/real-flow/README.md</code>, <code>e2e/real-flow/TESTING_PHASES.md</code>, <code>e2e/real-flow/MIGRATION_STATUS.md</code>, <code>e2e/real-flow/bootstrap/DETERMINISM_FINDING.md</code>, <code>e2e/PLAYWRIGHT_TEMPLATE.md</code>, plus four parallel read-only agent investigations against the working tree at <code>test/e2e-hardening-workstream-a</code>.
+</div>
+
+</div>
+</body>
+</html>
