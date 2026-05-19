@@ -87,6 +87,7 @@ export const testApi = {
       status?: string;
       guildId?: string;
       stakeAmount?: string;
+      role?: "craftsman" | "officer" | "master";
     },
   ) => postJson<{ id: string }>(req, "/api/test/seed/expert", body),
   seedExpertToken: (req: APIRequestContext, body: { expertId: string }) =>
@@ -95,9 +96,45 @@ export const testApi = {
       "/api/test/seed/expert-token",
       body,
     ),
+  /** Promote an already-seeded expert's guild_memberships.role without
+   *  mutating on-chain state. Uses seedExpert with ON CONFLICT to update only
+   *  the guild membership row. `fullName` defaults to the local part of the
+   *  expert's email so callers don't need to supply an extra value.
+   */
+  promoteExpertRole: (
+    req: APIRequestContext,
+    body: {
+      walletAddress: string;
+      email: string;
+      guildId: string;
+      role: "officer" | "master";
+      fullName?: string;
+    },
+  ) =>
+    postJson<{ id: string }>(req, "/api/test/seed/expert", {
+      walletAddress: body.walletAddress,
+      email: body.email,
+      fullName: body.fullName ?? body.email.split("@")[0],
+      guildId: body.guildId,
+      role: body.role,
+    }),
   endorsement: {
     processRetention: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/process-retention"),
+    /** Directly assign a list of experts as arbitration panel members for a
+     *  dispute, bypassing the role-based random selection that the production
+     *  path uses. Needed in E2E because all bootstrapped experts have
+     *  role='craftsman' and the production query requires 'officer'/'master'.
+     */
+    assignPanel: (
+      req: APIRequestContext,
+      body: { disputeId: string; expertIds: string[] },
+    ) =>
+      postJson<{ panelSize: number }>(
+        req,
+        "/api/test/endorsement/assign-panel",
+        body,
+      ),
     markRetentionReady: (
       req: APIRequestContext,
       body: { applicationId: string },
