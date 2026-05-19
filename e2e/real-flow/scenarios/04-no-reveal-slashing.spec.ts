@@ -85,7 +85,7 @@ test("no-reveal slashing: 3 commit, 1 fails to reveal, finalize, explicit slash 
 }) => {
   test.fixme(
     true,
-    "DIV-010: on-chain commit-reveal session never created (DIV-001 HARD BLOCKER — createVettingSession is onlyOwner; backend signer != owner; commitVote reverts SessionDoesNotExist)",
+    "DIV-012: createVettingSession still not called by backend after guild application — commitVote reverts SessionDoesNotExist(); SESSION_CREATOR_ROLE grant (DIV-010) did not resolve the issue; backend signer likely still lacks the role on the running anvil deployment",
   );
   let applicationId!: string;
   let sessionId!: Hex;

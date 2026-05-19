@@ -53,7 +53,7 @@ test("single-vote-expired: only 1 expert commits, deadline passes, expireSession
 }) => {
   test.fixme(
     true,
-    "DIV-010: on-chain commit-reveal session never created (DIV-001 HARD BLOCKER — createVettingSession is onlyOwner; backend signer != owner; commitVote reverts SessionDoesNotExist)",
+    "DIV-012: createVettingSession still not called by backend after guild application — commitVote reverts SessionDoesNotExist(); SESSION_CREATOR_ROLE grant (DIV-010) did not resolve the issue; backend signer likely still lacks the role on the running anvil deployment",
   );
   // Hoisted bindings so later steps can read what step 1 produced.
   let applicationId!: string;

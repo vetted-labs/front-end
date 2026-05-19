@@ -76,7 +76,7 @@ test("reject consensus: 3 panelists reveal low → rejected", async ({
 }) => {
   test.fixme(
     true,
-    "DIV-010: on-chain commit-reveal session never created (DIV-001 HARD BLOCKER — createVettingSession is onlyOwner; backend signer != owner; commitVote reverts SessionDoesNotExist)",
+    "DIV-012: createVettingSession still not called by backend after guild application — commitVote reverts SessionDoesNotExist(); SESSION_CREATOR_ROLE grant (DIV-010) did not resolve the issue; backend signer likely still lacks the role on the running anvil deployment",
   );
   // Hoisted bindings so later steps can read what step 1 produced. We resolve
   // them inside the first `test.step` so any error inside the step is

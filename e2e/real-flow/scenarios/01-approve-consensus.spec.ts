@@ -78,7 +78,7 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
 }) => {
   test.fixme(
     true,
-    "DIV-010: on-chain commit-reveal session never created (DIV-001 HARD BLOCKER — createVettingSession is onlyOwner; backend signer != owner)",
+    "DIV-011: score slider not found in expert review UI — commitVoteViaUI times out waiting for getByRole('slider') to be visible (step: 3 commits (UI)); likely the review panel is gated or not yet rendered for this expert/session",
   );
   // Hoisted bindings so later steps can read what step 1 produced. We resolve
   // them inside the first `test.step` so any error inside the step is
