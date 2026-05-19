@@ -1,5 +1,8 @@
 import { Page } from "@playwright/test";
 import type { GovernanceProposalDetail } from "@/types/governance";
+import type { GuildApplication, GuildApplicationSummary, VoteHistoryItem } from "@/types/guildApplication";
+import type { CandidateProfile } from "@/types/candidate";
+import type { Job } from "@/types/job";
 
 // ---------------------------------------------------------------------------
 // Shared IDs
@@ -15,16 +18,19 @@ export const JOB_ID = "e2e-job-001";
 // ---------------------------------------------------------------------------
 // Local shape interfaces
 //
-// The mock data predates some strict @/types interfaces (ExpertProfile.guilds
-// is ExpertGuild[] which requires many fields; GuildPublicDetail.experts is
-// ExpertMember[] which requires email/walletAddress; GuildApplication
-// .achievements is string[] but the mock uses objects).  Rather than fight
-// those mismatches, we define local interfaces that exactly match the
-// wire-format the specs expect.  All interfaces carry an index signature so
-// they remain assignable to Record<string, unknown> (required by the
-// setupVoting* helper params).
+// Most mock interfaces now extend or alias @/types shapes.  Interfaces that
+// cannot extend an app type carry a comment explaining why.
 // ---------------------------------------------------------------------------
 
+/**
+ * Mock expert profile.
+ * Cannot extend ExpertProfile because:
+ *  - ExpertProfile.guilds is ExpertGuild[] which requires many required fields
+ *    (memberCount, expertRole typed as ExpertRole enum, pendingProposals, etc.)
+ *  - The mock uses a flat { id, name, role } guild shape that the API actually
+ *    returns for the /experts/profile endpoint in e2e stubs.
+ *  - consensusRate is a mock-only display field not in ExpertProfile.
+ */
 export interface MockExpertProfile {
   id: string;
   walletAddress: string;
@@ -34,9 +40,20 @@ export interface MockExpertProfile {
   reviewCount: number;
   consensusRate: number;
   guilds: Array<{ id: string; name: string; role: string }>;
-  [key: string]: unknown;
 }
 
+/**
+ * Mock guild detail returned by the e2e stubs.
+ * Cannot extend ExpertGuildDetail / ExpertGuild because:
+ *  - ExpertGuild.expertRole is typed as ExpertRole ("recruit"|"apprentice"|…)
+ *    but the mock uses a plain string.
+ *  - ExpertGuild requires pendingProposals, ongoingProposals, closedProposals,
+ *    memberCount, totalEarnings — all required fields absent from the wire
+ *    format returned by the public guild detail endpoint in stubs.
+ *  - GuildPublicDetail/GuildPageDetail requires ExpertMember[] for .experts,
+ *    which needs email and walletAddress — the mock uses a flat { id, fullName,
+ *    role, reputation } shape.
+ */
 export interface MockGuild {
   id: string;
   name: string;
@@ -69,70 +86,53 @@ export interface MockGuild {
     totalEndorsementEarnings: number;
     recentEarnings: unknown[];
   };
-  [key: string]: unknown;
 }
 
-/** Guild application as returned by proposals API (snake_case) */
-export interface MockApplication {
-  id: string;
-  candidate_id: string;
-  candidate_name: string;
+/**
+ * Guild application (proposal) as returned by the proposals API (snake_case).
+ * Extends GuildApplication and adds candidate_email + voting_phase which are
+ * required by the e2e stubs but optional / absent in the app type.
+ * Also adds iqr (IQR stats object) used only in slashing mock variants — not
+ * part of the production type, handled via intersection below.
+ */
+export type MockApplication = GuildApplication & {
   candidate_email: string;
-  guild_id: string;
-  guild_name: string;
-  status: string;
-  finalized: boolean;
-  outcome: string | null;
-  consensus_score: number | null;
-  vote_count: number;
-  votes_for_count: number;
-  votes_against_count: number;
-  assigned_reviewer_count: number;
-  required_stake: number;
-  voting_deadline: string;
   voting_phase: string;
-  created_at: string;
-  updated_at: string;
-  is_assigned_reviewer: boolean;
-  has_voted: boolean;
-  my_vote_score: number | null;
-  years_of_experience: number;
-  skills_summary: string;
-  experience_summary: string;
-  motivation_statement: string;
-  proposal_text: string;
-  achievements: Array<{ year: number; title: string }>;
-  [key: string]: unknown;
-}
+};
 
-export interface MockCandidateProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  headline: string;
-  bio: string;
-  yearsOfExperience: number;
-  linkedIn: string;
-  github: string;
-  resumeUrl: string;
-  resumeFileName: string;
-  socialLinks: Array<{ platform: string; label: string; url: string }>;
-  [key: string]: unknown;
-}
+/** MockApplication extended with the IQR stats block (slashing scenarios only). */
+type MockApplicationWithIqr = MockApplication & {
+  iqr: {
+    median: number;
+    q1: number;
+    q3: number;
+    iqr: number;
+    includedCount: number;
+    excludedCount: number;
+  };
+};
 
-export interface MockVoteHistoryItem {
-  id: string;
-  expert_id: string;
+/** Candidate profile — aliases CandidateProfile from @/types/candidate directly. */
+export type MockCandidateProfile = CandidateProfile;
+
+/**
+ * Vote history item — extends VoteHistoryItem from @/types/guildApplication.
+ * Makes expert_name required (it's optional in the app type) and comment
+ * required (it's optional in the app type) to match the stub wire format.
+ */
+export type MockVoteHistoryItem = Omit<VoteHistoryItem, "expert_name" | "comment"> & {
   expert_name: string;
-  score: number;
-  alignment_distance: number;
-  reputation_change: number;
-  reward_amount: number;
   comment: string;
-  created_at: string;
-  [key: string]: unknown;
-}
+};
 
+/**
+ * Reputation timeline entry (internal to the mock timeline objects).
+ * Cannot extend ReputationTimelineEntry from @/types/reputation because:
+ *  - The mock adds id, your_vote, consensus, distance, reward fields not in
+ *    the app type (the app type reflects the minimal server response shape).
+ *  - The optional slash/vote/alignment fields are duplicated with different
+ *    naming conventions than the production type.
+ */
 interface MockReputationTimelineEntry {
   id: string;
   change_amount: number;
@@ -153,15 +153,25 @@ interface MockReputationTimelineEntry {
   created_at: string;
 }
 
+/**
+ * Paginated reputation timeline response shape.
+ * No @/types equivalent (the app type only covers the entry shape, not the
+ * pagination wrapper).
+ */
 export interface MockReputationTimeline {
   timeline?: MockReputationTimelineEntry[];
   items?: MockReputationTimelineEntry[];
   total: number;
   page: number;
   limit: number;
-  [key: string]: unknown;
 }
 
+/**
+ * Earnings breakdown response shape.
+ * Cannot extend any @/types earnings type: EarningsSummary / EarningsEntry
+ * don't cover the paginated { summary, entries, total, page, limit } wrapper
+ * and summary.byGuild differs from GuildEarning (adds total directly).
+ */
 export interface MockEarningsBreakdown {
   summary: {
     totalVetd: number;
@@ -180,9 +190,17 @@ export interface MockEarningsBreakdown {
   total: number;
   page: number;
   limit: number;
-  [key: string]: unknown;
 }
 
+/**
+ * Guild application form template returned by /api/guilds/:id/application-template.
+ * Cannot extend GuildApplicationTemplate from @/types/guildApplication because:
+ *  - Mock adds guildId/guildName fields not in the app type.
+ *  - generalQuestions uses { id, title, required, type } shape; the app type
+ *    uses GuildApplicationQuestion (id, title, prompt, hints, scored, maxPoints, …).
+ *  - domainQuestions topics use { id, title, description } shape; the app type
+ *    uses GuildDomainTopic (id, title, prompt, whatToLookFor, scoring, …).
+ */
 export interface MockGuildAppTemplate {
   guildId: string;
   guildName: string;
@@ -197,16 +215,16 @@ export interface MockGuildAppTemplate {
   requiredLevel: string | null;
   noAiDeclarationText: string;
   requiredSocialLinks: string[];
-  [key: string]: unknown;
 }
 
+/** Staking balance response — no @/types equivalent. */
 export interface MockStakingStatus {
   meetsMinimum: boolean;
   stakedAmount: string;
   minimumRequired: string;
-  [key: string]: unknown;
 }
 
+/** Commit-reveal phase status — no @/types equivalent. */
 export interface MockCommitRevealStatus {
   phase: "direct" | "commit" | "reveal" | "finalized";
   commitDeadline?: string;
@@ -216,32 +234,25 @@ export interface MockCommitRevealStatus {
   totalExpected?: number;
   userCommitted?: boolean;
   userRevealed?: boolean;
-  [key: string]: unknown;
 }
 
-export interface MockGuildApplicationSummary {
-  id: string;
-  guildId: string;
-  guildName: string;
-  guild: { id: string; name: string };
-  status: string;
-  jobTitle: string | null;
-  reviewCount: number;
-  approvalCount: number;
-  submittedAt: string;
-  createdAt: string;
-  [key: string]: unknown;
-}
+/**
+ * Guild application summary (candidate-facing list).
+ * Aliases GuildApplicationSummary from @/types/guildApplication directly —
+ * all mock fields are present as optional fields in the app type.
+ */
+export type MockGuildApplicationSummary = GuildApplicationSummary;
 
-export interface MockJob {
-  id: string;
-  title: string;
+/**
+ * Job stub used in the guild application form mocks.
+ * Extends Job with a required 'company' field (the mock uses 'company' instead
+ * of Job's optional 'companyName' to match the legacy wire format in stubs).
+ */
+export type MockJob = Pick<Job, "id" | "title" | "screeningQuestions" | "experienceLevel"> & {
   company: string;
-  screeningQuestions: string[];
-  experienceLevel: string;
-  [key: string]: unknown;
-}
+};
 
+/** Endorsement history entry — no @/types equivalent. */
 export interface MockEndorsementHistoryEntry {
   id: string;
   applicationId: string;
@@ -252,9 +263,9 @@ export interface MockEndorsementHistoryEntry {
   status: string;
   outcome: string;
   createdAt: string;
-  [key: string]: unknown;
 }
 
+/** Dispute detail — no @/types equivalent (disputes are not part of the main app types). */
 export interface MockDisputeDetail {
   id: string;
   status: string;
@@ -281,7 +292,6 @@ export interface MockDisputeDetail {
   hasVoted: boolean;
   resolution?: string;
   resolvedAt?: string;
-  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -379,8 +389,8 @@ const baseApplication: MockApplication = {
   guild_name: "Engineering",
   status: "voting",
   finalized: false,
-  outcome: null,
-  consensus_score: null,
+  outcome: undefined,
+  consensus_score: undefined,
   vote_count: 1,
   votes_for_count: 1,
   votes_against_count: 0,
@@ -389,16 +399,15 @@ const baseApplication: MockApplication = {
   voting_deadline: new Date(Date.now() + 7 * 86400000).toISOString(),
   voting_phase: "direct",
   created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  updated_at: new Date().toISOString(),
   is_assigned_reviewer: true,
   has_voted: false,
-  my_vote_score: null,
+  my_vote_score: undefined,
   years_of_experience: 5,
   skills_summary: "React, TypeScript, Node.js, PostgreSQL",
   experience_summary: "5 years of full-stack development",
   motivation_statement: "I want to contribute to the engineering guild.",
   proposal_text: "I have extensive experience in building scalable web applications.",
-  achievements: [{ year: 2024, title: "Led migration to microservices architecture" }],
+  achievements: [],
 };
 
 export function createMockApplication(
@@ -443,7 +452,6 @@ const baseCandidateProfile: MockCandidateProfile = {
   email: "jane@example.com",
   headline: "Senior Full-Stack Engineer",
   bio: "Passionate about building great software with modern technologies.",
-  yearsOfExperience: 5,
   linkedIn: "https://linkedin.com/in/janedoe",
   github: "https://github.com/janedoe",
   resumeUrl: "/uploads/resume-jane.pdf",
@@ -790,6 +798,9 @@ const baseGuildApplicationSummary: MockGuildApplicationSummary = {
   approvalCount: 0,
   submittedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
   createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  candidateName: "",
+  candidateEmail: "",
+  requiredStake: 0,
 };
 
 export function createMockGuildApplicationSummary(
@@ -818,7 +829,6 @@ export const MOCK_GUILD_APPLICATION_SUMMARIES: MockGuildApplicationSummary[] = [
     guildName: "Data Science",
     guild: { id: "guild-003", name: "Data Science" },
     status: "rejected",
-    jobTitle: null,
     reviewCount: 3,
     approvalCount: 0,
     submittedAt: new Date(Date.now() - 21 * 86400000).toISOString(),
@@ -851,7 +861,7 @@ export const MOCK_JOB = createMockJob();
 // Slashing application variants
 // ---------------------------------------------------------------------------
 
-export const MOCK_APPLICATION_SLASHED = createMockApplication({
+export const MOCK_APPLICATION_SLASHED: MockApplicationWithIqr = {
   ...MOCK_APPLICATION_FINALIZED,
   id: "e2e-application-slashed-003",
   candidate_name: "Slashed Expert Test",
@@ -872,7 +882,7 @@ export const MOCK_APPLICATION_SLASHED = createMockApplication({
     includedCount: 4,
     excludedCount: 1,
   },
-});
+};
 
 export const MOCK_APPLICATION_MILD_SLASH = createMockApplication({
   ...MOCK_APPLICATION_FINALIZED,
@@ -1140,8 +1150,8 @@ export const MOCK_GOVERNANCE_PROPOSAL = createMockGovernanceProposal();
 export async function setupCommonExpertMocks(
   page: Page,
   overrides?: {
-    expertProfile?: Record<string, unknown>;
-    stakingStatus?: Record<string, unknown>;
+    expertProfile?: unknown;
+    stakingStatus?: unknown;
   },
 ) {
   const profile = overrides?.expertProfile ?? MOCK_EXPERT_PROFILE;
@@ -1202,9 +1212,9 @@ export async function setupCommonExpertMocks(
 export async function setupVotingQueueMocks(
   page: Page,
   options?: {
-    applications?: Record<string, unknown>[];
-    assignedApplications?: Record<string, unknown>[];
-    stakingStatus?: Record<string, unknown>;
+    applications?: unknown[];
+    assignedApplications?: unknown[];
+    stakingStatus?: unknown;
   },
 ) {
   await setupCommonExpertMocks(page, { stakingStatus: options?.stakingStatus });
@@ -1260,11 +1270,11 @@ export async function setupVotingDetailMocks(
   page: Page,
   applicationId: string,
   options?: {
-    application?: Record<string, unknown>;
-    candidateProfile?: Record<string, unknown>;
-    voteHistory?: Record<string, unknown>[];
-    crPhase?: Record<string, unknown>;
-    stakingStatus?: Record<string, unknown>;
+    application?: unknown;
+    candidateProfile?: unknown;
+    voteHistory?: unknown[];
+    crPhase?: unknown;
+    stakingStatus?: unknown;
   },
 ) {
   const app = options?.application ?? MOCK_APPLICATION_ACTIVE;
@@ -1308,7 +1318,7 @@ export async function setupVotingDetailMocks(
     });
   });
 
-  // Candidate profile
+  // Candidate profile — app is typed as Record<string,unknown> in the public API
   const candidateId =
     (app as Record<string, unknown>).candidate_id ??
     (app as Record<string, unknown>).candidateId ??
@@ -1358,8 +1368,8 @@ export async function setupVotingDetailMocks(
 export async function setupReputationMocks(
   page: Page,
   options?: {
-    timeline?: Record<string, unknown>;
-    expertProfile?: Record<string, unknown>;
+    timeline?: unknown;
+    expertProfile?: unknown;
   },
 ) {
   await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
@@ -1390,8 +1400,8 @@ export async function setupReputationMocks(
 export async function setupEarningsMocks(
   page: Page,
   options?: {
-    earnings?: Record<string, unknown>;
-    expertProfile?: Record<string, unknown>;
+    earnings?: unknown;
+    expertProfile?: unknown;
   },
 ) {
   await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
@@ -1422,11 +1432,11 @@ export async function setupEarningsMocks(
 export async function setupGuildApplicationMocks(
   page: Page,
   options?: {
-    guild?: Record<string, unknown>;
-    template?: Record<string, unknown>;
-    job?: Record<string, unknown> | null;
-    candidateProfile?: Record<string, unknown>;
-    membershipStatus?: Record<string, unknown>;
+    guild?: unknown;
+    template?: unknown;
+    job?: unknown | null;
+    candidateProfile?: unknown;
+    membershipStatus?: unknown;
   },
 ) {
   const guild = options?.guild ?? MOCK_GUILD;
@@ -1635,11 +1645,11 @@ export async function setupEndorsementHistoryMocks(page: Page): Promise<void> {
  */
 export async function setupDisputeDetailMocks(
   page: Page,
-  dispute?: Record<string, unknown>,
+  dispute?: unknown,
 ): Promise<void> {
   await setupCommonExpertMocks(page);
 
-  const disputeData = dispute ?? MOCK_DISPUTE_DETAIL;
+  const disputeData = (dispute ?? MOCK_DISPUTE_DETAIL) as Record<string, unknown>;
   const disputeId = disputeData.id as string;
 
   // Hire outcome endpoint
@@ -1675,7 +1685,7 @@ export async function setupDisputeDetailMocks(
  */
 export async function setupDashboardWithVoteWeight(
   page: Page,
-  options?: { expertProfile?: Record<string, unknown> },
+  options?: { expertProfile?: unknown },
 ): Promise<void> {
   const highRepProfile = {
     ...MOCK_EXPERT_PROFILE,
