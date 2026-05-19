@@ -382,29 +382,30 @@ export async function submitRubricReviewViaUI(
       page.getByText(/confirm your review/i).first(),
     ).toBeVisible({ timeout: modalTimeoutMs });
 
-    // Capture the overall score HERE, on the confirm step, BEFORE submitting.
-    // ReviewConfirmStep renders the "Overall Score" label next to a bold
-    // `{overallScore}/{overallMax}` span (see ReviewConfirmStep.tsx ~line 190).
-    // The success step (ReviewSuccessStep) does NOT render a score, so scraping
-    // it there always missed and fell through to a broad number-scrape that
-    // grabbed unrelated digits. We normalize to a 0-100 percentage because the
-    // oracle (computeConsensus) and APPROVAL_THRESHOLD operate on 0-100.
+    // Step 4 — confirm step: read overall score via stable test id.
+    // ReviewConfirmStep tags the score wrapper with data-testid="review-overall-score".
+    // We normalize to a 0-100 percentage because computeConsensus and
+    // APPROVAL_THRESHOLD both operate on 0-100.
     const scoreText = await page
-      .locator(':text("Overall Score")')
-      .locator("xpath=following-sibling::*[1]")
+      .locator('[data-testid="review-overall-score"]')
       .first()
-      .textContent()
-      .catch(() => null);
-    if (scoreText) {
-      const frac = scoreText.match(/(\d+)\s*\/\s*(\d+)/);
-      if (frac) {
-        const raw = parseInt(frac[1], 10);
-        const max = parseInt(frac[2], 10);
-        if (max > 0) submittedScore = Math.round((raw / max) * 100);
-      } else {
-        const single = scoreText.match(/\d+/);
-        if (single) submittedScore = parseInt(single[0], 10);
-      }
+      .textContent({ timeout: 5_000 });
+    const rawScore = Number(scoreText?.trim().replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(rawScore)) {
+      throw new Error(
+        `submitRubricReviewViaUI: could not parse overall score from "${scoreText}"`,
+      );
+    }
+    // The element renders "{overallScore}/{overallMax}" concatenated; extract
+    // the leading integer before the slash as the raw score and look up the max
+    // from the same text so we can normalise to 0-100.
+    const fracMatch = scoreText?.trim().match(/^(\d+)\s*\/\s*(\d+)/);
+    if (fracMatch) {
+      const raw = parseInt(fracMatch[1], 10);
+      const max = parseInt(fracMatch[2], 10);
+      if (max > 0) submittedScore = Math.round((raw / max) * 100);
+    } else {
+      submittedScore = rawScore;
     }
 
     // Click "Submit Review" or "Submit Commitment" (commit-reveal phase).
@@ -491,56 +492,6 @@ export async function submitRubricReviewViaUI(
         .getByText(/review submitted|commitment submitted|practice complete/i)
         .first(),
     ).toBeVisible({ timeout: 90_000 });
-
-    // Fallback only: if the confirm-step capture above missed, try the
-    // success panel. (ReviewSuccessStep does not render an "Overall Score",
-    // so these rarely fire — kept as defensive backups.)
-    if (submittedScore === 0) {
-      const overallScoreText = await page
-        .locator(
-          'text="Overall Score" >> xpath=following-sibling::* | xpath=parent::*/following-sibling::*',
-        )
-        .first()
-        .textContent()
-        .catch(() => null);
-
-      if (overallScoreText) {
-        const match = overallScoreText.match(/\d+/);
-        if (match) submittedScore = parseInt(match[0], 10);
-      }
-    }
-
-    // Try to read the score from the structured element (bold number next to
-    // "Overall Score" in the score breakdown table).
-    if (submittedScore === 0) {
-      // Alternative: find the large bold number near "Overall Score"
-      const scoreEl = page.locator(
-        ':text("Overall Score") ~ * span, :text("Overall Score") + span',
-      );
-      const scoreVal = await scoreEl.first().textContent().catch(() => null);
-      if (scoreVal) {
-        const m = scoreVal.match(/(\d+)/);
-        if (m) submittedScore = parseInt(m[1], 10);
-      }
-    }
-
-    // If we still don't have a score, use a broad scrape: find the biggest
-    // number in the success panel that looks like a score (0-200 range).
-    if (submittedScore === 0) {
-      const panelText = await page
-        .locator('[class*="space-y-6"]')
-        .first()
-        .textContent()
-        .catch(() => "");
-      const allNums = (panelText ?? "").match(/\b(\d{1,3})\b/g) ?? [];
-      for (const n of allNums) {
-        const v = parseInt(n, 10);
-        if (v > 0 && v <= 200) {
-          submittedScore = v;
-          break;
-        }
-      }
-    }
 
     // Try to read the on-chain txHash from the "View on Etherscan" link.
     const etherscanLink = page.locator('a[href*="etherscan.io/tx/"]').first();
