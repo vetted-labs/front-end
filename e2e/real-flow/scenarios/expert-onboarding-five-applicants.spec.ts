@@ -379,12 +379,20 @@ test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () =>
       // Resolved during test execution; declared here so later steps can read them.
       const applicants: Applicant[] = [];
       let panelReviewers: Reviewer[] = [];
-      let targetGuildId!: string;
       let targetGuildName!: string;
 
-      // ── Step 1: discover the guild and build the reviewer panel ────────────
+      // ── Step 1: discover the guild ────────────────────────────────────────
+      //
+      // panelReviewers is built in Step 3 from the IDs returned by
+      // activate-and-assign — NOT from GET /api/guilds/:id/members.
+      //
+      // The /members endpoint lacks an `e.status = 'approved'` filter, so it
+      // can return non-approved experts whose IDs will never appear in
+      // expert_application_reviewer_assignments (activate-and-assign only
+      // inserts approved members). That mismatch is the root cause of the
+      // "You are not assigned to review this application" 403 in Step 4.
       await test.step(
-        "discover the Engineering guild and assemble a reviewer panel",
+        "discover the Engineering guild",
         async () => {
           // The bootstrap creates 3 guilds × 10 experts. We target 'Engineering'.
           const guildsRes = await request.get(`${BACKEND_URL}/api/guilds`);
@@ -399,59 +407,7 @@ test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () =>
             engineeringGuild,
             "Engineering guild must exist from bootstrap",
           ).toBeDefined();
-          targetGuildId = engineeringGuild!.id;
           targetGuildName = engineeringGuild!.name;
-
-          // Use the first 5 approved, staked guild members as reviewers.
-          // Pull their IDs + mint test tokens via /api/test/seed/expert-token.
-          const membersRes = await request.get(
-            `${BACKEND_URL}/api/guilds/${targetGuildId}/members`,
-          );
-          expect(
-            membersRes.ok(),
-            "GET /api/guilds/:id/members should succeed",
-          ).toBeTruthy();
-          const membersBody = (await membersRes.json()) as {
-            data: Array<{
-              expertId?: string;
-              id?: string;
-              wallet_address?: string;
-              walletAddress?: string;
-            }>;
-          };
-          const memberRows = membersBody.data.slice(0, 5);
-          expect(
-            memberRows.length,
-            "Need at least 5 guild members as reviewers (bootstrap provides 10)",
-          ).toBeGreaterThanOrEqual(5);
-
-          panelReviewers = await Promise.all(
-            memberRows.map(async (m) => {
-              const expertId = m.expertId ?? m.id ?? "";
-              const tokenRes = await request.post(
-                `${BACKEND_URL}/api/test/seed/expert-token`,
-                { data: { expertId } },
-              );
-              expect(
-                tokenRes.ok(),
-                `Minting token for expert ${expertId}`,
-              ).toBeTruthy();
-              const tokenBody = (await tokenRes.json()) as {
-                data: ExpertTokenResult;
-              };
-              return {
-                expertId,
-                token: tokenBody.data.token,
-                walletAddress:
-                  m.wallet_address ?? m.walletAddress ?? tokenBody.data.wallet_address,
-              };
-            }),
-          );
-
-          expect(
-            panelReviewers.length,
-            "Panel must have 5 reviewers",
-          ).toBe(5);
         },
       );
 
@@ -483,14 +439,18 @@ test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () =>
 
       // ── Step 3: trigger reviewer assignment for each application ───────────
       //
-      // NOTE: this step calls activateAndAssignReviewers which hits a test
-      // fixture endpoint that does not yet exist (Gap 1 / DIV-002). The helper
-      // will throw with a clear "endpoint does not exist" message.  Once the
-      // endpoint is added, this step passes without modification.
+      // activate-and-assign assigns the top-N approved guild members (sorted by
+      // reputation DESC). We capture the exact reviewerIds from the first
+      // applicant's response and mint tokens for those IDs to build panelReviewers.
+      // All subsequent applicants get the same panel (same guild, same sort, same
+      // LIMIT) so we assert their reviewerIds match before submitting reviews.
       await test.step(
-        "activate reviewer assignments for all 5 applicants (requires DIV-002 Gap 1 fix)",
+        "activate reviewer assignments for all 5 applicants and build the reviewer panel",
         async () => {
-          for (const applicant of applicants) {
+          let canonicalReviewerIds: string[] = [];
+
+          for (let i = 0; i < applicants.length; i++) {
+            const applicant = applicants[i]!;
             const { assigned, reviewerIds } = await activateAndAssignReviewers(
               request,
               applicant.expertId,
@@ -503,6 +463,47 @@ test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () =>
               reviewerIds.length,
               "At least 3 reviewers must be assigned per application",
             ).toBeGreaterThanOrEqual(3);
+
+            if (i === 0) {
+              // Capture the first applicant's actual assigned reviewerIds and mint
+              // JWT tokens for them. These are the ONLY experts in
+              // expert_application_reviewer_assignments, so they are the only ones
+              // that can submit reviews without a 403.
+              canonicalReviewerIds = reviewerIds;
+
+              panelReviewers = await Promise.all(
+                reviewerIds.map(async (expertId) => {
+                  const tokenRes = await request.post(
+                    `${BACKEND_URL}/api/test/seed/expert-token`,
+                    { data: { expertId } },
+                  );
+                  expect(
+                    tokenRes.ok(),
+                    `Minting token for assigned reviewer ${expertId}`,
+                  ).toBeTruthy();
+                  const tokenBody = (await tokenRes.json()) as {
+                    data: ExpertTokenResult;
+                  };
+                  return {
+                    expertId,
+                    token: tokenBody.data.token,
+                    walletAddress: tokenBody.data.wallet_address,
+                  };
+                }),
+              );
+
+              expect(
+                panelReviewers.length,
+                `Panel must have ${canonicalReviewerIds.length} reviewers (SCORE_MATRIX columns)`,
+              ).toBe(SCORE_MATRIX[0]!.length);
+            } else {
+              // Subsequent applicants: activate-and-assign selects the same
+              // top-N approved members so reviewerIds should match.
+              expect(
+                new Set(reviewerIds),
+                `Applicant ${i} panel must match applicant 0 panel`,
+              ).toEqual(new Set(canonicalReviewerIds));
+            }
           }
         },
       );
