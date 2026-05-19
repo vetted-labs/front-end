@@ -71,14 +71,12 @@ import type { Hex } from "viem";
 import { BACKEND_URL, CRON_SECRET } from "../helpers/backend";
 import { computeConsensus } from "../oracle";
 
-// ─── DIV-002 fixme guard ─────────────────────────────────────────────────────
-// Both gaps are now closed (2026-05-14):
+// DIV-002 resolved (2026-05-14):
 //   Gap 1: POST /api/test/expert-reviews/:id/activate-and-assign and
 //           POST /api/test/expert-reviews/:id/expire-and-finalize added to
 //           backend/src/routes/test/expert-reviews.ts.
 //   Gap 2: CRON_SECRET added to backend/.env.e2e.
-// Guard is set to false so the scenario runs.
-const DIV_002_GAPS_OPEN = false;
+//   Gap 3: Expert email seeding added to the `experts` fixture (fixtures.ts).
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -337,16 +335,6 @@ async function pollFinalization(
 // ─── Scenario ────────────────────────────────────────────────────────────────
 
 test.describe("expert-onboarding: ≥5 applicants reviewed via IQR panel", () => {
-  // Gate the entire describe block until DIV-002 is resolved.
-  // The fixme is intentionally on the describe (not on individual tests) so
-  // that the *entire* flow is either green or skipped — partial green/red
-  // would give a false signal.
-  test.fixme(
-    DIV_002_GAPS_OPEN,
-    "DIV-002: two test-infrastructure gaps block end-to-end execution. " +
-      "See docs/testing/PROTOCOL_DIVERGENCES.md for remediation steps.",
-  );
-
   // ── Shared mutable state across steps ──────────────────────────────────────
   //
   // We run a SINGLE test with multiple test.step() phases so that:

@@ -61,7 +61,7 @@ const JOB_CREATOR_TOKEN_FLOAT = 100n * 10n ** 18n;
 // anvil default account, so it starts with zero ETH — fund it for gas each test.
 const BACKEND_WALLET_ETH_BALANCE = 100n * 10n ** 18n;
 
-export type Expert = Wallet & { id: string; guildId: string };
+export type Expert = Wallet & { id: string; guildId: string; email: string };
 export type Candidate = {
   email: string;
   password: string;
@@ -199,14 +199,39 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   // Worker-scoped: 30 staked experts (10 per guild) from the manifest.
   // Each entry is a full Wallet (privateKey, address, viem WalletClient) plus
-  // the backend id and the guild the expert is staked into.
+  // the backend id, guild, and a deterministic email address derived from the
+  // email template env var (DIV-002 fix).
+  //
+  // Email derivation: E2E_EXPERT_EMAIL_TEMPLATE defaults to
+  //   e2e-expert-{guildId}-{i}@e2e.local
+  // where {guildId} is the backend guild UUID and {i} is the 0-based index of
+  // this expert within that guild's expert list (sorted by manifest order).
+  // The template is resolved per-expert before the fixture is provided to tests
+  // so callers can look up experts by email without any extra mapping.
   experts: [
     async ({ manifest }, use) => {
-      const experts: Expert[] = manifest.experts.map((e) => ({
-        ...makeWallet(e.privateKey),
-        id: e.id,
-        guildId: e.guildId,
-      }));
+      const emailTemplate =
+        process.env.E2E_EXPERT_EMAIL_TEMPLATE ??
+        "e2e-expert-{guildId}-{i}@e2e.local";
+
+      // Build a per-guild counter so {i} is stable and 0-based within each guild.
+      const guildIndexCounter = new Map<string, number>();
+
+      const experts: Expert[] = manifest.experts.map((e) => {
+        const guildIndex = guildIndexCounter.get(e.guildId) ?? 0;
+        guildIndexCounter.set(e.guildId, guildIndex + 1);
+
+        const email = emailTemplate
+          .replace("{guildId}", e.guildId)
+          .replace("{i}", String(guildIndex));
+
+        return {
+          ...makeWallet(e.privateKey),
+          id: e.id,
+          guildId: e.guildId,
+          email,
+        };
+      });
       await use(experts);
     },
     { scope: "worker" },
