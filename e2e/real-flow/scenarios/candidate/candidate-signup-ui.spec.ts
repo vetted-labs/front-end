@@ -47,7 +47,7 @@ test("candidate signs up via UI and lands on dashboard", async ({
 
   await test.step("dashboard renders with the candidate's name", async () => {
     await page.waitForURL(/\/candidate\/dashboard/, { timeout: 30_000 });
-    await expect(page.getByText(/test candidate/i).first()).toBeVisible({
+    await expect(page.getByText(/welcome back, test/i)).toBeVisible({
       timeout: 15_000,
     });
   });
