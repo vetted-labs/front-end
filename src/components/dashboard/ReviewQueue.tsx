@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
@@ -56,6 +57,8 @@ function getReviewUrl(app: GuildApplication): string {
 export function ReviewQueue({ applications }: ReviewQueueProps) {
   const router = useRouter();
   const { isActive: isStoryLabPreview } = useStoryLabContext();
+  // eslint-disable-next-line react-hooks/purity -- Date.now compared against stored voting_deadline timestamps, memoized once per render cycle
+  const now = useMemo(() => Date.now(), []);
   const effectiveApplications =
     isStoryLabPreview && applications.length === 0
       ? [STORY_LAB_QUEUE_ROW]
@@ -87,6 +90,60 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
           {displayed.map((app, index) => {
             const isFirst = index === 0;
             const name = app.candidate_name || "Application";
+            const isPastDeadline =
+              app.finalized ||
+              (!!app.voting_deadline &&
+                new Date(app.voting_deadline).getTime() < now);
+
+            if (isPastDeadline) {
+              const deadlineCopy = app.voting_deadline
+                ? `Review window closed ${formatTimeAgo(app.voting_deadline)}`
+                : "Review window closed";
+              return (
+                <div
+                  key={`${app.item_type ?? "proposal"}-${app.id}`}
+                  data-testid="review-queue-item-expired"
+                  aria-disabled="true"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border opacity-60 cursor-not-allowed"
+                >
+                  {/* Avatar */}
+                  <img
+                    src={getPersonAvatar(name)}
+                    alt={name}
+                    className="w-[34px] h-[34px] rounded-lg object-cover shrink-0 bg-muted grayscale"
+                  />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-muted-foreground truncate">
+                      {name}
+                    </div>
+                    <div className="text-xs text-muted-foreground/70 flex items-center gap-1.5 min-w-0">
+                      {app.guild_name ? (
+                        <GuildBadge guild={app.guild_name} size="xs" />
+                      ) : (
+                        <span>Guild</span>
+                      )}
+                      <span className="text-muted-foreground/50">·</span>
+                      <span className="truncate">{deadlineCopy}</span>
+                    </div>
+                  </div>
+
+                  {/* Disabled action */}
+                  <span
+                    className={`shrink-0 px-3 py-1.5 rounded-[7px] text-xs font-medium ${STATUS_COLORS.neutral.badge}`}
+                    title={
+                      app.voting_deadline
+                        ? `Deadline: ${new Date(app.voting_deadline).toLocaleDateString()}`
+                        : "Deadline passed"
+                    }
+                  >
+                    Deadline passed
+                  </span>
+                </div>
+              );
+            }
+
             return (
               <button
                 key={`${app.item_type ?? "proposal"}-${app.id}`}
