@@ -16,14 +16,19 @@ export async function signupCompany(page: Page): Promise<CompanyCredentials> {
   const password = "TestPass123!";
   const companyName = `E2E Corp ${timestamp}`;
 
-  await page.goto("/auth/signup?type=company", { waitUntil: "networkidle" });
+  await page.goto("/auth/signup?type=company", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
 
   // Wait for React to hydrate and render the form
-  await page.getByPlaceholder("Acme Inc.").waitFor({ state: "visible", timeout: 30000 });
+  await page
+    .getByPlaceholder("Acme Inc.")
+    .waitFor({ state: "visible", timeout: 30000 });
 
   // Fill company signup form
   await page.getByPlaceholder("Acme Inc.").fill(companyName);
-  await page.getByPlaceholder("https://example.com").fill("https://e2e-test.com");
+  await page
+    .getByPlaceholder("https://example.com")
+    .fill("https://e2e-test.com");
   await page.getByPlaceholder("you@example.com").fill(email);
 
   // Password fields
@@ -47,10 +52,13 @@ export async function loginCompany(
   email: string,
   password: string,
 ): Promise<void> {
-  await page.goto("/auth/login?type=company", { waitUntil: "networkidle" });
+  await page.goto("/auth/login?type=company", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
 
   // Wait for React to hydrate
-  await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 30000 });
+  await page
+    .getByPlaceholder("you@example.com")
+    .waitFor({ state: "visible", timeout: 30000 });
 
   await page.getByPlaceholder("you@example.com").fill(email);
   await page.getByPlaceholder("Enter your password").fill(password);
