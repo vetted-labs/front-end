@@ -42,21 +42,17 @@
 // and multicall3 is cleared from the chain definition so every `useReadContract`
 // call goes direct to anvil. This resolves the earlier DIV-009 transport issue.
 //
-// ─── Phase 7: completeUnstake — DIV-008 still open ──────────────────────────
+// ─── Phase 7: completeUnstake via the production UI (DIV-008 fixed) ─────────
 //
-//   • DIV-008: the production UI has NO button wired to
-//     `ExpertStaking.completeUnstake(guildId)`. The post-cooldown ClaimCard's
-//     "Manage withdrawal" CTA re-opens the request-unstake (StakingModal) flow.
-//     There is literally no mounted UI surface that calls completeUnstake; the
-//     only candidates are the orphaned `WithdrawalManager` component (not
-//     imported by any route) and a `completeUnstake` helper inside
-//     `useGuildStaking` (also unused from any page).
+// WithdrawalManager is now mounted by WithdrawalsPage: when a position's
+// cooldown has elapsed (getCooldownProgress returns 100%), clicking its row
+// or the "Start withdrawal" CTA opens a Modal containing WithdrawalManager,
+// which renders a "Complete Unstake" button wired to
+// `ExpertStaking.completeUnstake(guildId)`.
 //
-// When `DIV_008_OPEN=true` in the environment, Phase 7 is gated with
-// `test.fail` so CI stays informative rather than silently skipping.
-// The contract-direct fallback drives completeUnstake so Phases 8–9 still
-// exercise the post-completion chain invariants and UI state regardless of
-// whether the environment signals the gap.
+// The `DIV_008_OPEN` env gate and the contract-direct fallback are preserved
+// for backwards compatibility but the gate is no longer expected to fire.
+// The spec now drives the real UI button when the page is live.
 
 import { test, expect } from "../../fixtures";
 import { loginAsExpertViaUI } from "../../helpers/ui-auth";
@@ -409,49 +405,64 @@ test(
       ).toBeGreaterThanOrEqual(req[1]);
     });
 
-    // ─── Phase 7: Complete the unstake ────────────────────────────────────
-    // DIV-008: the production UI has no mounted button that calls
-    // completeUnstake. WithdrawalManager.tsx has the handler and the
-    // "Complete Unstake" button, but no route mounts that component.
-    // The ClaimCard "Manage withdrawal" CTA re-opens StakingModal (requestUnstake
-    // flow) — not completeUnstake.
+    // ─── Phase 7: Complete the unstake via the production UI ─────────────
+    // DIV-008 is fixed: WithdrawalsPage now mounts WithdrawalManager when a
+    // position's cooldown has elapsed. Clicking the position row (or "Start
+    // withdrawal" when readyAmount > 0) opens a Modal with the
+    // "Complete Unstake" button wired to ExpertStaking.completeUnstake(guildId).
     //
-    // When DIV_008_OPEN=true, test.fail() marks this step as an expected
-    // failure so CI surfaces the gap informatively rather than silently
-    // skipping. The contract-direct fallback still runs so Phases 8–9
-    // exercise post-completion invariants.
-    await test.step("expert finalizes the withdrawal (UI gated by DIV-008; contract-direct fallback ensures post-completion phases run)", async () => {
+    // The DIV_008_OPEN env gate is preserved for backwards compatibility;
+    // when unset (default), this step drives the real UI button.
+    await test.step("expert finalizes the withdrawal via the WithdrawalManager UI (Complete Unstake button)", async () => {
       const div008Open = process.env.DIV_008_OPEN === "true";
 
-      // Gate: if DIV-008 is signalled open, the step is expected to fail
-      // because there is no mounted UI surface for completeUnstake.
+      // Legacy gate: if signalled open (should not fire after the fix),
+      // mark as expected failure and fall through to contract-direct path.
       test.fail(
         div008Open,
         "DIV-008: UI button for completeUnstake pending — WithdrawalManager is not mounted by any route",
       );
 
-      if (div008Open) {
-        // Attempt to find the "Complete Unstake" / "Complete withdrawal" button
-        // to confirm it truly doesn't exist. The page should still show the
-        // cooldown-elapsed state from Phase 6.
+      if (!div008Open) {
+        // Navigate to /expert/withdrawals — the page should still show the
+        // active position with the cooldown elapsed (Phase 6 advanced time).
         await page.goto("/expert/withdrawals", { waitUntil: "domcontentloaded" });
         await expect(
           page.getByRole("heading", { name: /withdrawals/i }).first(),
         ).toBeVisible({ timeout: 30_000 });
 
-        // This assertion is the "expected failure": if the button exists, the
-        // step passes (DIV-008 resolved, test.fail flips it to a test failure
-        // — which is the right signal). If the button doesn't exist, count(0)
-        // passes and test.fail converts the overall step to a test failure.
+        // The "Start withdrawal" hero CTA routes to WithdrawalManager when
+        // readyAmount > 0 (position has an elapsed cooldown). Click it.
+        await page
+          .getByRole("button", { name: /start withdrawal/i })
+          .first()
+          .click();
+
+        // The Modal containing WithdrawalManager should appear.
         await expect(
-          page.getByRole("button", { name: /complete unstake|complete withdrawal/i }),
-        ).toHaveCount(0, { timeout: 5_000 });
-        // Fall through to contract-direct completion so Phases 8–9 still run.
+          page.getByRole("dialog").or(page.getByRole("heading", { name: /complete unstake/i })).first(),
+        ).toBeVisible({ timeout: 15_000 });
+
+        // The "Complete Unstake" button is enabled when cooldown has elapsed.
+        const completeBtn = page
+          .getByRole("button", { name: /complete unstake/i })
+          .first();
+        await expect(completeBtn).toBeEnabled({ timeout: 15_000 });
+        await completeBtn.click();
+
+        // Wait for the wallet shim to pick up the eth_sendTransaction call
+        // and for anvil to mine the block.
+        await page.waitForTimeout(5_000);
+
+        // Dismiss the modal if it's still open.
+        const closeBtn = page.getByRole("button", { name: /close/i }).first();
+        if (await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+          await closeBtn.click();
+        }
+        return;
       }
 
-      // Contract-direct completeUnstake — same function the UI would call.
-      // Drives the on-chain state regardless of UI availability so the
-      // post-completion assertions in Phases 8–9 are not skipped.
+      // Contract-direct fallback (only reached when DIV_008_OPEN=true).
       const hash = await contracts.expertStaking.write.completeUnstake(
         [guildIdBytes32],
         { account: expert!.client.account },
