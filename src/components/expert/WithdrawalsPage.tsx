@@ -27,6 +27,8 @@ import { GuildBadge } from "@/components/ui/guild";
 import type { GuildStakeInfo } from "@/types";
 import { PositionRow } from "./withdrawals/PositionRow";
 import { ClaimCard } from "./withdrawals/ClaimCard";
+import { Modal } from "@/components/ui/modal";
+import { WithdrawalManager } from "@/components/WithdrawalManager";
 
 const StakingModal = dynamic(
   () =>
@@ -97,6 +99,7 @@ export default function WithdrawalsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedGuildId, setSelectedGuildId] = useState<string | undefined>();
+  const [withdrawalManagerGuild, setWithdrawalManagerGuild] = useState<GuildPosition | null>(null);
 
   const { balance, refetchBalance } = useTokenBalance();
 
@@ -204,11 +207,34 @@ export default function WithdrawalsPage() {
   );
 
   const handleGuildClick = (guildId: string) => {
+    const position = positions.find((p) => p.guildId === guildId);
+    if (
+      position?.unstakeInfo?.hasRequest &&
+      position.unstakeInfo.unlockTime &&
+      getCooldownProgress(position.unstakeInfo.unlockTime).percent === 100
+    ) {
+      // Cooldown elapsed — open WithdrawalManager so the expert can call
+      // completeUnstake. StakingModal only handles requestUnstake.
+      setWithdrawalManagerGuild(position);
+      return;
+    }
     setSelectedGuildId(guildId);
     setModalOpen(true);
   };
 
   const handleStartWithdrawal = () => {
+    // If there's a ready position, route to WithdrawalManager; otherwise
+    // open StakingModal in withdraw mode so the expert can request unstake.
+    const firstReady = positions.find(
+      (p) =>
+        p.unstakeInfo?.hasRequest &&
+        p.unstakeInfo.unlockTime &&
+        getCooldownProgress(p.unstakeInfo.unlockTime).percent === 100,
+    );
+    if (firstReady) {
+      setWithdrawalManagerGuild(firstReady);
+      return;
+    }
     setSelectedGuildId(undefined);
     setModalOpen(true);
   };
@@ -518,7 +544,7 @@ export default function WithdrawalsPage() {
           </aside>
         </div>
 
-        {/* ── Staking Modal ── */}
+        {/* ── Staking Modal (requestUnstake) ── */}
         <StakingModal
           isOpen={modalOpen}
           onClose={() => {
@@ -529,6 +555,30 @@ export default function WithdrawalsPage() {
           preselectedGuildId={selectedGuildId}
           defaultMode="withdraw"
         />
+
+        {/* ── Withdrawal Manager (completeUnstake) ── */}
+        {withdrawalManagerGuild && address && (
+          <Modal
+            isOpen={!!withdrawalManagerGuild}
+            onClose={() => setWithdrawalManagerGuild(null)}
+            title={`Complete Unstake${withdrawalManagerGuild.guildName ? ` — ${withdrawalManagerGuild.guildName}` : ""}`}
+            size="lg"
+          >
+            <WithdrawalManager
+              walletAddress={address}
+              currentStake={withdrawalManagerGuild.stakedAmount}
+              currentBalance={
+                balance !== undefined ? formatEther(balance) : "0"
+              }
+              guildId={hashToBytes32(withdrawalManagerGuild.guildId) as `0x${string}`}
+              guildName={withdrawalManagerGuild.guildName}
+              onWithdrawalComplete={() => {
+                setWithdrawalManagerGuild(null);
+                handleModalSuccess();
+              }}
+            />
+          </Modal>
+        )}
       </div>
     </div>
   );

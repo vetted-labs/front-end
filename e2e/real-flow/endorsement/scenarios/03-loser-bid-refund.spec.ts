@@ -21,15 +21,19 @@
 //      scenario is purely on-chain, we synthesize a fresh UUID for `jobId`
 //      and call `createJob` ourselves before any bids are placed.
 //   2. `EndorsementBidding.placeBid` reverts unless `createJob(jobId)` has
-//      been called first AND the caller is not the job creator. We use anvil
-//      account 5 (outside the experts[0..3] range used by the fixture) as
-//      the job creator, which has VETD from the dev mint script.
+//      been called first AND the caller is not the job creator. We use the
+//      `jobCreator` fixture (wallet outside experts[0..3]) as the creator,
+//      which has VETD topped up by `cleanState`. This avoids `CreatorCannotBid`.
 //   3. `pendingRefunds` is a public mapping in Solidity, so viem reads via
 //      `read.pendingRefunds([address])` (single-element args array per viem
 //      convention).
+//   4. The `candidate.candidateId` fixture field already holds the UUID from
+//      signup — no guild-application step or `GET /api/candidates/me` round-trip
+//      is needed. The previous approach (applyToGuildViaUI + HTTP fetch) was
+//      redundant and caused the scenario to fail when the commit-reveal drain
+//      raced with the subsequent `/api/candidates/me` request.
 
 import { test, expect } from "../../fixtures";
-import { applyToGuildViaUI } from "../../helpers/scenario";
 import {
   approveExpertsForBidding,
   createJob,
@@ -37,7 +41,6 @@ import {
   withdrawRefund,
   uuidToBytes32,
 } from "../../helpers/endorsement";
-import { ANVIL_KEYS, makeWallet } from "../../helpers/chain";
 import { parseEther, type Address } from "viem";
 import { randomUUID } from "node:crypto";
 
@@ -51,37 +54,26 @@ type TopEndorsersTuple = readonly [
 ];
 
 test("loser-bid refund: 4th expert displaces lowest, refund withdraws cleanly", async ({
-  page,
-  candidate: _candidate,
-  guild,
+  candidate,
   experts,
   contracts,
-  anvil: _anvil,
+  jobCreator,
+  anvil,
   cleanState: _cleanState,
 }) => {
-  // Resolved inside step 2 so the trace viewer attributes errors correctly.
-  let jobId!: string;
-  let candidateId!: string;
+  // candidateId comes directly from the `candidate` fixture (set during signup).
+  // No guild-application step is needed — this scenario is purely on-chain and
+  // only requires a UUID to identify the candidate in the bidding contract.
+  const candidateId = candidate.candidateId;
 
-  // Anvil account 5 — outside the experts[0..3] fixture range, holds 5M VETD
-  // from the dev mint script, and so can pay the createJob fee + cannot bid
-  // (avoiding the contract's `CreatorCannotBid` revert when experts bid).
-  const jobCreator = makeWallet(ANVIL_KEYS[5]);
+  // jobCreator fixture: pre-funded wallet whose VETD balance is topped up by
+  // cleanState. Cannot bid (distinct address from experts[0..3]); this avoids
+  // the contract's `CreatorCannotBid` revert.
   const bidders = experts.slice(0, 4);
+  let jobId!: string;
 
   await test.step("approve experts for bidding", async () => {
     await approveExpertsForBidding(bidders, contracts);
-  });
-
-  await test.step("apply candidate via UI to capture candidateId", async () => {
-    // Drives the UI guild apply flow so we have a real candidate UUID. The
-    // returned `applicationId` and `sessionId` are unused — we only need the
-    // candidate's own UUID, which we read from `/api/candidates/me`.
-    await applyToGuildViaUI(page, _candidate, guild.id);
-    const meRes = await page.request.get(`/api/candidates/me`);
-    expect(meRes.ok()).toBeTruthy();
-    const me = (await meRes.json()) as { data: { id: string } };
-    candidateId = me.data.id;
   });
 
   await test.step("synthesize jobId + createJob on-chain", async () => {
@@ -128,11 +120,17 @@ test("loser-bid refund: 4th expert displaces lowest, refund withdraws cleanly", 
       bidders[0].address,
     ])) as bigint;
 
-    await withdrawRefund(bidders[0], contracts);
+    const { txHash } = await withdrawRefund(bidders[0], contracts);
+    // Wait for the receipt so we know the tx was mined and assert it succeeded.
+    // Without this, a reverting withdrawRefund would return a hash silently and
+    // the pendingRefunds read below would show the uncleared balance.
+    const receipt = await anvil.publicClient.waitForTransactionReceipt({ hash: txHash });
+    expect(receipt.status).toBe("success");
 
-    const pendingAfter = (await contracts.endorsementBidding.read.pendingRefunds(
-      [bidders[0].address],
-    )) as bigint;
+    const pendingAfter =
+      (await contracts.endorsementBidding.read.pendingRefunds([
+        bidders[0].address,
+      ])) as bigint;
     expect(pendingAfter).toBe(0n);
 
     const balanceAfter = (await contracts.vettedToken.read.balanceOf([

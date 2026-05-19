@@ -11,13 +11,14 @@ import {
   readContract,
 } from "wagmi/actions";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { ThemeProvider } from "@/lib/theme-provider";
+import { ThemeProvider, useTheme } from "@/lib/theme-provider";
 import { MotionProvider } from "@/lib/motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { installBrowserHeadlessWallet } from "@/lib/e2e/browser-headless-wallet";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { sepolia } from "wagmi/chains";
+import { Toaster } from "sonner";
 
 installBrowserHeadlessWallet();
 
@@ -38,6 +39,12 @@ if (
     getAccount,
     readContract,
   };
+}
+
+/** Renders Sonner's Toaster with the app's resolved theme so toasts match dark/light mode. */
+function ThemedToaster() {
+  const { theme } = useTheme();
+  return <Toaster theme={theme === "dark" ? "dark" : theme === "light" ? "light" : "system"} richColors closeButton />;
 }
 
 const queryClient = new QueryClient({
@@ -77,6 +84,7 @@ export function Providers({ children, cookieHeader }: ProvidersProps) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider initialChain={sepolia}>
           <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
+            <ThemedToaster />
             <MotionProvider>
               <AuthProvider>
                 {children}

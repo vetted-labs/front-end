@@ -2,11 +2,7 @@
 //
 // Expert-pillar coverage: vote submission is blocked after the voting deadline.
 //
-// ─── Actual UI behaviour vs plan assumption ───────────────────────────────────
-//
-// The plan template assumed `advanceTime(anvil, 86_400 * 8)` would expire the
-// voting deadline and produce a disabled Review button on the expert dashboard.
-// After tracing the production code, the actual behaviour diverges:
+// ─── Actual UI behaviour ─────────────────────────────────────────────────────
 //
 //   1. `voting_deadline` on `candidate_proposals` is set to
 //      `CURRENT_TIMESTAMP + 3 days` in Postgres real time (NOT block.timestamp).
@@ -14,19 +10,21 @@
 //      Postgres's `CURRENT_TIMESTAMP` and therefore does NOT expire the BE
 //      deadline gate (`proposals.service.ts:718`).
 //
-//   2. The `ReviewQueue` widget on `/expert/dashboard` renders all assigned
-//      proposals as clickable row-buttons — there is no disabled state tied to
-//      the voting deadline. The row always navigates to the review page.
+//   2. Once a proposal is finalised, the `ReviewQueue` widget on
+//      `/expert/dashboard` renders the row with a disabled "Deadline passed"
+//      badge instead of a clickable "Review →" button (DIV-011 fixed).
 //
 //   3. The "Cast Vote" button in `ProposalCard` and `VotingApplicationPage`
 //      is only disabled when `!meetsStakingRequirement || hasVoted`. A past
-//      deadline does NOT disable it on the client side.
+//      deadline does NOT disable it on the client side in isolation — but
+//      once finalised the ProposalCard switches to an outcome badge and the
+//      VotingApplicationPage renders the `FinalizedView`.
 //
 //   4. After the `commit_deadline` passes on a commit-reveal proposal, the BE
 //      cron (`processProposalTransitions`) auto-reveals + finalizes the proposal.
 //      ONCE FINALIZED the `ProposalCard` replaces "Cast Vote" with an outcome
 //      badge and the `VotingApplicationPage` renders the `FinalizedView`. That
-//      is the actual "expert cannot vote" surface the UI exposes.
+//      is the primary "expert cannot vote" surface the UI exposes.
 //
 //   5. The `CommitRevealStatusCard` shows `formatDeadline(deadline, "Ended")`
 //      once the real-time `commit_deadline` is past.
@@ -47,21 +45,16 @@
 //   2. Enable commit-reveal with 0.01-minute commit window → deadline is
 //      ~600 ms from now (already in the past by the time we act).
 //   3. Call processProposalTransitions to auto-expire + finalise.
-//   4. Expert logs in via the real UI.
-//   5. Navigate to /expert/applications (ProposalCard list).
-//   6. Assert: "Cast Vote" is absent / "Voted" or outcome badge appears.
-//   7. Navigate to the individual voting page.
-//   8. Assert: FinalizedView is rendered (no vote submission form).
-//   9. Assert deadline copy — either "Ended" (CommitRevealStatusCard) or
+//   4. Expert logs in via the real UI and visits the dashboard.
+//   5. Assert: dashboard ReviewQueue shows "Deadline passed" disabled state.
+//   6. Navigate to /expert/applications (ProposalCard list).
+//   7. Assert: "Cast Vote" is absent / outcome badge appears.
+//   8. Navigate to the individual voting page.
+//   9. Assert: FinalizedView is rendered (no vote submission form).
+//  10. Assert deadline copy — either "Ended" (CommitRevealStatusCard) or
 //      "Expired" (CountdownBadge) is visible somewhere on the page.
 //
 // ─── Known divergences documented ────────────────────────────────────────────
-//
-//   DIV-011: No disabled "Review" button on the dashboard ReviewQueue widget
-//            for past-deadline proposals (the card is always clickable).
-//            The plan's "disabled Review button + deadline-passed copy" surface
-//            does not exist in the current UI. Enforcement happens only after
-//            the proposal finalises (FinalizedView replaces the vote form).
 //
 //   DIV-012: `advanceTime(anvil, ...)` cannot expire `candidate_proposals`
 //            deadlines because they are stored as Postgres `TIMESTAMP WITH TIME
@@ -114,6 +107,7 @@ test(
   }) => {
     test.setTimeout(120_000);
     void _cleanState;
+    void experts; // used only as a type source below
 
     // ─── Phase 1: Candidate applies; panel is assigned ────────────────────
     let applicationId!: string;
@@ -166,9 +160,42 @@ test(
       await loginAsExpertViaUI(page, expert.address);
     });
 
+    // ─── Phase 4b: Dashboard ReviewQueue — disabled state (DIV-011) ───────
+    await test.step(
+      "the expert dashboard ReviewQueue renders the past-deadline proposal as a disabled row, not a clickable button",
+      async () => {
+        await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
+
+        // Wait for the ReviewQueue widget to render — it appears once the
+        // assigned-applications data resolves. The widget header is always
+        // present when the expert has at least one assignment.
+        await expect(
+          page.getByText("Review Queue", { exact: true }),
+        ).toBeVisible({ timeout: 30_000 });
+
+        // A disabled (expired) row is rendered as a <div aria-disabled="true">
+        // rather than a <button>. Once the proposal is finalised, the
+        // ReviewQueue computes isPastDeadline=true and renders the greyed-out
+        // "Deadline passed" badge.
+        await expect(
+          page.getByTestId("review-queue-item-expired"),
+        ).toBeVisible({ timeout: 20_000 });
+
+        // The "Deadline passed" badge must be present.
+        await expect(
+          page.getByText("Deadline passed"),
+        ).toBeVisible({ timeout: 10_000 });
+
+        // No clickable "Review →" button should exist for this expired item.
+        await expect(
+          page.getByRole("button", { name: /review/i }),
+        ).toHaveCount(0, { timeout: 5_000 });
+      },
+    );
+
     // ─── Phase 5: Applications list — no active vote button ───────────────
     await test.step(
-      "the expert applications page shows the proposal without an active Cast Vote button",
+      "the expert applications list shows the finalised proposal without an active Cast Vote button",
       async () => {
         await page.goto("/expert/applications", { waitUntil: "domcontentloaded" });
 
