@@ -34,44 +34,33 @@
 //       transfers the tokens back to msg.sender,
 //       clears the unstake request, emits Unstaked.
 //
-// ─── Why this is contract-direct, not UI-driven ──────────────────────────────
+// ─── Phase 3: requestUnstake via the production UI ───────────────────────────
 //
-// The "primary" UI path would drive `requestUnstake` through the StakingModal
-// on /expert/withdrawals. Two production-side gaps block that today; both are
-// tracked in docs/testing/PROTOCOL_DIVERGENCES.md and confirmed reproducible:
+// Phase 3 drives `requestUnstake` through the WithdrawalsPage → StakingModal
+// UI path. The wagmi transport for E2E mode is a plain `http()` pointed at
+// local anvil (see wagmi-config.ts, `e2eSepoliaChain` + `foundryTransport`),
+// and multicall3 is cleared from the chain definition so every `useReadContract`
+// call goes direct to anvil. This resolves the earlier DIV-009 transport issue.
+//
+// ─── Phase 7: completeUnstake — DIV-008 still open ──────────────────────────
 //
 //   • DIV-008: the production UI has NO button wired to
 //     `ExpertStaking.completeUnstake(guildId)`. The post-cooldown ClaimCard's
-//     "Manage withdrawal" CTA re-opens the request-unstake modal. There is
-//     literally no UI surface that calls completeUnstake; the only ways out
-//     are an off-platform contract call or the dormant `WithdrawalManager`
-//     component that no route mounts.
+//     "Manage withdrawal" CTA re-opens the request-unstake (StakingModal) flow.
+//     There is literally no mounted UI surface that calls completeUnstake; the
+//     only candidates are the orphaned `WithdrawalManager` component (not
+//     imported by any route) and a `completeUnstake` helper inside
+//     `useGuildStaking` (also unused from any page).
 //
-//   • DIV-009: in E2E mode (`NEXT_PUBLIC_E2E_MODE=true`), wagmi's sepolia
-//     fallback transport (config in `wagmi-config.ts:52-68`) ranks public
-//     sepolia RPCs ahead of the local anvil RPC once viem's health probes
-//     run. Every `useReadContract` call in the StakingModal then targets a
-//     PUBLIC sepolia node — which has no code at our locally-deployed
-//     contract addresses, so eth_call returns "0x" and the modal stays
-//     stuck at "Balance: — Loading…" / "Staked: — Loading…" forever. This
-//     fully blocks the Withdraw mode toggle (`disabled={!currentStake ...}`)
-//     and the in-modal "Insufficient staked balance" gate
-//     (`handleWithdraw` reads `stakeInfo[0]` to compute currentStake). The
-//     same regression also breaks the expert-stake.smoke.spec.ts smoke
-//     test, confirming this is a pre-existing E2E-infrastructure issue
-//     unrelated to this scenario.
-//
-// While DIV-008 + DIV-009 are open, the scenario drives both
-// `requestUnstake` and `completeUnstake` directly via the expert's viem
-// wallet client — same pattern as `04-no-reveal-slashing.spec.ts` for the
-// `onlyOwner` slash that also has no UI. We still log the expert in through
-// the real UI flow and assert the user-visible Withdrawals page state at
-// each lifecycle step (the page itself reads chain state via the backend's
-// chain-direct service, which sidesteps DIV-009).
+// When `DIV_008_OPEN=true` in the environment, Phase 7 is gated with
+// `test.fail` so CI stays informative rather than silently skipping.
+// The contract-direct fallback drives completeUnstake so Phases 8–9 still
+// exercise the post-completion chain invariants and UI state regardless of
+// whether the environment signals the gap.
 
 import { test, expect } from "../../fixtures";
 import { loginAsExpertViaUI } from "../../helpers/ui-auth";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import type { Address, Hex } from "viem";
 import { BACKEND_URL } from "../../helpers/backend";
 
@@ -116,7 +105,7 @@ async function syncStakeToDb(
 }
 
 test(
-  "expert requests unstake, waits out the cooldown, completes withdrawal, and the on-chain stake + VETD balance reflect the return",
+  "expert requests unstake via the withdrawals UI, waits out the cooldown, completes withdrawal, and the on-chain stake + VETD balance reflect the return",
   async ({
     page,
     experts,
@@ -126,9 +115,8 @@ test(
     wallet,
     cleanState: _cleanState,
   }) => {
-    // Multi-phase flow: UI login + 2 on-chain txs + 7-day time skip + UI
-    // re-render assertions. The headline scenario already budgets 180s;
-    // give us comparable headroom.
+    // Multi-phase flow: UI login + UI-driven requestUnstake tx + 7-day time
+    // skip + UI assertions. Budget comparable headroom to the headline scenario.
     test.setTimeout(180_000);
     void _cleanState;
 
@@ -213,21 +201,121 @@ test(
       ).toBeVisible({ timeout: 15_000 });
     });
 
-    // ─── Phase 3: Drive requestUnstake on-chain [DIV-009 workaround] ──────
-    // The production UI's StakingModal cannot complete a withdraw because the
-    // in-modal wagmi reads stall at "Loading…" against public-sepolia
-    // fallback RPCs (DIV-009). The contract-direct path drives the same
-    // on-chain function the modal would have called.
-    await test.step("expert submits the request-unstake transaction on-chain (UI surface blocked by DIV-009)", async () => {
-      const hash = await contracts.expertStaking.write.requestUnstake(
-        [guildIdBytes32, unstakeAmount],
-        { account: expert!.client.account },
-      );
-      // Wait for the tx to mine. viem's `contract.write.*` returns once the
-      // RPC accepts the tx, not after it's mined. The cleanState background
-      // miner mines every 200ms — but Phase 4's read MUST observe the post-
-      // mine state, so we wait for the receipt explicitly here.
-      await anvil.publicClient.waitForTransactionReceipt({ hash });
+    // ─── Phase 3: Drive requestUnstake through the production UI ──────────
+    // Opens WithdrawalsPage → StakingModal (defaultMode="withdraw") → guild
+    // selector → amount input → Withdraw button → shim signs eth_sendTransaction.
+    // The E2E wagmi config bypasses the ranked fallback transport (plain
+    // http() to anvil) and clears multicall3, so useReadContract calls resolve
+    // against local state — the stakeInfo/balance reads in StakingModal work.
+    await test.step("expert requests unstake through the Withdrawals page UI: opens modal, selects guild, fills amount, confirms", async () => {
+      // Capture shim method calls to verify the tx went through the wallet.
+      const shimMethodCalls: string[] = [];
+      await page.exposeFunction("__shimMethodSeenWithdraw", (m: string) => {
+        shimMethodCalls.push(m);
+      });
+      await page.evaluate(() => {
+        const provider = (
+          window as unknown as {
+            __hwProvider?: {
+              request: (a: { method: string; params?: unknown[] }) => unknown;
+            };
+          }
+        ).__hwProvider;
+        if (!provider) return;
+        const origRequest = provider.request.bind(provider);
+        provider.request = async (args: {
+          method: string;
+          params?: unknown[];
+        }) => {
+          (
+            window as unknown as {
+              __shimMethodSeenWithdraw: (m: string) => void;
+            }
+          ).__shimMethodSeenWithdraw(args.method);
+          return origRequest(args);
+        };
+      });
+
+      // Click the primary "Start withdrawal" CTA in the hero card.
+      // The button is disabled when positions.length === 0; we already
+      // confirmed an active position in Phase 2.
+      await page
+        .getByRole("button", { name: /start withdrawal/i })
+        .first()
+        .click();
+
+      // The StakingModal opens in "withdraw" mode (defaultMode="withdraw").
+      // Wait for it to be visible.
+      await expect(
+        page.getByRole("heading", { name: /manage staking/i }).first(),
+      ).toBeVisible({ timeout: 15_000 });
+
+      // The modal may start in "stake" mode visually even when defaultMode is
+      // "withdraw" if the Withdraw toggle is disabled (currentStake still loading).
+      // Wait for the Withdraw tab to be enabled, then click it.
+      const withdrawToggle = page
+        .getByRole("button", { name: /^withdraw$/i })
+        .first();
+      await expect(withdrawToggle).toBeEnabled({ timeout: 15_000 });
+      await withdrawToggle.click();
+
+      // Open the guild selector dropdown (text changes once loaded).
+      await page
+        .getByRole("button", { name: /select guild|choose a guild/i })
+        .first()
+        .click();
+
+      // Pick the guild that matches our expert's staked guild.
+      await page
+        .getByRole("button", { name: new RegExp(guild.name, "i") })
+        .first()
+        .click();
+
+      // Wait for the stakeInfo read to resolve so the amount input isn't
+      // blocked by the "Insufficient staked balance" gate.
+      // The modal shows "Staked: <n> VETD" once useGuildStaking resolves.
+      await expect(
+        page.getByText(/staked:\s*(?!—\s*loading)/i).first(),
+      ).toBeVisible({ timeout: 15_000 });
+
+      // Fill the unstake amount. The input placeholder is "0.00" in withdraw
+      // mode. We use formatEther so the value matches the bigint exactly.
+      const unstakeAmountEther = formatEther(unstakeAmount);
+      const amountInput = page.getByPlaceholder(/0\.00/i).first();
+      await amountInput.waitFor({ state: "visible", timeout: 10_000 });
+      await amountInput.fill(unstakeAmountEther);
+
+      // Wait a moment for the input to register and button state to update.
+      await page.waitForTimeout(500);
+
+      // Click the "Withdraw" action button. It reads "Withdraw" (with a guild
+      // name in the ArrowRight slot) when a guild is selected and amount > 0.
+      const withdrawBtn = page
+        .getByRole("button", { name: /^withdraw$/i })
+        .nth(1); // nth(1): the second "Withdraw"-labelled element is the action button;
+      // the first is the mode toggle already clicked above.
+      await expect(withdrawBtn).toBeEnabled({ timeout: 10_000 });
+      await withdrawBtn.click();
+
+      // Wait for the shim to receive an eth_sendTransaction — that proves
+      // the production requestUnstake pipeline went through the wallet.
+      await expect
+        .poll(
+          () => shimMethodCalls.includes("eth_sendTransaction"),
+          { timeout: 30_000, intervals: [250, 500, 1_000] },
+        )
+        .toBe(true);
+
+      // Wait for the TransactionModal success state or close. The modal auto-
+      // syncs the stake to DB on success. Give it generous time for the anvil
+      // mine + wagmi confirmation.
+      await page.waitForTimeout(3_000);
+
+      // Dismiss the transaction modal if it's still open (success screen).
+      const closeBtn = page.getByRole("button", { name: /close|done/i }).first();
+      if (await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await closeBtn.click();
+      }
     });
 
     // ─── Phase 4: Chain invariant — request mutated state as expected ─────
@@ -281,7 +369,9 @@ test(
     await test.step("the Withdrawals page surfaces the pending unstake after the request", async () => {
       // Sync DB mirror so the page's blockchainApi.getExpertGuildStakes
       // (which reads DB first) reflects the post-request state. The
-      // production StakingModal does this same sync on tx success.
+      // production StakingModal does this same sync on tx success via
+      // blockchainApi.syncStake; if the UI-driven flow already fired it, this
+      // call is idempotent and harmless.
       await syncStakeToDb(page.request, {
         address: expertAddress,
         blockchainGuildId: guildIdBytes32,
@@ -319,10 +409,49 @@ test(
       ).toBeGreaterThanOrEqual(req[1]);
     });
 
-    // ─── Phase 7: Complete the unstake [DIV-008] ──────────────────────────
-    // The production UI has no completeUnstake button (DIV-008). Drive the
-    // contract directly via the expert's wallet client.
-    await test.step("expert finalizes the withdrawal on-chain (no production UI button — DIV-008)", async () => {
+    // ─── Phase 7: Complete the unstake ────────────────────────────────────
+    // DIV-008: the production UI has no mounted button that calls
+    // completeUnstake. WithdrawalManager.tsx has the handler and the
+    // "Complete Unstake" button, but no route mounts that component.
+    // The ClaimCard "Manage withdrawal" CTA re-opens StakingModal (requestUnstake
+    // flow) — not completeUnstake.
+    //
+    // When DIV_008_OPEN=true, test.fail() marks this step as an expected
+    // failure so CI surfaces the gap informatively rather than silently
+    // skipping. The contract-direct fallback still runs so Phases 8–9
+    // exercise post-completion invariants.
+    await test.step("expert finalizes the withdrawal (UI gated by DIV-008; contract-direct fallback ensures post-completion phases run)", async () => {
+      const div008Open = process.env.DIV_008_OPEN === "true";
+
+      // Gate: if DIV-008 is signalled open, the step is expected to fail
+      // because there is no mounted UI surface for completeUnstake.
+      test.fail(
+        div008Open,
+        "DIV-008: UI button for completeUnstake pending — WithdrawalManager is not mounted by any route",
+      );
+
+      if (div008Open) {
+        // Attempt to find the "Complete Unstake" / "Complete withdrawal" button
+        // to confirm it truly doesn't exist. The page should still show the
+        // cooldown-elapsed state from Phase 6.
+        await page.goto("/expert/withdrawals", { waitUntil: "domcontentloaded" });
+        await expect(
+          page.getByRole("heading", { name: /withdrawals/i }).first(),
+        ).toBeVisible({ timeout: 30_000 });
+
+        // This assertion is the "expected failure": if the button exists, the
+        // step passes (DIV-008 resolved, test.fail flips it to a test failure
+        // — which is the right signal). If the button doesn't exist, count(0)
+        // passes and test.fail converts the overall step to a test failure.
+        await expect(
+          page.getByRole("button", { name: /complete unstake|complete withdrawal/i }),
+        ).toHaveCount(0, { timeout: 5_000 });
+        // Fall through to contract-direct completion so Phases 8–9 still run.
+      }
+
+      // Contract-direct completeUnstake — same function the UI would call.
+      // Drives the on-chain state regardless of UI availability so the
+      // post-completion assertions in Phases 8–9 are not skipped.
       const hash = await contracts.expertStaking.write.completeUnstake(
         [guildIdBytes32],
         { account: expert!.client.account },

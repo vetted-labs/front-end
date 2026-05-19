@@ -190,7 +190,10 @@ export function ReviewConfirmStep({
             <span className="text-sm font-medium text-muted-foreground">
               Overall Score
             </span>
-            <span className="text-2xl font-bold text-foreground">
+            <span
+              className="text-2xl font-bold text-foreground"
+              data-testid="review-overall-score"
+            >
               {overallScore}
               <span className="text-sm text-muted-foreground font-normal">
                 /{overallMax}

@@ -1,4 +1,8 @@
 import { Page } from "@playwright/test";
+import type { GovernanceProposalDetail } from "@/types/governance";
+import type { GuildApplication, GuildApplicationSummary, VoteHistoryItem } from "@/types/guildApplication";
+import type { CandidateProfile } from "@/types/candidate";
+import type { Job } from "@/types/job";
 
 // ---------------------------------------------------------------------------
 // Shared IDs
@@ -12,10 +16,289 @@ export const CANDIDATE_ID = "e2e-candidate-001";
 export const JOB_ID = "e2e-job-001";
 
 // ---------------------------------------------------------------------------
-// Expert mock (reuses shape from expert-auth.ts)
+// Local shape interfaces
+//
+// Most mock interfaces now extend or alias @/types shapes.  Interfaces that
+// cannot extend an app type carry a comment explaining why.
 // ---------------------------------------------------------------------------
 
-export const MOCK_EXPERT_PROFILE = {
+/**
+ * Mock expert profile.
+ * Cannot extend ExpertProfile because:
+ *  - ExpertProfile.guilds is ExpertGuild[] which requires many required fields
+ *    (memberCount, expertRole typed as ExpertRole enum, pendingProposals, etc.)
+ *  - The mock uses a flat { id, name, role } guild shape that the API actually
+ *    returns for the /experts/profile endpoint in e2e stubs.
+ *  - consensusRate is a mock-only display field not in ExpertProfile.
+ */
+export interface MockExpertProfile {
+  id: string;
+  walletAddress: string;
+  fullName: string;
+  status: string;
+  reputation: number;
+  reviewCount: number;
+  consensusRate: number;
+  guilds: Array<{ id: string; name: string; role: string }>;
+}
+
+/**
+ * Mock guild detail returned by the e2e stubs.
+ * Cannot extend ExpertGuildDetail / ExpertGuild because:
+ *  - ExpertGuild.expertRole is typed as ExpertRole ("recruit"|"apprentice"|…)
+ *    but the mock uses a plain string.
+ *  - ExpertGuild requires pendingProposals, ongoingProposals, closedProposals,
+ *    memberCount, totalEarnings — all required fields absent from the wire
+ *    format returned by the public guild detail endpoint in stubs.
+ *  - GuildPublicDetail/GuildPageDetail requires ExpertMember[] for .experts,
+ *    which needs email and walletAddress — the mock uses a flat { id, fullName,
+ *    role, reputation } shape.
+ */
+export interface MockGuild {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  memberCount: number;
+  expertCount: number;
+  candidateCount: number;
+  totalMembers: number;
+  experts: Array<{ id: string; fullName: string; role: string; reputation: number }>;
+  candidates: unknown[];
+  recentJobs: unknown[];
+  guildApplications: unknown[];
+  applications: unknown[];
+  recentActivity: unknown[];
+  openPositions: number;
+  totalProposalsReviewed: number;
+  averageApprovalTime: string;
+  totalVetdStaked: number;
+  statistics: {
+    vettedProposals: number;
+    totalVetdStaked: number;
+    totalEarningsFromEndorsements: number;
+  };
+  expertRole: string;
+  reputation: number;
+  earnings: {
+    totalPoints: number;
+    totalEndorsementEarnings: number;
+    recentEarnings: unknown[];
+  };
+}
+
+/**
+ * Guild application (proposal) as returned by the proposals API (snake_case).
+ * Extends GuildApplication and adds candidate_email + voting_phase which are
+ * required by the e2e stubs but optional / absent in the app type.
+ * Also adds iqr (IQR stats object) used only in slashing mock variants — not
+ * part of the production type, handled via intersection below.
+ */
+export type MockApplication = GuildApplication & {
+  candidate_email: string;
+  voting_phase: string;
+};
+
+/** MockApplication extended with the IQR stats block (slashing scenarios only). */
+type MockApplicationWithIqr = MockApplication & {
+  iqr: {
+    median: number;
+    q1: number;
+    q3: number;
+    iqr: number;
+    includedCount: number;
+    excludedCount: number;
+  };
+};
+
+/** Candidate profile — aliases CandidateProfile from @/types/candidate directly. */
+export type MockCandidateProfile = CandidateProfile;
+
+/**
+ * Vote history item — extends VoteHistoryItem from @/types/guildApplication.
+ * Makes expert_name required (it's optional in the app type) and comment
+ * required (it's optional in the app type) to match the stub wire format.
+ */
+export type MockVoteHistoryItem = Omit<VoteHistoryItem, "expert_name" | "comment"> & {
+  expert_name: string;
+  comment: string;
+};
+
+/**
+ * Reputation timeline entry (internal to the mock timeline objects).
+ * Cannot extend ReputationTimelineEntry from @/types/reputation because:
+ *  - The mock adds id, your_vote, consensus, distance, reward fields not in
+ *    the app type (the app type reflects the minimal server response shape).
+ *  - The optional slash/vote/alignment fields are duplicated with different
+ *    naming conventions than the production type.
+ */
+interface MockReputationTimelineEntry {
+  id: string;
+  change_amount: number;
+  reason: string;
+  description: string;
+  guild_name: string;
+  candidate_name: string;
+  outcome: string;
+  your_vote: number;
+  consensus: number;
+  distance: number;
+  reward: number;
+  slash_percent?: number;
+  vote_score?: number;
+  alignment_distance?: number;
+  consensus_score?: number;
+  reward_amount?: number;
+  created_at: string;
+}
+
+/**
+ * Paginated reputation timeline response shape.
+ * No @/types equivalent (the app type only covers the entry shape, not the
+ * pagination wrapper).
+ */
+export interface MockReputationTimeline {
+  timeline?: MockReputationTimelineEntry[];
+  items?: MockReputationTimelineEntry[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+/**
+ * Earnings breakdown response shape.
+ * Cannot extend any @/types earnings type: EarningsSummary / EarningsEntry
+ * don't cover the paginated { summary, entries, total, page, limit } wrapper
+ * and summary.byGuild differs from GuildEarning (adds total directly).
+ */
+export interface MockEarningsBreakdown {
+  summary: {
+    totalVetd: number;
+    votingTotal: number;
+    endorsementTotal: number;
+    byGuild: Array<{ guildId: string; guildName: string; total: number }>;
+  };
+  entries: Array<{
+    id: string;
+    type: string;
+    amount: number;
+    guild_name: string;
+    candidate_name: string;
+    created_at: string;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+}
+
+/**
+ * Guild application form template returned by /api/guilds/:id/application-template.
+ * Cannot extend GuildApplicationTemplate from @/types/guildApplication because:
+ *  - Mock adds guildId/guildName fields not in the app type.
+ *  - generalQuestions uses { id, title, required, type } shape; the app type
+ *    uses GuildApplicationQuestion (id, title, prompt, hints, scored, maxPoints, …).
+ *  - domainQuestions topics use { id, title, description } shape; the app type
+ *    uses GuildDomainTopic (id, title, prompt, whatToLookFor, scoring, …).
+ */
+export interface MockGuildAppTemplate {
+  guildId: string;
+  guildName: string;
+  description: string;
+  generalQuestions: Array<{ id: string; title: string; required: boolean; type: string }>;
+  domainQuestions: {
+    entry: { level: string; topics: Array<{ id: string; title: string; description: string }> };
+    experienced: { level: string; topics: Array<{ id: string; title: string; description: string }> };
+    expert: { level: string; topics: Array<{ id: string; title: string; description: string }> };
+  };
+  levels: Array<{ id: string; label: string; description: string }>;
+  requiredLevel: string | null;
+  noAiDeclarationText: string;
+  requiredSocialLinks: string[];
+}
+
+/** Staking balance response — no @/types equivalent. */
+export interface MockStakingStatus {
+  meetsMinimum: boolean;
+  stakedAmount: string;
+  minimumRequired: string;
+}
+
+/** Commit-reveal phase status — no @/types equivalent. */
+export interface MockCommitRevealStatus {
+  phase: "direct" | "commit" | "reveal" | "finalized";
+  commitDeadline?: string;
+  revealDeadline?: string;
+  commitCount?: number;
+  revealCount?: number;
+  totalExpected?: number;
+  userCommitted?: boolean;
+  userRevealed?: boolean;
+}
+
+/**
+ * Guild application summary (candidate-facing list).
+ * Aliases GuildApplicationSummary from @/types/guildApplication directly —
+ * all mock fields are present as optional fields in the app type.
+ */
+export type MockGuildApplicationSummary = GuildApplicationSummary;
+
+/**
+ * Job stub used in the guild application form mocks.
+ * Extends Job with a required 'company' field (the mock uses 'company' instead
+ * of Job's optional 'companyName' to match the legacy wire format in stubs).
+ */
+export type MockJob = Pick<Job, "id" | "title" | "screeningQuestions" | "experienceLevel"> & {
+  company: string;
+};
+
+/** Endorsement history entry — no @/types equivalent. */
+export interface MockEndorsementHistoryEntry {
+  id: string;
+  applicationId: string;
+  candidateName: string;
+  companyName: string;
+  guildName: string;
+  stakeAmount: number;
+  status: string;
+  outcome: string;
+  createdAt: string;
+}
+
+/** Dispute detail — no @/types equivalent (disputes are not part of the main app types). */
+export interface MockDisputeDetail {
+  id: string;
+  status: string;
+  reason: string;
+  evidence: string;
+  filed_by: string;
+  filed_at: string;
+  deadline: string;
+  candidateName: string;
+  jobTitle: string;
+  guildName: string;
+  panelMembers: Array<{
+    id: string;
+    expertName: string;
+    walletAddress: string;
+    vote: string | null;
+    votedAt: string | null;
+  }>;
+  totalPanelSize: number;
+  votesSubmitted: number;
+  upholdCount: number;
+  dismissCount: number;
+  isOnPanel: boolean;
+  hasVoted: boolean;
+  resolution?: string;
+  resolvedAt?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Expert profile factory
+// ---------------------------------------------------------------------------
+
+const baseExpertProfile: MockExpertProfile = {
   id: "mock-expert-id-001",
   walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
   fullName: "E2E Expert",
@@ -23,16 +306,22 @@ export const MOCK_EXPERT_PROFILE = {
   reputation: 350,
   reviewCount: 24,
   consensusRate: 88,
-  guilds: [
-    { id: ENGINEERING_GUILD_ID, name: "Engineering", role: "reviewer" },
-  ],
+  guilds: [{ id: ENGINEERING_GUILD_ID, name: "Engineering", role: "reviewer" }],
 };
 
+export function createMockExpertProfile(
+  overrides: Partial<MockExpertProfile> = {},
+): MockExpertProfile {
+  return { ...baseExpertProfile, ...overrides };
+}
+
+export const MOCK_EXPERT_PROFILE = createMockExpertProfile();
+
 // ---------------------------------------------------------------------------
-// Guild mock data
+// Guild factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_GUILD = {
+const baseGuild: MockGuild = {
   id: ENGINEERING_GUILD_ID,
   name: "Engineering",
   description: "Software engineers, data scientists, and all technical builders",
@@ -43,7 +332,12 @@ export const MOCK_GUILD = {
   candidateCount: 4,
   totalMembers: 12,
   experts: [
-    { id: MOCK_EXPERT_PROFILE.id, fullName: MOCK_EXPERT_PROFILE.fullName, role: "reviewer", reputation: 350 },
+    {
+      id: MOCK_EXPERT_PROFILE.id,
+      fullName: MOCK_EXPERT_PROFILE.fullName,
+      role: "reviewer",
+      reputation: 350,
+    },
   ],
   candidates: [],
   recentJobs: [],
@@ -54,26 +348,39 @@ export const MOCK_GUILD = {
   totalProposalsReviewed: 18,
   averageApprovalTime: "3 days",
   totalVetdStaked: 500,
-  statistics: { vettedProposals: 18, totalVetdStaked: 500, totalEarningsFromEndorsements: 120 },
+  statistics: {
+    vettedProposals: 18,
+    totalVetdStaked: 500,
+    totalEarningsFromEndorsements: 120,
+  },
   expertRole: "reviewer",
   reputation: 350,
-  earnings: { totalPoints: 350, totalEndorsementEarnings: 50, recentEarnings: [] },
+  earnings: {
+    totalPoints: 350,
+    totalEndorsementEarnings: 50,
+    recentEarnings: [],
+  },
 };
 
-export const MOCK_DESIGN_GUILD = {
-  ...MOCK_GUILD,
+export function createMockGuild(overrides: Partial<MockGuild> = {}): MockGuild {
+  return { ...baseGuild, ...overrides };
+}
+
+export const MOCK_GUILD = createMockGuild();
+
+export const MOCK_DESIGN_GUILD = createMockGuild({
   id: DESIGN_GUILD_ID,
   name: "Design",
   description: "UI/UX designers, brand designers, and creative professionals",
   icon: "palette",
   color: "#8B5CF6",
-};
+});
 
 // ---------------------------------------------------------------------------
-// Application / proposal mocks
+// Application (guild proposal) factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_APPLICATION_ACTIVE = {
+const baseApplication: MockApplication = {
   id: APPLICATION_ID,
   candidate_id: CANDIDATE_ID,
   candidate_name: "Jane Doe",
@@ -82,8 +389,8 @@ export const MOCK_APPLICATION_ACTIVE = {
   guild_name: "Engineering",
   status: "voting",
   finalized: false,
-  outcome: null,
-  consensus_score: null,
+  outcome: undefined,
+  consensus_score: undefined,
   vote_count: 1,
   votes_for_count: 1,
   votes_against_count: 0,
@@ -92,20 +399,26 @@ export const MOCK_APPLICATION_ACTIVE = {
   voting_deadline: new Date(Date.now() + 7 * 86400000).toISOString(),
   voting_phase: "direct",
   created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  updated_at: new Date().toISOString(),
   is_assigned_reviewer: true,
   has_voted: false,
-  my_vote_score: null,
+  my_vote_score: undefined,
   years_of_experience: 5,
   skills_summary: "React, TypeScript, Node.js, PostgreSQL",
   experience_summary: "5 years of full-stack development",
   motivation_statement: "I want to contribute to the engineering guild.",
   proposal_text: "I have extensive experience in building scalable web applications.",
-  achievements: [{ year: 2024, title: "Led migration to microservices architecture" }],
+  achievements: [],
 };
 
-export const MOCK_APPLICATION_FINALIZED = {
-  ...MOCK_APPLICATION_ACTIVE,
+export function createMockApplication(
+  overrides: Partial<MockApplication> = {},
+): MockApplication {
+  return { ...baseApplication, ...overrides };
+}
+
+export const MOCK_APPLICATION_ACTIVE = createMockApplication();
+
+export const MOCK_APPLICATION_FINALIZED = createMockApplication({
   id: FINALIZED_APPLICATION_ID,
   candidate_name: "Alex Smith",
   candidate_email: "alex@example.com",
@@ -122,52 +435,70 @@ export const MOCK_APPLICATION_FINALIZED = {
   alignment_distance: 3.5,
   my_reputation_change: 5,
   my_reward_amount: 12.5,
-};
+});
 
-export const MOCK_APPLICATION_VOTED = {
-  ...MOCK_APPLICATION_ACTIVE,
+export const MOCK_APPLICATION_VOTED = createMockApplication({
   has_voted: true,
   my_vote_score: 75,
-};
+});
 
 // ---------------------------------------------------------------------------
-// Candidate profile
+// Candidate profile factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_CANDIDATE_PROFILE = {
+const baseCandidateProfile: MockCandidateProfile = {
   id: CANDIDATE_ID,
   fullName: "Jane Doe",
   email: "jane@example.com",
   headline: "Senior Full-Stack Engineer",
   bio: "Passionate about building great software with modern technologies.",
-  yearsOfExperience: 5,
   linkedIn: "https://linkedin.com/in/janedoe",
   github: "https://github.com/janedoe",
   resumeUrl: "/uploads/resume-jane.pdf",
   resumeFileName: "jane-doe-resume.pdf",
   socialLinks: [
-    { platform: "linkedin", label: "LinkedIn", url: "https://linkedin.com/in/janedoe" },
+    {
+      platform: "linkedin",
+      label: "LinkedIn",
+      url: "https://linkedin.com/in/janedoe",
+    },
     { platform: "github", label: "GitHub", url: "https://github.com/janedoe" },
   ],
 };
 
+export function createMockCandidateProfile(
+  overrides: Partial<MockCandidateProfile> = {},
+): MockCandidateProfile {
+  return { ...baseCandidateProfile, ...overrides };
+}
+
+export const MOCK_CANDIDATE_PROFILE = createMockCandidateProfile();
+
 // ---------------------------------------------------------------------------
-// Vote history
+// Vote history factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_VOTE_HISTORY = [
-  {
-    id: "vote-001",
-    expert_id: MOCK_EXPERT_PROFILE.id,
-    expert_name: "E2E Expert",
-    score: 82,
-    alignment_distance: 3.5,
-    reputation_change: 5,
-    reward_amount: 12.5,
-    comment: "Strong technical background, excellent communication skills.",
-    created_at: "2026-02-20T10:00:00Z",
-  },
-  {
+const baseVoteHistoryItem: MockVoteHistoryItem = {
+  id: "vote-001",
+  expert_id: MOCK_EXPERT_PROFILE.id,
+  expert_name: "E2E Expert",
+  score: 82,
+  alignment_distance: 3.5,
+  reputation_change: 5,
+  reward_amount: 12.5,
+  comment: "Strong technical background, excellent communication skills.",
+  created_at: "2026-02-20T10:00:00Z",
+};
+
+export function createMockVoteHistoryItem(
+  overrides: Partial<MockVoteHistoryItem> = {},
+): MockVoteHistoryItem {
+  return { ...baseVoteHistoryItem, ...overrides };
+}
+
+export const MOCK_VOTE_HISTORY: MockVoteHistoryItem[] = [
+  createMockVoteHistoryItem(),
+  createMockVoteHistoryItem({
     id: "vote-002",
     expert_id: "expert-002",
     expert_name: "Second Reviewer",
@@ -177,8 +508,8 @@ export const MOCK_VOTE_HISTORY = [
     reward_amount: 8.0,
     comment: "Good candidate, meets requirements.",
     created_at: "2026-02-20T12:00:00Z",
-  },
-  {
+  }),
+  createMockVoteHistoryItem({
     id: "vote-003",
     expert_id: "expert-003",
     expert_name: "Third Reviewer",
@@ -188,14 +519,14 @@ export const MOCK_VOTE_HISTORY = [
     reward_amount: 15.0,
     comment: "Solid experience. Recommend approval.",
     created_at: "2026-02-21T08:00:00Z",
-  },
+  }),
 ];
 
 // ---------------------------------------------------------------------------
-// Reputation timeline
+// Reputation timeline factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_REPUTATION_TIMELINE = {
+const baseReputationTimeline: MockReputationTimeline = {
   timeline: [
     {
       id: "rep-001",
@@ -245,11 +576,19 @@ export const MOCK_REPUTATION_TIMELINE = {
   limit: 15,
 };
 
+export function createMockReputationTimeline(
+  overrides: Partial<MockReputationTimeline> = {},
+): MockReputationTimeline {
+  return { ...baseReputationTimeline, ...overrides };
+}
+
+export const MOCK_REPUTATION_TIMELINE = createMockReputationTimeline();
+
 // ---------------------------------------------------------------------------
-// Earnings breakdown
+// Earnings breakdown factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_EARNINGS_BREAKDOWN = {
+const baseEarningsBreakdown: MockEarningsBreakdown = {
   summary: {
     totalVetd: 42.5,
     votingTotal: 32.5,
@@ -290,73 +629,128 @@ export const MOCK_EARNINGS_BREAKDOWN = {
   limit: 20,
 };
 
+export function createMockEarningsBreakdown(
+  overrides: Partial<MockEarningsBreakdown> = {},
+): MockEarningsBreakdown {
+  return { ...baseEarningsBreakdown, ...overrides };
+}
+
+export const MOCK_EARNINGS_BREAKDOWN = createMockEarningsBreakdown();
+
 // ---------------------------------------------------------------------------
-// Guild application template (for candidate guild apply form)
+// Guild application template factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_GUILD_APP_TEMPLATE = {
+const baseGuildAppTemplate: MockGuildAppTemplate = {
   guildId: ENGINEERING_GUILD_ID,
   guildName: "Engineering",
   description: "Application template for the Engineering guild",
   generalQuestions: [
-    { id: "motivation", title: "Why do you want to join this guild?", required: true, type: "textarea" },
-    { id: "experience", title: "Describe your relevant experience", required: true, type: "textarea" },
+    {
+      id: "motivation",
+      title: "Why do you want to join this guild?",
+      required: true,
+      type: "textarea",
+    },
+    {
+      id: "experience",
+      title: "Describe your relevant experience",
+      required: true,
+      type: "textarea",
+    },
   ],
   domainQuestions: {
     entry: {
       level: "entry",
       topics: [
-        { id: "fundamentals", title: "Core fundamentals knowledge", description: "Explain your understanding of core engineering fundamentals" },
+        {
+          id: "fundamentals",
+          title: "Core fundamentals knowledge",
+          description:
+            "Explain your understanding of core engineering fundamentals",
+        },
       ],
     },
     experienced: {
       level: "experienced",
       topics: [
-        { id: "architecture", title: "System design experience", description: "Describe a system you designed from scratch" },
+        {
+          id: "architecture",
+          title: "System design experience",
+          description: "Describe a system you designed from scratch",
+        },
       ],
     },
     expert: {
       level: "expert",
       topics: [
-        { id: "leadership", title: "Technical leadership", description: "Share an example of leading a complex engineering initiative" },
+        {
+          id: "leadership",
+          title: "Technical leadership",
+          description:
+            "Share an example of leading a complex engineering initiative",
+        },
       ],
     },
   },
   levels: [
     { id: "entry", label: "Entry-Level", description: "0-2 years experience" },
-    { id: "experienced", label: "Experienced", description: "3-7 years experience" },
+    {
+      id: "experienced",
+      label: "Experienced",
+      description: "3-7 years experience",
+    },
     { id: "expert", label: "Expert", description: "8+ years experience" },
   ],
   requiredLevel: null,
-  noAiDeclarationText: "I confirm that all answers in this application are my own work and not generated by AI.",
+  noAiDeclarationText:
+    "I confirm that all answers in this application are my own work and not generated by AI.",
   requiredSocialLinks: [],
 };
 
+export function createMockGuildAppTemplate(
+  overrides: Partial<MockGuildAppTemplate> = {},
+): MockGuildAppTemplate {
+  return { ...baseGuildAppTemplate, ...overrides };
+}
+
+export const MOCK_GUILD_APP_TEMPLATE = createMockGuildAppTemplate();
+
 // ---------------------------------------------------------------------------
-// Staking data
+// Staking factories
 // ---------------------------------------------------------------------------
 
-export const MOCK_STAKING_MET = {
+const baseStakingMet: MockStakingStatus = {
   meetsMinimum: true,
   stakedAmount: "100",
   minimumRequired: "50",
 };
 
-export const MOCK_STAKING_NOT_MET = {
+export function createMockStaking(overrides: Partial<MockStakingStatus> = {}): MockStakingStatus {
+  return { ...baseStakingMet, ...overrides };
+}
+
+export const MOCK_STAKING_MET = createMockStaking();
+export const MOCK_STAKING_NOT_MET = createMockStaking({
   meetsMinimum: false,
   stakedAmount: "10",
-  minimumRequired: "50",
-};
+});
 
 // ---------------------------------------------------------------------------
-// Commit-Reveal phase data
+// Commit-reveal phase factories
 // ---------------------------------------------------------------------------
 
-export const MOCK_CR_DIRECT = {
+export function createMockCommitReveal(
+  overrides: Partial<MockCommitRevealStatus> = {},
+): MockCommitRevealStatus {
+  return { phase: "direct", ...overrides };
+}
+
+export const MOCK_CR_DIRECT: MockCommitRevealStatus = createMockCommitReveal({
   phase: "direct" as const,
-};
+});
 
-export const MOCK_CR_COMMIT = {
+export const MOCK_CR_COMMIT: MockCommitRevealStatus = createMockCommitReveal({
   phase: "commit" as const,
   commitDeadline: new Date(Date.now() + 3 * 86400000).toISOString(),
   revealDeadline: new Date(Date.now() + 6 * 86400000).toISOString(),
@@ -365,9 +759,9 @@ export const MOCK_CR_COMMIT = {
   totalExpected: 3,
   userCommitted: false,
   userRevealed: false,
-};
+});
 
-export const MOCK_CR_REVEAL = {
+export const MOCK_CR_REVEAL: MockCommitRevealStatus = createMockCommitReveal({
   phase: "reveal" as const,
   commitDeadline: new Date(Date.now() - 1 * 86400000).toISOString(),
   revealDeadline: new Date(Date.now() + 3 * 86400000).toISOString(),
@@ -376,9 +770,9 @@ export const MOCK_CR_REVEAL = {
   totalExpected: 3,
   userCommitted: true,
   userRevealed: false,
-};
+});
 
-export const MOCK_CR_FINALIZED = {
+export const MOCK_CR_FINALIZED: MockCommitRevealStatus = createMockCommitReveal({
   phase: "finalized" as const,
   commitDeadline: new Date(Date.now() - 5 * 86400000).toISOString(),
   revealDeadline: new Date(Date.now() - 2 * 86400000).toISOString(),
@@ -387,26 +781,37 @@ export const MOCK_CR_FINALIZED = {
   totalExpected: 3,
   userCommitted: true,
   userRevealed: true,
+});
+
+// ---------------------------------------------------------------------------
+// Guild application summaries factory (candidate-facing list)
+// ---------------------------------------------------------------------------
+
+const baseGuildApplicationSummary: MockGuildApplicationSummary = {
+  id: "ga-001",
+  guildId: ENGINEERING_GUILD_ID,
+  guildName: "Engineering",
+  guild: { id: ENGINEERING_GUILD_ID, name: "Engineering" },
+  status: "pending",
+  jobTitle: "Senior Frontend Engineer",
+  reviewCount: 0,
+  approvalCount: 0,
+  submittedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  candidateName: "",
+  candidateEmail: "",
+  requiredStake: 0,
 };
 
-// ---------------------------------------------------------------------------
-// Candidate guild application summaries
-// ---------------------------------------------------------------------------
+export function createMockGuildApplicationSummary(
+  overrides: Partial<MockGuildApplicationSummary> = {},
+): MockGuildApplicationSummary {
+  return { ...baseGuildApplicationSummary, ...overrides };
+}
 
-export const MOCK_GUILD_APPLICATION_SUMMARIES = [
-  {
-    id: "ga-001",
-    guildId: ENGINEERING_GUILD_ID,
-    guildName: "Engineering",
-    guild: { id: ENGINEERING_GUILD_ID, name: "Engineering" },
-    status: "pending",
-    jobTitle: "Senior Frontend Engineer",
-    reviewCount: 0,
-    approvalCount: 0,
-    submittedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-  {
+export const MOCK_GUILD_APPLICATION_SUMMARIES: MockGuildApplicationSummary[] = [
+  createMockGuildApplicationSummary(),
+  createMockGuildApplicationSummary({
     id: "ga-002",
     guildId: DESIGN_GUILD_ID,
     guildName: "Design",
@@ -417,423 +822,46 @@ export const MOCK_GUILD_APPLICATION_SUMMARIES = [
     approvalCount: 2,
     submittedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
     createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
-  },
-  {
+  }),
+  createMockGuildApplicationSummary({
     id: "ga-003",
     guildId: "guild-003",
     guildName: "Data Science",
     guild: { id: "guild-003", name: "Data Science" },
     status: "rejected",
-    jobTitle: null,
     reviewCount: 3,
     approvalCount: 0,
     submittedAt: new Date(Date.now() - 21 * 86400000).toISOString(),
     createdAt: new Date(Date.now() - 21 * 86400000).toISOString(),
-  },
+  }),
 ];
 
 // ---------------------------------------------------------------------------
-// Job mock data
+// Job factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_JOB = {
+const baseJob: MockJob = {
   id: JOB_ID,
   title: "Senior Frontend Engineer",
   company: "Vetted Inc.",
-  screeningQuestions: ["Why do you want this role?", "Describe your React experience."],
+  screeningQuestions: [
+    "Why do you want this role?",
+    "Describe your React experience.",
+  ],
   experienceLevel: "senior",
 };
 
-// ===========================================================================
-// Setup functions — call BEFORE page.goto()
-// ===========================================================================
-
-/**
- * Common mocks shared across all expert pages:
- * - Expert profile
- * - Notifications (empty)
- * - Wallet verification
- */
-export async function setupCommonExpertMocks(
-  page: Page,
-  overrides?: { expertProfile?: Record<string, unknown>; stakingStatus?: Record<string, unknown> },
-) {
-  const profile = overrides?.expertProfile ?? MOCK_EXPERT_PROFILE;
-  const staking = overrides?.stakingStatus ?? MOCK_STAKING_MET;
-
-  // Expert profile
-  await page.route("**/api/experts/profile**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: profile }),
-    });
-  });
-
-  // Notifications
-  await page.route("**/api/experts/*/notifications**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: { notifications: [], unreadCount: 0 } }),
-    });
-  });
-
-  // Staking balance
-  await page.route("**/api/blockchain/staking/balance/**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: staking }),
-    });
-  });
-
-  // Wallet verification
-  await page.route("**/api/blockchain/wallet/verified/**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: { verified: true } }),
-    });
-  });
-
-  // Guild stakes
-  await page.route("**/api/blockchain/staking/guilds/**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
-    });
-  });
+export function createMockJob(overrides: Partial<MockJob> = {}): MockJob {
+  return { ...baseJob, ...overrides };
 }
 
-/**
- * Voting queue page mocks (VotingPage.tsx)
- */
-export async function setupVotingQueueMocks(
-  page: Page,
-  options?: {
-    applications?: Record<string, unknown>[];
-    assignedApplications?: Record<string, unknown>[];
-    stakingStatus?: Record<string, unknown>;
-  },
-) {
-  await setupCommonExpertMocks(page, { stakingStatus: options?.stakingStatus });
-
-  const applications = options?.applications ?? [MOCK_APPLICATION_ACTIVE, MOCK_APPLICATION_FINALIZED];
-  const assigned = options?.assignedApplications ?? [MOCK_APPLICATION_ACTIVE];
-
-  // Guilds list (for guild selector)
-  await page.route("**/api/guilds", (route) => {
-    if (route.request().url().includes("/guilds/")) return route.fallback();
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [MOCK_GUILD] }),
-    });
-  });
-
-  // Applications by guild
-  await page.route("**/api/proposals/guild/**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: applications }),
-    });
-  });
-
-  // Assigned applications
-  await page.route("**/api/proposals/assigned/**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: assigned }),
-    });
-  });
-
-  // Governance proposals (sidebar)
-  await page.route("**/api/governance/proposals**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
-    });
-  });
-}
-
-/**
- * Voting detail page mocks — the 6-call cascade from useVotingApplicationData
- */
-export async function setupVotingDetailMocks(
-  page: Page,
-  applicationId: string,
-  options?: {
-    application?: Record<string, unknown>;
-    candidateProfile?: Record<string, unknown>;
-    voteHistory?: Record<string, unknown>[];
-    crPhase?: Record<string, unknown>;
-    stakingStatus?: Record<string, unknown>;
-  },
-) {
-  const app = options?.application ?? MOCK_APPLICATION_ACTIVE;
-  const candidate = options?.candidateProfile ?? MOCK_CANDIDATE_PROFILE;
-  const crPhase = options?.crPhase ?? MOCK_CR_DIRECT;
-  const votes = options?.voteHistory ?? [];
-
-  await setupCommonExpertMocks(page, { stakingStatus: options?.stakingStatus });
-
-  // Commit-reveal status
-  await page.route(`**/api/proposals/${applicationId}/commit-reveal/status`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: crPhase }),
-    });
-  });
-
-  // Application detail
-  await page.route(`**/api/proposals/${applicationId}?**`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: app }),
-    });
-  });
-  await page.route(`**/api/proposals/${applicationId}`, (route) => {
-    if (route.request().url().includes("/vote") || route.request().url().includes("/commit")) {
-      return route.fallback();
-    }
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: app }),
-    });
-  });
-
-  // Candidate profile
-  const candidateId = (app as Record<string, unknown>).candidate_id ?? (app as Record<string, unknown>).candidateId ?? CANDIDATE_ID;
-  await page.route(`**/api/candidates/${candidateId}`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: candidate }),
-    });
-  });
-
-  // Vote history
-  await page.route(`**/api/proposals/${applicationId}/votes`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: votes }),
-    });
-  });
-
-  // Appeal by application (no existing appeal)
-  await page.route(`**/api/guilds/appeals/by-application/${applicationId}`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: null }),
-    });
-  });
-
-  // Governance proposals (sidebar)
-  await page.route("**/api/governance/proposals**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
-    });
-  });
-}
-
-/**
- * Reputation page mocks
- */
-export async function setupReputationMocks(
-  page: Page,
-  options?: {
-    timeline?: Record<string, unknown>;
-    expertProfile?: Record<string, unknown>;
-  },
-) {
-  await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
-
-  const timeline = options?.timeline ?? MOCK_REPUTATION_TIMELINE;
-
-  await page.route("**/api/experts/reputation/timeline**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: timeline }),
-    });
-  });
-
-  // Governance proposals (sidebar)
-  await page.route("**/api/governance/proposals**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
-    });
-  });
-}
-
-/**
- * Earnings page mocks
- */
-export async function setupEarningsMocks(
-  page: Page,
-  options?: {
-    earnings?: Record<string, unknown>;
-    expertProfile?: Record<string, unknown>;
-  },
-) {
-  await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
-
-  const earnings = options?.earnings ?? MOCK_EARNINGS_BREAKDOWN;
-
-  await page.route("**/api/experts/earnings/breakdown**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: earnings }),
-    });
-  });
-
-  // Governance proposals (sidebar)
-  await page.route("**/api/governance/proposals**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
-    });
-  });
-}
-
-/**
- * Guild application form mocks (for candidate applying to a guild)
- */
-export async function setupGuildApplicationMocks(
-  page: Page,
-  options?: {
-    guild?: Record<string, unknown>;
-    template?: Record<string, unknown>;
-    job?: Record<string, unknown> | null;
-    candidateProfile?: Record<string, unknown>;
-    membershipStatus?: Record<string, unknown>;
-  },
-) {
-  const guild = options?.guild ?? MOCK_GUILD;
-  const template = options?.template ?? MOCK_GUILD_APP_TEMPLATE;
-  const guildId = (guild as Record<string, unknown>).id as string;
-
-  // Guild public detail
-  await page.route(`**/api/guilds/${guildId}/public`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: guild }),
-    });
-  });
-  await page.route(`**/api/guilds/${guildId}`, (route) => {
-    if (route.request().url().includes("/application") || route.request().url().includes("/membership") || route.request().url().includes("/posts")) {
-      return route.fallback();
-    }
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: guild }),
-    });
-  });
-
-  // Application template
-  await page.route(`**/api/guilds/${guildId}/application-template**`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: template }),
-    });
-  });
-
-  // Job data (optional)
-  if (options?.job) {
-    const jobId = (options.job as Record<string, unknown>).id as string;
-    await page.route(`**/api/jobs/${jobId}`, (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: options.job }),
-      });
-    });
-  }
-
-  // Candidate profile
-  await page.route("**/api/candidates/*", (route) => {
-    if (route.request().url().includes("/resume") || route.request().url().includes("/guild-applications")) {
-      return route.fallback();
-    }
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: options?.candidateProfile ?? MOCK_CANDIDATE_PROFILE }),
-    });
-  });
-
-  // Membership check
-  const membership = options?.membershipStatus ?? null;
-  await page.route(`**/api/guilds/${guildId}/membership**`, (route) => {
-    if (membership) {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: membership }),
-      });
-    } else {
-      route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ success: false, error: "Not a member" }) });
-    }
-  });
-
-  // Resume upload
-  await page.route("**/api/candidates/*/resume", (route) => {
-    if (route.request().method() === "POST") {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: { resumeUrl: "/uploads/test-resume.pdf" } }),
-      });
-    } else {
-      route.fallback();
-    }
-  });
-
-  // Guild application submit
-  await page.route(`**/api/guilds/${guildId}/apply**`, (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: true, data: { id: "new-app-001" } }),
-    });
-  });
-  await page.route("**/api/guilds/*/applications", (route) => {
-    if (route.request().method() === "POST") {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: { id: "new-app-001" } }),
-      });
-    } else {
-      route.fallback();
-    }
-  });
-}
+export const MOCK_JOB = createMockJob();
 
 // ---------------------------------------------------------------------------
-// Slashing mock data
+// Slashing application variants
 // ---------------------------------------------------------------------------
 
-export const MOCK_APPLICATION_SLASHED = {
+export const MOCK_APPLICATION_SLASHED: MockApplicationWithIqr = {
   ...MOCK_APPLICATION_FINALIZED,
   id: "e2e-application-slashed-003",
   candidate_name: "Slashed Expert Test",
@@ -846,10 +874,17 @@ export const MOCK_APPLICATION_SLASHED = {
   my_reward_amount: 0,
   my_slashing_tier: "severe",
   my_slash_percent: 25,
-  iqr: { median: 35, q1: 28, q3: 42, iqr: 14, includedCount: 4, excludedCount: 1 },
+  iqr: {
+    median: 35,
+    q1: 28,
+    q3: 42,
+    iqr: 14,
+    includedCount: 4,
+    excludedCount: 1,
+  },
 };
 
-export const MOCK_APPLICATION_MILD_SLASH = {
+export const MOCK_APPLICATION_MILD_SLASH = createMockApplication({
   ...MOCK_APPLICATION_FINALIZED,
   id: "e2e-application-mild-004",
   candidate_name: "Mild Slash Test",
@@ -860,9 +895,13 @@ export const MOCK_APPLICATION_MILD_SLASH = {
   my_reward_amount: 3.0,
   my_slashing_tier: "mild",
   my_slash_percent: 5,
-};
+});
 
-export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING = {
+// ---------------------------------------------------------------------------
+// Reputation timeline with slashing entries
+// ---------------------------------------------------------------------------
+
+export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING: MockReputationTimeline = {
   items: [
     {
       id: "rep-slash-001",
@@ -928,33 +967,39 @@ export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING = {
 };
 
 // ---------------------------------------------------------------------------
-// Endorsement history mock data
+// Endorsement history factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_ENDORSEMENT_HISTORY = [
-  {
-    id: "endorse-001",
-    applicationId: FINALIZED_APPLICATION_ID,
-    candidateName: "Alex Smith",
-    companyName: "Vetted Inc.",
-    guildName: "Engineering",
-    stakeAmount: 50,
-    status: "finalized",
-    outcome: "hired",
-    createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
+const baseEndorsementHistoryEntry: MockEndorsementHistoryEntry = {
+  id: "endorse-001",
+  applicationId: FINALIZED_APPLICATION_ID,
+  candidateName: "Alex Smith",
+  companyName: "Vetted Inc.",
+  guildName: "Engineering",
+  stakeAmount: 50,
+  status: "finalized",
+  outcome: "hired",
+  createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+};
+
+export function createMockEndorsementHistoryEntry(
+  overrides: Partial<MockEndorsementHistoryEntry> = {},
+): MockEndorsementHistoryEntry {
+  return { ...baseEndorsementHistoryEntry, ...overrides };
+}
+
+export const MOCK_ENDORSEMENT_HISTORY: MockEndorsementHistoryEntry[] = [
+  createMockEndorsementHistoryEntry(),
+  createMockEndorsementHistoryEntry({
     id: "endorse-002",
     applicationId: "e2e-application-mild-004",
     candidateName: "Mild Slash Test",
     companyName: "Tech Corp",
-    guildName: "Engineering",
     stakeAmount: 30,
-    status: "finalized",
     outcome: "not_hired",
     createdAt: new Date(Date.now() - 20 * 86400000).toISOString(),
-  },
-  {
+  }),
+  createMockEndorsementHistoryEntry({
     id: "endorse-003",
     applicationId: "e2e-application-slashed-003",
     candidateName: "Slashed Expert Test",
@@ -964,18 +1009,20 @@ export const MOCK_ENDORSEMENT_HISTORY = [
     status: "refunded",
     outcome: "refunded",
     createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
-  },
+  }),
 ];
 
 // ---------------------------------------------------------------------------
-// Dispute mock data
+// Dispute factory
 // ---------------------------------------------------------------------------
 
-export const MOCK_DISPUTE_DETAIL = {
+const baseDisputeDetail: MockDisputeDetail = {
   id: "dispute-001",
   status: "open",
-  reason: "Incorrect scoring — my application was scored unfairly by reviewers.",
-  evidence: "I have 8 years of experience in the relevant domain and my references can confirm.",
+  reason:
+    "Incorrect scoring — my application was scored unfairly by reviewers.",
+  evidence:
+    "I have 8 years of experience in the relevant domain and my references can confirm.",
   filed_by: CANDIDATE_ID,
   filed_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   deadline: new Date(Date.now() + 5 * 86400000).toISOString(),
@@ -1013,8 +1060,15 @@ export const MOCK_DISPUTE_DETAIL = {
   hasVoted: false,
 };
 
-export const MOCK_DISPUTE_RESOLVED = {
-  ...MOCK_DISPUTE_DETAIL,
+export function createMockDisputeDetail(
+  overrides: Partial<MockDisputeDetail> = {},
+): MockDisputeDetail {
+  return { ...baseDisputeDetail, ...overrides };
+}
+
+export const MOCK_DISPUTE_DETAIL = createMockDisputeDetail();
+
+export const MOCK_DISPUTE_RESOLVED = createMockDisputeDetail({
   id: "dispute-002",
   status: "resolved",
   resolution: "upheld",
@@ -1046,19 +1100,21 @@ export const MOCK_DISPUTE_RESOLVED = {
   upholdCount: 2,
   dismissCount: 1,
   hasVoted: true,
-};
+});
 
 // ---------------------------------------------------------------------------
-// Governance proposal mock data
+// Governance proposal factory
+// Uses @/types/governance.GovernanceProposalDetail — exact match.
 // ---------------------------------------------------------------------------
 
-export const MOCK_GOVERNANCE_PROPOSAL = {
+const baseGovernanceProposal: GovernanceProposalDetail = {
   id: "gov-proposal-001",
   title: "Increase minimum stake requirement for Engineering guild",
   description:
     "This proposal aims to increase the minimum stake from 50 VETD to 75 VETD to improve reviewer quality and reduce low-effort votes.",
   proposal_type: "standard",
   status: "active",
+  proposer_wallet: "0x0000000000000000000000000000000000000001",
   guild_id: ENGINEERING_GUILD_ID,
   guild_name: "Engineering",
   voting_deadline: new Date(Date.now() + 5 * 86400000).toISOString(),
@@ -1068,12 +1124,444 @@ export const MOCK_GOVERNANCE_PROPOSAL = {
   votes_abstain: 1,
   total_voting_power: 350,
   quorum_required: 0.3,
+  voter_count: 0,
+  finalized: false,
   created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
 };
 
+export function createMockGovernanceProposal(
+  overrides: Partial<GovernanceProposalDetail> = {},
+): GovernanceProposalDetail {
+  return { ...baseGovernanceProposal, ...overrides };
+}
+
+export const MOCK_GOVERNANCE_PROPOSAL = createMockGovernanceProposal();
+
 // ===========================================================================
-// Additional setup functions
+// Setup functions — call BEFORE page.goto()
 // ===========================================================================
+
+/**
+ * Common mocks shared across all expert pages:
+ * - Expert profile
+ * - Notifications (empty)
+ * - Wallet verification
+ */
+export async function setupCommonExpertMocks(
+  page: Page,
+  overrides?: {
+    expertProfile?: unknown;
+    stakingStatus?: unknown;
+  },
+) {
+  const profile = overrides?.expertProfile ?? MOCK_EXPERT_PROFILE;
+  const staking = overrides?.stakingStatus ?? MOCK_STAKING_MET;
+
+  // Expert profile
+  await page.route("**/api/experts/profile**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: profile }),
+    });
+  });
+
+  // Notifications
+  await page.route("**/api/experts/*/notifications**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: { notifications: [], unreadCount: 0 },
+      }),
+    });
+  });
+
+  // Staking balance
+  await page.route("**/api/blockchain/staking/balance/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: staking }),
+    });
+  });
+
+  // Wallet verification
+  await page.route("**/api/blockchain/wallet/verified/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: { verified: true } }),
+    });
+  });
+
+  // Guild stakes
+  await page.route("**/api/blockchain/staking/guilds/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [] }),
+    });
+  });
+}
+
+/**
+ * Voting queue page mocks (VotingPage.tsx)
+ */
+export async function setupVotingQueueMocks(
+  page: Page,
+  options?: {
+    applications?: unknown[];
+    assignedApplications?: unknown[];
+    stakingStatus?: unknown;
+  },
+) {
+  await setupCommonExpertMocks(page, { stakingStatus: options?.stakingStatus });
+
+  const applications = options?.applications ?? [
+    MOCK_APPLICATION_ACTIVE,
+    MOCK_APPLICATION_FINALIZED,
+  ];
+  const assigned = options?.assignedApplications ?? [MOCK_APPLICATION_ACTIVE];
+
+  // Guilds list (for guild selector)
+  await page.route("**/api/guilds", (route) => {
+    if (route.request().url().includes("/guilds/")) return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GUILD] }),
+    });
+  });
+
+  // Applications by guild
+  await page.route("**/api/proposals/guild/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: applications }),
+    });
+  });
+
+  // Assigned applications
+  await page.route("**/api/proposals/assigned/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: assigned }),
+    });
+  });
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [] }),
+    });
+  });
+}
+
+/**
+ * Voting detail page mocks — the 6-call cascade from useVotingApplicationData
+ */
+export async function setupVotingDetailMocks(
+  page: Page,
+  applicationId: string,
+  options?: {
+    application?: unknown;
+    candidateProfile?: unknown;
+    voteHistory?: unknown[];
+    crPhase?: unknown;
+    stakingStatus?: unknown;
+  },
+) {
+  const app = options?.application ?? MOCK_APPLICATION_ACTIVE;
+  const candidate = options?.candidateProfile ?? MOCK_CANDIDATE_PROFILE;
+  const crPhase = options?.crPhase ?? MOCK_CR_DIRECT;
+  const votes = options?.voteHistory ?? [];
+
+  await setupCommonExpertMocks(page, { stakingStatus: options?.stakingStatus });
+
+  // Commit-reveal status
+  await page.route(
+    `**/api/proposals/${applicationId}/commit-reveal/status`,
+    (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: crPhase }),
+      });
+    },
+  );
+
+  // Application detail
+  await page.route(`**/api/proposals/${applicationId}?**`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: app }),
+    });
+  });
+  await page.route(`**/api/proposals/${applicationId}`, (route) => {
+    if (
+      route.request().url().includes("/vote") ||
+      route.request().url().includes("/commit")
+    ) {
+      return route.fallback();
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: app }),
+    });
+  });
+
+  // Candidate profile — app is typed as Record<string,unknown> in the public API
+  const candidateId =
+    (app as Record<string, unknown>).candidate_id ??
+    (app as Record<string, unknown>).candidateId ??
+    CANDIDATE_ID;
+  await page.route(`**/api/candidates/${candidateId}`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: candidate }),
+    });
+  });
+
+  // Vote history
+  await page.route(`**/api/proposals/${applicationId}/votes`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: votes }),
+    });
+  });
+
+  // Appeal by application (no existing appeal)
+  await page.route(
+    `**/api/guilds/appeals/by-application/${applicationId}`,
+    (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: null }),
+      });
+    },
+  );
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [] }),
+    });
+  });
+}
+
+/**
+ * Reputation page mocks
+ */
+export async function setupReputationMocks(
+  page: Page,
+  options?: {
+    timeline?: unknown;
+    expertProfile?: unknown;
+  },
+) {
+  await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
+
+  const timeline = options?.timeline ?? MOCK_REPUTATION_TIMELINE;
+
+  await page.route("**/api/experts/reputation/timeline**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: timeline }),
+    });
+  });
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [] }),
+    });
+  });
+}
+
+/**
+ * Earnings page mocks
+ */
+export async function setupEarningsMocks(
+  page: Page,
+  options?: {
+    earnings?: unknown;
+    expertProfile?: unknown;
+  },
+) {
+  await setupCommonExpertMocks(page, { expertProfile: options?.expertProfile });
+
+  const earnings = options?.earnings ?? MOCK_EARNINGS_BREAKDOWN;
+
+  await page.route("**/api/experts/earnings/breakdown**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: earnings }),
+    });
+  });
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [] }),
+    });
+  });
+}
+
+/**
+ * Guild application form mocks (for candidate applying to a guild)
+ */
+export async function setupGuildApplicationMocks(
+  page: Page,
+  options?: {
+    guild?: unknown;
+    template?: unknown;
+    job?: unknown | null;
+    candidateProfile?: unknown;
+    membershipStatus?: unknown;
+  },
+) {
+  const guild = options?.guild ?? MOCK_GUILD;
+  const template = options?.template ?? MOCK_GUILD_APP_TEMPLATE;
+  const guildId = (guild as Record<string, unknown>).id as string;
+
+  // Guild public detail
+  await page.route(`**/api/guilds/${guildId}/public`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: guild }),
+    });
+  });
+  await page.route(`**/api/guilds/${guildId}`, (route) => {
+    if (
+      route.request().url().includes("/application") ||
+      route.request().url().includes("/membership") ||
+      route.request().url().includes("/posts")
+    ) {
+      return route.fallback();
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: guild }),
+    });
+  });
+
+  // Application template
+  await page.route(
+    `**/api/guilds/${guildId}/application-template**`,
+    (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: template }),
+      });
+    },
+  );
+
+  // Job data (optional)
+  if (options?.job) {
+    const jobId = (options.job as Record<string, unknown>).id as string;
+    await page.route(`**/api/jobs/${jobId}`, (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: options.job }),
+      });
+    });
+  }
+
+  // Candidate profile
+  await page.route("**/api/candidates/*", (route) => {
+    if (
+      route.request().url().includes("/resume") ||
+      route.request().url().includes("/guild-applications")
+    ) {
+      return route.fallback();
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: options?.candidateProfile ?? MOCK_CANDIDATE_PROFILE,
+      }),
+    });
+  });
+
+  // Membership check
+  const membership = options?.membershipStatus ?? null;
+  await page.route(`**/api/guilds/${guildId}/membership**`, (route) => {
+    if (membership) {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: membership }),
+      });
+    } else {
+      route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ success: false, error: "Not a member" }),
+      });
+    }
+  });
+
+  // Resume upload
+  await page.route("**/api/candidates/*/resume", (route) => {
+    if (route.request().method() === "POST") {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: { resumeUrl: "/uploads/test-resume.pdf" },
+        }),
+      });
+    } else {
+      route.fallback();
+    }
+  });
+
+  // Guild application submit
+  await page.route(`**/api/guilds/${guildId}/apply**`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: { id: "new-app-001" } }),
+    });
+  });
+  await page.route("**/api/guilds/*/applications", (route) => {
+    if (route.request().method() === "POST") {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: { id: "new-app-001" } }),
+      });
+    } else {
+      route.fallback();
+    }
+  });
+}
 
 /**
  * Slashing reputation page mocks — reputation timeline with slashing entries
@@ -1085,7 +1573,10 @@ export async function setupSlashingReputationMocks(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING }),
+      body: JSON.stringify({
+        success: true,
+        data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING,
+      }),
     });
   });
 
@@ -1111,7 +1602,10 @@ export async function setupEndorsementHistoryMocks(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [MOCK_GUILD, MOCK_DESIGN_GUILD] }),
+      body: JSON.stringify({
+        success: true,
+        data: [MOCK_GUILD, MOCK_DESIGN_GUILD],
+      }),
     });
   });
 
@@ -1129,7 +1623,10 @@ export async function setupEndorsementHistoryMocks(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: { endorsed: true, stakeAmount: "50" } }),
+      body: JSON.stringify({
+        success: true,
+        data: { endorsed: true, stakeAmount: "50" },
+      }),
     });
   });
 
@@ -1148,11 +1645,11 @@ export async function setupEndorsementHistoryMocks(page: Page): Promise<void> {
  */
 export async function setupDisputeDetailMocks(
   page: Page,
-  dispute?: Record<string, unknown>,
+  dispute?: unknown,
 ): Promise<void> {
   await setupCommonExpertMocks(page);
 
-  const disputeData = dispute ?? MOCK_DISPUTE_DETAIL;
+  const disputeData = (dispute ?? MOCK_DISPUTE_DETAIL) as Record<string, unknown>;
   const disputeId = disputeData.id as string;
 
   // Hire outcome endpoint
@@ -1188,7 +1685,7 @@ export async function setupDisputeDetailMocks(
  */
 export async function setupDashboardWithVoteWeight(
   page: Page,
-  options?: { expertProfile?: Record<string, unknown> }
+  options?: { expertProfile?: unknown },
 ): Promise<void> {
   const highRepProfile = {
     ...MOCK_EXPERT_PROFILE,
@@ -1205,7 +1702,11 @@ export async function setupDashboardWithVoteWeight(
       contentType: "application/json",
       body: JSON.stringify({
         success: true,
-        data: [MOCK_APPLICATION_ACTIVE, MOCK_APPLICATION_FINALIZED, MOCK_APPLICATION_SLASHED],
+        data: [
+          MOCK_APPLICATION_ACTIVE,
+          MOCK_APPLICATION_FINALIZED,
+          MOCK_APPLICATION_SLASHED,
+        ],
       }),
     });
   });
@@ -1233,7 +1734,10 @@ export async function setupDashboardWithVoteWeight(
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING }),
+      body: JSON.stringify({
+        success: true,
+        data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING,
+      }),
     });
   });
 
@@ -1243,7 +1747,10 @@ export async function setupDashboardWithVoteWeight(
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [MOCK_GUILD, MOCK_DESIGN_GUILD] }),
+      body: JSON.stringify({
+        success: true,
+        data: [MOCK_GUILD, MOCK_DESIGN_GUILD],
+      }),
     });
   });
 

@@ -1,6 +1,35 @@
 // e2e/real-flow/helpers/backend.ts
 import type { APIRequestContext } from "@playwright/test";
 
+// ── Local seed-response shapes ────────────────────────────────────────────────
+// Used for helpers below that do not map to an existing @/types shape.
+
+export interface SeededGovernanceProposal {
+  id: string;
+  title: string;
+  description: string;
+  proposer_expert_id: string;
+  status: string;
+}
+
+export interface SeededMessageThread {
+  id: string;
+  candidate_email: string;
+  recruiter_name: string;
+}
+
+export interface SeededApplicant {
+  id: string;
+  candidate_id: string;
+  job_id: string;
+  status: string;
+}
+
+export interface SeededApprovedCandidate {
+  job: { id: string; title: string; company_id: string };
+  application: { id: string; candidate_id: string; status: string };
+}
+
 export const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
 export const CRON_SECRET =
   process.env.CRON_SECRET ?? "dev-cron-secret-pad-to-32-chars-minimum-length";
@@ -58,6 +87,7 @@ export const testApi = {
       status?: string;
       guildId?: string;
       stakeAmount?: string;
+      role?: "craftsman" | "officer" | "master";
     },
   ) => postJson<{ id: string }>(req, "/api/test/seed/expert", body),
   seedExpertToken: (req: APIRequestContext, body: { expertId: string }) =>
@@ -66,9 +96,45 @@ export const testApi = {
       "/api/test/seed/expert-token",
       body,
     ),
+  /** Promote an already-seeded expert's guild_memberships.role without
+   *  mutating on-chain state. Uses seedExpert with ON CONFLICT to update only
+   *  the guild membership row. `fullName` defaults to the local part of the
+   *  expert's email so callers don't need to supply an extra value.
+   */
+  promoteExpertRole: (
+    req: APIRequestContext,
+    body: {
+      walletAddress: string;
+      email: string;
+      guildId: string;
+      role: "officer" | "master";
+      fullName?: string;
+    },
+  ) =>
+    postJson<{ id: string }>(req, "/api/test/seed/expert", {
+      walletAddress: body.walletAddress,
+      email: body.email,
+      fullName: body.fullName ?? body.email.split("@")[0],
+      guildId: body.guildId,
+      role: body.role,
+    }),
   endorsement: {
     processRetention: (req: APIRequestContext) =>
       postJson<unknown>(req, "/api/test/endorsement/process-retention"),
+    /** Directly assign a list of experts as arbitration panel members for a
+     *  dispute, bypassing the role-based random selection that the production
+     *  path uses. Needed in E2E because all bootstrapped experts have
+     *  role='craftsman' and the production query requires 'officer'/'master'.
+     */
+    assignPanel: (
+      req: APIRequestContext,
+      body: { disputeId: string; expertIds: string[] },
+    ) =>
+      postJson<{ panelSize: number }>(
+        req,
+        "/api/test/endorsement/assign-panel",
+        body,
+      ),
     markRetentionReady: (
       req: APIRequestContext,
       body: { applicationId: string },
@@ -135,6 +201,124 @@ export const testApi = {
       return body.data;
     },
   },
+  // ── DIV-XXX stubs: BE endpoints pending ──────────────────────────────────
+  // Each helper throws on call so test failures clearly point to the missing
+  // BE work rather than silently producing undefined behaviour.
+
+  /**
+   * Seed a governance proposal authored by the given expert.
+   * STUB — POST /api/test/seed/governance-proposal not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedGovernanceProposal: (
+    _req: APIRequestContext,
+    _opts: { proposerExpertId: string; title: string; description?: string },
+  ): Promise<SeededGovernanceProposal> => {
+    throw new Error(
+      "testApi.seedGovernanceProposal not implemented yet — POST /api/test/seed/governance-proposal missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Cast a governance vote on behalf of an expert.
+   * STUB — POST /api/test/seed/governance-vote not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  castGovernanceVote: (
+    _req: APIRequestContext,
+    _opts: {
+      proposalId: string;
+      expertId: string;
+      choice: "for" | "against" | "abstain";
+    },
+  ): Promise<void> => {
+    throw new Error(
+      "testApi.castGovernanceVote not implemented yet — POST /api/test/seed/governance-vote missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Seed a message thread between a candidate and a recruiter.
+   * STUB — POST /api/test/seed/message-thread not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedMessageThread: (
+    _req: APIRequestContext,
+    _opts: {
+      candidateEmail: string;
+      recruiterName: string;
+      initialBody: string;
+    },
+  ): Promise<SeededMessageThread> => {
+    throw new Error(
+      "testApi.seedMessageThread not implemented yet — POST /api/test/seed/message-thread missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Seed in-app notifications for a candidate.
+   * STUB — POST /api/test/seed/notifications not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedNotifications: (
+    _req: APIRequestContext,
+    _opts: {
+      candidateEmail: string;
+      items: Array<{ type: string; body: string }>;
+    },
+  ): Promise<void> => {
+    throw new Error(
+      "testApi.seedNotifications not implemented yet — POST /api/test/seed/notifications missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Seed in-app notifications for an expert.
+   * STUB — POST /api/test/seed/expert-notifications not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedExpertNotifications: (
+    _req: APIRequestContext,
+    _opts: {
+      expertId: string;
+      items: Array<{ type: string; body: string }>;
+    },
+  ): Promise<void> => {
+    throw new Error(
+      "testApi.seedExpertNotifications not implemented yet — POST /api/test/seed/expert-notifications missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Seed N applicant records for a given job.
+   * STUB — POST /api/test/seed/applicants-for-job not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedApplicantsForJob: (
+    _req: APIRequestContext,
+    _opts: { jobId: string; count: number },
+  ): Promise<{ items: SeededApplicant[] }> => {
+    throw new Error(
+      "testApi.seedApplicantsForJob not implemented yet — POST /api/test/seed/applicants-for-job missing on BE; track as DIV-XXX",
+    );
+  },
+
+  /**
+   * Seed a fully-approved candidate (job + application) owned by a company.
+   * STUB — POST /api/test/seed/approved-candidate not yet wired on BE.
+   * Track as DIV-XXX.
+   */
+  seedApprovedCandidate: (
+    _req: APIRequestContext,
+    _opts: { ownerCompanyId: string },
+  ): Promise<SeededApprovedCandidate> => {
+    throw new Error(
+      "testApi.seedApprovedCandidate not implemented yet — POST /api/test/seed/approved-candidate missing on BE; track as DIV-XXX",
+    );
+  },
+
+  // ── End DIV-XXX stubs ─────────────────────────────────────────────────────
+
   candidateReviews: {
     /**
      * Assign a deterministic Pipeline B expert panel to a candidate guild
