@@ -1,10 +1,12 @@
 import { Page } from "@playwright/test";
+import { setAuthToken } from "./auth-utils";
 
 interface CandidateCredentials {
   email: string;
   password: string;
   token: string;
   candidateId: string;
+  fullName: string;
 }
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
@@ -19,18 +21,23 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
  * required-field set + button-disabled state machine. Faster and more
  * deterministic than driving the form.
  */
-export async function signupCandidate(page: Page): Promise<CandidateCredentials> {
+export async function signupCandidate(
+  page: Page,
+): Promise<CandidateCredentials> {
   const timestamp = Date.now();
   const email = `e2e-${timestamp}@vetted-test.com`;
   const password = "TestPass123!";
+  const fullName = `E2E User ${timestamp}`;
 
   // Land on the app first so localStorage writes target the right origin.
-  await page.goto("/auth/signup?type=candidate", { waitUntil: "domcontentloaded" });
+  await page.goto("/auth/signup?type=candidate", {
+    waitUntil: "domcontentloaded",
+  });
 
   // Hit the candidate signup endpoint directly.
   const res = await page.request.post(`${BACKEND_URL}/api/candidates`, {
     data: {
-      fullName: `E2E User ${timestamp}`,
+      fullName,
       email,
       password,
       phone: "",
@@ -46,7 +53,9 @@ export async function signupCandidate(page: Page): Promise<CandidateCredentials>
     },
   });
   if (!res.ok()) {
-    throw new Error(`signupCandidate failed: ${res.status()} ${await res.text()}`);
+    throw new Error(
+      `signupCandidate failed: ${res.status()} ${await res.text()}`,
+    );
   }
   const body = (await res.json()) as {
     data: {
@@ -57,19 +66,22 @@ export async function signupCandidate(page: Page): Promise<CandidateCredentials>
   };
   const { token, refreshToken, candidate } = body.data;
 
-  // Mirror what the FE's auth.login() writes so guarded routes work.
-  await page.evaluate(
-    ({ token, refreshToken, candidate }) => {
-      localStorage.setItem("authToken", token);
-      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("userType", "candidate");
-      localStorage.setItem("candidateId", candidate.id);
-      localStorage.setItem("candidateEmail", candidate.email);
-    },
-    { token, refreshToken, candidate },
-  );
+  // Leave the signup page before writing auth; its mount effect intentionally
+  // clears token auth and can race with direct localStorage setup.
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  return { email, password, token, candidateId: candidate.id };
+  // Mirror what the FE's auth.login() writes so guarded routes work.
+  await setAuthToken(page, token, {
+    refreshToken,
+    userType: "candidate",
+    candidateId: candidate.id,
+    candidateEmail: candidate.email,
+    clearConflicting: true,
+  });
+
+  await page.goto("/candidate/dashboard", { waitUntil: "domcontentloaded" });
+
+  return { email, password, token, candidateId: candidate.id, fullName };
 }
 
 /**
@@ -80,10 +92,14 @@ export async function loginCandidate(
   email: string,
   password: string,
 ): Promise<void> {
-  await page.goto("/auth/login?type=candidate", { waitUntil: "domcontentloaded" });
+  await page.goto("/auth/login?type=candidate", {
+    waitUntil: "domcontentloaded",
+  });
 
   // Wait for React to hydrate
-  await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 30000 });
+  await page
+    .getByPlaceholder("you@example.com")
+    .waitFor({ state: "visible", timeout: 30000 });
 
   await page.getByPlaceholder("you@example.com").fill(email);
   await page.getByPlaceholder("Enter your password").fill(password);
@@ -94,10 +110,24 @@ export async function loginCandidate(
 }
 
 /**
- * Logs out by clicking the sidebar Logout button.
+ * Logs out by clearing browser auth state and returning to candidate login.
+ *
+ * Most E2E specs are not testing the logout button itself; direct cleanup keeps
+ * setup deterministic even while React is re-rendering the sidebar.
  */
 export async function logoutCandidate(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Logout" }).click();
-  // After logout, the app may redirect to "/" or "/auth/login" or "/auth/signup"
-  await page.waitForURL(/\/(auth\/(signup|login)|$)/, { timeout: 10000 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("companyAuthToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("candidateId");
+    localStorage.removeItem("candidateEmail");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("companyEmail");
+    localStorage.removeItem("userType");
+  });
+  await page.goto("/auth/login?type=candidate", {
+    waitUntil: "domcontentloaded",
+  });
 }

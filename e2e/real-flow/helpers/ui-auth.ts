@@ -16,6 +16,7 @@
 import { expect, type Page } from "@playwright/test";
 import type { Hex } from "viem";
 import type { InjectedWalletHandle } from "./wallet-injection";
+import { markOnboardingComplete } from "../../helpers/auth-utils";
 
 /**
  * Connect the page-side wagmi store to the injected wallet (our shim).
@@ -31,7 +32,9 @@ import type { InjectedWalletHandle } from "./wallet-injection";
 export async function connectWalletViaUI(page: Page): Promise<void> {
   // Wait for wagmi to be ready on the page (Providers must have mounted).
   await page.waitForFunction(
-    () => typeof (window as unknown as { __wagmiTest?: unknown }).__wagmiTest !== "undefined",
+    () =>
+      typeof (window as unknown as { __wagmiTest?: unknown }).__wagmiTest !==
+      "undefined",
     null,
     { timeout: 10_000 },
   );
@@ -45,9 +48,10 @@ export async function connectWalletViaUI(page: Page): Promise<void> {
             config: unknown,
             args: { connector: unknown },
           ) => Promise<{ accounts: readonly string[]; chainId: number }>;
-          getAccount: (
-            config: unknown,
-          ) => { isConnected: boolean; address?: string };
+          getAccount: (config: unknown) => {
+            isConnected: boolean;
+            address?: string;
+          };
         };
       }
     ).__wagmiTest;
@@ -76,7 +80,9 @@ export async function connectWalletViaUI(page: Page): Promise<void> {
     }
 
     try {
-      const res = await harness.connect(harness.config, { connector: injected });
+      const res = await harness.connect(harness.config, {
+        connector: injected,
+      });
       return { ok: true, address: res.accounts[0], chainId: res.chainId };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
@@ -115,9 +121,7 @@ export async function switchAccountUI(
             args: { connector: unknown },
           ) => Promise<unknown>;
           disconnect: (config: unknown) => Promise<void>;
-          getAccount: (
-            config: unknown,
-          ) => { isConnected: boolean };
+          getAccount: (config: unknown) => { isConnected: boolean };
         };
       }
     ).__wagmiTest;
@@ -132,50 +136,13 @@ export async function switchAccountUI(
       cfg.connectors.find((c) => c.id === "headless-e2e") ??
       cfg.connectors.find((c) => c.id === "injected") ??
       cfg.connectors.find((c) => c.id === "metaMask");
-    if (injected) await harness.connect(harness.config, { connector: injected });
+    if (injected)
+      await harness.connect(harness.config, { connector: injected });
   });
 }
 
-/**
- * Pre-mark the expert onboarding tour as completed in localStorage so the
- * /expert/* layout's story-lab redirect doesn't bounce a fresh test expert
- * to the 16-step "first run" experience. Keyed by lowercased wallet
- * address per `buildExpertOnboardingStorageKey`.
- */
-async function markOnboardingComplete(
-  page: Page,
-  walletAddress: string,
-): Promise<void> {
-  const key = `vetted:expert-onboarding-tour:v1:${walletAddress.toLowerCase()}`;
-  const value = JSON.stringify({
-    dismissed: true,
-    completed: true,
-    checklistDismissed: true,
-    events: {
-      firstReviewOpened: true,
-      practiceReviewCompleted: true,
-      applicationsVisited: true,
-      guildsVisited: true,
-      endorsementsVisited: true,
-      governanceVisited: true,
-      stakingExplanationViewed: true,
-      commitRevealViewed: true,
-      rewardsVisited: true,
-      reputationVisited: true,
-      notificationsVisited: true,
-    },
-  });
-  await page.addInitScript(
-    ([k, v]) => {
-      try {
-        window.localStorage.setItem(k, v);
-      } catch {
-        /* localStorage may be unavailable in some contexts; ignore */
-      }
-    },
-    [key, value] as const,
-  );
-}
+// markOnboardingComplete is now the shared helper from e2e/helpers/auth-utils.ts.
+// Re-exported via import above; no local definition needed.
 
 /**
  * Drive the expert SIWE login flow through the real UI:
@@ -201,7 +168,10 @@ export async function loginAsExpertViaUI(
   const timeoutMs = opts.timeoutMs ?? 30_000;
   await markOnboardingComplete(page, expertAddress);
   await page.goto("/auth/login?type=expert");
-  await page.getByRole("button", { name: /connect wallet/i }).first().click();
+  await page
+    .getByRole("button", { name: /connect wallet/i })
+    .first()
+    .click();
   await page
     .getByRole("button", { name: /headless e2e wallet/i })
     .first()
@@ -216,7 +186,10 @@ export async function disconnectWalletUI(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const harness = (
       window as unknown as {
-        __wagmiTest?: { config: unknown; disconnect: (c: unknown) => Promise<void> };
+        __wagmiTest?: {
+          config: unknown;
+          disconnect: (c: unknown) => Promise<void>;
+        };
       }
     ).__wagmiTest;
     if (!harness) return;
@@ -228,13 +201,19 @@ export async function disconnectWalletUI(page: Page): Promise<void> {
  * Sign an arbitrary message through wagmi (exercises `useSignMessage` path).
  * Returns the signature.
  */
-export async function signMessageViaWagmi(page: Page, message: string): Promise<`0x${string}`> {
+export async function signMessageViaWagmi(
+  page: Page,
+  message: string,
+): Promise<`0x${string}`> {
   const sig = (await page.evaluate(async (msg) => {
     const harness = (
       window as unknown as {
         __wagmiTest?: {
           config: unknown;
-          signMessage: (config: unknown, args: { message: string }) => Promise<`0x${string}`>;
+          signMessage: (
+            config: unknown,
+            args: { message: string },
+          ) => Promise<`0x${string}`>;
         };
       }
     ).__wagmiTest;
@@ -254,9 +233,10 @@ export async function readWagmiAddress(page: Page): Promise<string | null> {
       window as unknown as {
         __wagmiTest?: {
           config: unknown;
-          getAccount: (
-            config: unknown,
-          ) => { isConnected: boolean; address?: string };
+          getAccount: (config: unknown) => {
+            isConnected: boolean;
+            address?: string;
+          };
         };
       }
     ).__wagmiTest;
