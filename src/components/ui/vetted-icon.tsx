@@ -46,6 +46,7 @@ export function VettedIcon({ name, className }: VettedIconProps) {
     <span
       role="img"
       aria-hidden="true"
+      data-vetted-icon={name}
       className={cn("inline-block", className)}
       style={{
         maskImage: `url(/icons/vetted/${name}.png)`,

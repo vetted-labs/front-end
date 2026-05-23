@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReviewGuildApplicationModal } from "@/components/guild/ReviewGuildApplicationModal";
 import type {
@@ -19,6 +25,8 @@ vi.mock("wagmi", () => ({
   useAccount: () => ({
     address: "0x1234567890abcdef1234567890abcdef12345678",
   }),
+  useChainId: () => 11155111,
+  usePublicClient: () => undefined,
 }));
 
 vi.mock("@/lib/hooks/useVettedContracts", () => ({
@@ -41,6 +49,14 @@ vi.mock("@/lib/api", () => ({
     expertCommitReveal: {
       generateHash: mocks.generateHash,
       submitCommitment: mocks.submitCommitment,
+    },
+  },
+  reviewsApi: {
+    guildApplication: {
+      getState: vi.fn().mockResolvedValue(null),
+    },
+    proposal: {
+      getState: vi.fn().mockResolvedValue(null),
     },
   },
   resumeApi: {
@@ -143,7 +159,7 @@ const levelTemplate: LevelReviewTemplate = {
 };
 
 function renderPracticeModal(
-  props: Partial<Parameters<typeof ReviewGuildApplicationModal>[0]> = {}
+  props: Partial<Parameters<typeof ReviewGuildApplicationModal>[0]> = {},
 ) {
   const onSubmitReview = vi.fn().mockResolvedValue({ message: "Real submit" });
   const onPracticeComplete = vi.fn();
@@ -170,7 +186,7 @@ function renderPracticeModal(
         </>
       }
       {...props}
-    />
+    />,
   );
 
   return { onClose, onSubmitReview, onPracticeComplete };
@@ -188,21 +204,28 @@ async function completePracticeReview() {
 
   expect(await screen.findByText("General Review")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "4" }));
-  fireEvent.change(screen.getByPlaceholderText(/explain why/i), {
-    target: { value: "Specific shipped work is named, but blockchain production evidence is light." },
+  fireEvent.change(screen.getByPlaceholderText(/cite specific evidence/i), {
+    target: {
+      value:
+        "Specific shipped work is named, but blockchain production evidence is light.",
+    },
   });
   fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
 
   expect(await screen.findByText("Domain Review")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "3" }));
   fireEvent.change(screen.getByPlaceholderText(/tie the score/i), {
-    target: { value: "System design evidence is credible, but ownership boundaries need more detail." },
+    target: {
+      value:
+        "System design evidence is credible, but ownership boundaries need more detail.",
+    },
   });
-  fireEvent.click(screen.getByLabelText(/unsupported claims/i));
-  fireEvent.change(screen.getByPlaceholderText(/share your reasoning/i), {
-    target: { value: "Good general engineering evidence; ask for production blockchain examples." },
-  });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
 
+  expect(
+    await screen.findByRole("button", { name: /complete practice review/i }),
+  ).toBeInTheDocument();
   const submit =
     screen.queryByRole("button", { name: /complete practice review/i }) ??
     screen.getByRole("button", { name: /submit commitment|submit review/i });
@@ -215,8 +238,8 @@ describe("expert practice review flow", () => {
     mocks.getGuildApplicationTemplate.mockImplementation(
       (_guildId: string, templateType: "general" | "level") =>
         Promise.resolve(
-          templateType === "general" ? generalTemplate : levelTemplate
-        )
+          templateType === "general" ? generalTemplate : levelTemplate,
+        ),
     );
     mocks.generateHash.mockResolvedValue({ hash: "0xhidden-score-hash" });
     mocks.submitCommitment.mockResolvedValue({});
@@ -233,7 +256,7 @@ describe("expert practice review flow", () => {
 
     await flushEffects();
 
-    expect(screen.getByText(/practice review/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/practice review/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/sandbox/i)).toBeInTheDocument();
     expect(mocks.getGuildApplicationTemplate).not.toHaveBeenCalled();
   });
@@ -243,8 +266,12 @@ describe("expert practice review flow", () => {
 
     await flushEffects();
 
-    expect(screen.getByLabelText(/demo resume sample only/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /demo resume/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/demo resume sample only/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /demo resume/i }),
+    ).not.toBeInTheDocument();
     expect(mocks.getDownloadUrl).not.toHaveBeenCalled();
     expect(window.open).not.toHaveBeenCalled();
   });
@@ -257,10 +284,16 @@ describe("expert practice review flow", () => {
     await waitFor(() => {
       expect(screen.getByText(/practice complete/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/no real review was submitted/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no real review was submitted/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/practice calibration/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /go to applications/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /check staking/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /go to applications/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /check staking/i }),
+    ).toBeInTheDocument();
     expect(onPracticeComplete).toHaveBeenCalledTimes(1);
     expect(onSubmitReview).not.toHaveBeenCalled();
     expect(mocks.getGuildApplicationTemplate).not.toHaveBeenCalled();
@@ -276,13 +309,19 @@ describe("expert practice review flow", () => {
 
     await flushEffects();
 
-    expect(screen.queryByRole("button", { name: /close review modal/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /close review modal/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^cancel$/i }),
+    ).not.toBeInTheDocument();
 
     await completePracticeReview();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /^done$/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^done$/i }),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /^done$/i }));

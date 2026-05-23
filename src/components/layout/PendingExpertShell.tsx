@@ -9,7 +9,11 @@ import { useAuthContext } from "@/hooks/useAuthContext";
 import { truncateAddress } from "@/lib/utils";
 import { fullWalletTeardown } from "@/lib/walletConnectCleanup";
 
-export function PendingExpertShell({ children }: { children: React.ReactNode }) {
+export function PendingExpertShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
@@ -37,23 +41,23 @@ export function PendingExpertShell({ children }: { children: React.ReactNode }) 
                   </span>
                 </div>
               )}
-              <button
-                onClick={handleDisconnect}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors"
-                title="Disconnect Wallet"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Disconnect</span>
-              </button>
+              {address && (
+                <button
+                  onClick={handleDisconnect}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors"
+                  title="Disconnect Wallet"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Disconnect</span>
+                </button>
+              )}
               <ThemeToggle />
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="flex-1 content-gradient">
-        {children}
-      </main>
+      <main className="flex-1 content-gradient">{children}</main>
     </div>
   );
 }

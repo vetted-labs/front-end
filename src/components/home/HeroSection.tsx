@@ -75,12 +75,9 @@ export function HeroSection({
         </div>
 
         {/* Headline */}
-        <h1 className="font-display font-bold text-3xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-4">
+        <h1 className="font-display font-bold text-3xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-12">
           The Credibility Layer<br />for Hiring
         </h1>
-        <p className="text-sm text-muted-foreground font-normal leading-relaxed max-w-xl mb-12">
-          The first hiring signal built on expert judgment with real skin in the game.
-        </p>
 
         {/* Value Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-9">

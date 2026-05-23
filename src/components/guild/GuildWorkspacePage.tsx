@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Settings, ExternalLink, Star, BadgeCheck } from "lucide-react";
@@ -267,6 +267,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const searchParams = useSearchParams();
   const { isActive: isStoryLabPreview } = useStoryLabContext();
   const isStoryLabSyntheticGuild = isStoryLabPreview && guildId === STORY_LAB_GUILD.id;
+  const [hasHydrated, setHasHydrated] = useState(false);
   const initialTab: GuildWorkspaceTab = (() => {
     const t = searchParams?.get("tab");
     if (t && (GUILD_WORKSPACE_TABS as readonly string[]).includes(t)) {
@@ -278,6 +279,13 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const [guild, setGuild] = useState<GuildDetailData | null>(null);
   const [currentExpertId, setCurrentExpertId] = useState<string | null>(null);
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
+
+  useEffect(() => {
+    // One-shot SSR→client hydration guard: flips a flag on mount so client-only
+    // UI (wallet-gated data) renders after hydration, avoiding SSR mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time post-hydration flag
+    setHasHydrated(true);
+  }, []);
 
   const { isLoading, error } = useFetch(
     async () => {
@@ -472,6 +480,19 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     params.set("tab", next);
     router.replace(`/expert/guild/${encodeURIComponent(guildId)}?${params.toString()}`);
   };
+
+  if (!hasHydrated && !isStoryLabSyntheticGuild) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="h-24 animate-pulse rounded-xl bg-muted" />
+        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!isConnected && !isStoryLabSyntheticGuild) {
     return (

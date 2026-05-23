@@ -14,32 +14,38 @@ import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransactio
 import { blockchainApi, expertApi, extractApiError } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
 import { useFetch } from "@/lib/hooks/useFetch";
-import type { EndorsementApplication, GuildRecord, EarningsBreakdownResponse, TokenBalance, StakeBalance } from "@/types";
+import type {
+  EndorsementApplication,
+  GuildRecord,
+  EarningsBreakdownResponse,
+  TokenBalance,
+  StakeBalance,
+} from "@/types";
 
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Coins,
-  AlertCircle,
-} from "lucide-react";
+import { Coins, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 
 const EndorseCandidateModal = dynamic(
-  () => import("./endorsements/endorse/EndorseCandidateModal").then(m => ({ default: m.EndorseCandidateModal })),
-  { ssr: false }
+  () =>
+    import("./endorsements/endorse/EndorseCandidateModal").then((m) => ({
+      default: m.EndorseCandidateModal,
+    })),
+  { ssr: false },
 );
 import { EndorsementHeader } from "./endorsements/EndorsementHeader";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 import { STATUS_COLORS } from "@/config/colors";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
-import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import {
+  TOUR_TARGETS,
+  dataTourTarget,
+} from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import {
   STORY_LAB_ENDORSEMENT_APPLICATION_ID,
@@ -53,7 +59,9 @@ function isBiddingExpired(app: EndorsementApplication): boolean {
   return Date.now() >= deadline;
 }
 
-function tokenAmountToWei(value?: string | number | bigint | null): bigint | undefined {
+function tokenAmountToWei(
+  value?: string | number | bigint | null,
+): bigint | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value === "bigint") return value;
 
@@ -80,49 +88,75 @@ interface EndorsementMarketplaceProps {
   onGuildChange: (guildId: string) => void;
 }
 
-export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId, guilds, selectedGuildId, onGuildChange }: EndorsementMarketplaceProps) {
+export function EndorsementMarketplace({
+  guildId,
+  guildName,
+  blockchainGuildId: blockchainGuildIdProp,
+  initialApplicationId,
+  guilds,
+  selectedGuildId,
+  onGuildChange,
+}: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
   const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
   const STORY_LAB_OPEN_MODAL_SUBSTOPS = useMemo(
     () => new Set(["bid-mechanic", "consequences"]),
-    []
+    [],
   );
   const shouldStoryLabOpenModal =
     isStoryLabPreview &&
     activeSubStopId !== null &&
     STORY_LAB_OPEN_MODAL_SUBSTOPS.has(activeSubStopId);
-  const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
+  const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(
+    null,
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"endorse" | "view">("endorse");
   const [modalInitialStep, setModalInitialStep] = useState<1 | 2 | 3 | 4>(1);
-  const [applicationFilter, setApplicationFilter] = useState<'active' | 'closed'>('active');
+  const [applicationFilter, setApplicationFilter] = useState<
+    "active" | "closed"
+  >("active");
   const [search, setSearch] = useState("");
 
   // Track whether we've already auto-opened the modal for initialApplicationId
   const hasAutoOpened = useRef(false);
 
   // Use backend API to get user's endorsements (more reliable than blockchain)
-  const { endorsements: allUserEndorsements, isLoading: endorsementsLoading, refetch: refetchEndorsements } = useMyActiveEndorsements();
+  const {
+    endorsements: allUserEndorsements,
+    isLoading: endorsementsLoading,
+    refetch: refetchEndorsements,
+  } = useMyActiveEndorsements();
 
   // Fetch real earnings data for the stats cards
   const { data: earningsData } = useFetch<EarningsBreakdownResponse>(
-    () => expertApi.getEarningsBreakdown(address!, { limit: 100 }) as Promise<EarningsBreakdownResponse>,
+    () =>
+      expertApi.getEarningsBreakdown(address!, {
+        limit: 100,
+      }) as Promise<EarningsBreakdownResponse>,
     {
       skip: !address,
-      onError: (err) => toast.error(extractApiError(err, "Couldn't load earnings")),
-    }
+      onError: (err) =>
+        toast.error(extractApiError(err, "Couldn't load earnings")),
+    },
   );
 
   // Load applications with server-side pagination
   const APPS_PER_PAGE = 12;
   const fetchApplications = useCallback(
     async (page: number, limit: number) => {
-      if (!guildId || !address) return { data: [] as EndorsementApplication[], total: 0 };
-      const response = await blockchainApi.getApplicationsForEndorsement(guildId, address, page, limit);
+      if (!guildId || !address)
+        return { data: [] as EndorsementApplication[], total: 0 };
+      const response = await blockchainApi.getApplicationsForEndorsement(
+        guildId,
+        address,
+        page,
+        limit,
+      );
       return { data: response.data ?? [], total: response.total ?? 0 };
     },
-    [guildId, address]
+    [guildId, address],
   );
   const {
     data: rawApplications,
@@ -132,16 +166,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     totalPages: applicationsTotalPages,
     totalItems: applicationsTotalItems,
     setPage: setApplicationsPage,
-  } = usePaginatedFetch<EndorsementApplication>(
-    fetchApplications,
-    {
-      limit: APPS_PER_PAGE,
-      skip: !guildId || !address,
-      onError: (error) => {
-        toast.error(error || "Failed to load applications");
-      },
-    }
-  );
+  } = usePaginatedFetch<EndorsementApplication>(fetchApplications, {
+    limit: APPS_PER_PAGE,
+    skip: !guildId || !address,
+    onError: (error) => {
+      toast.error(error || "Failed to load applications");
+    },
+  });
 
   // Inject the synthetic story-lab endorsement application so the gated
   // tour marker has something to anchor on in story preview mode.
@@ -150,7 +181,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       isStoryLabPreview
         ? withStoryLabEndorsements(rawApplications ?? [])
         : rawApplications,
-    [rawApplications, isStoryLabPreview]
+    [rawApplications, isStoryLabPreview],
   );
 
   // Transaction hook -- encapsulates approval + bid flow, tx tracking, error handling
@@ -170,7 +201,8 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   });
 
   // Use the on-chain guild ID from the API if available; fall back to local hash
-  const blockchainGuildId = blockchainGuildIdProp ?? (guildId ? hashToBytes32(guildId) : undefined);
+  const blockchainGuildId =
+    blockchainGuildIdProp ?? (guildId ? hashToBytes32(guildId) : undefined);
   const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
 
   // DB-cached balances. Renders instantly on mount and survives RPC outages
@@ -187,20 +219,28 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   );
 
   // Filter endorsements for current guild
-  const userEndorsements = allUserEndorsements.filter((e) => e.guild?.id === guildId);
+  const userEndorsements = allUserEndorsements.filter(
+    (e) => e.guild?.id === guildId,
+  );
 
   // Split applications by bidding status for filter tabs
-  const activeApps = (applications ?? []).filter(app => !isBiddingExpired(app));
-  const closedApps = (applications ?? []).filter(app => isBiddingExpired(app));
-  const tabFilteredApplications = applicationFilter === 'active' ? activeApps : closedApps;
+  const activeApps = (applications ?? []).filter(
+    (app) => !isBiddingExpired(app),
+  );
+  const closedApps = (applications ?? []).filter((app) =>
+    isBiddingExpired(app),
+  );
+  const tabFilteredApplications =
+    applicationFilter === "active" ? activeApps : closedApps;
 
   const filteredApplications = useMemo(() => {
     if (!search.trim()) return tabFilteredApplications;
     const q = search.toLowerCase();
-    return tabFilteredApplications.filter(app =>
-      app.candidate_name?.toLowerCase().includes(q) ||
-      app.job_title?.toLowerCase().includes(q) ||
-      app.company_name?.toLowerCase().includes(q)
+    return tabFilteredApplications.filter(
+      (app) =>
+        app.candidate_name?.toLowerCase().includes(q) ||
+        app.job_title?.toLowerCase().includes(q) ||
+        app.company_name?.toLowerCase().includes(q),
     );
   }, [tabFilteredApplications, search]);
 
@@ -213,7 +253,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       !loading
     ) {
       const targetApp = (applications ?? []).find(
-        (app) => app.application_id === initialApplicationId
+        (app) => app.application_id === initialApplicationId,
       );
       if (targetApp) {
         hasAutoOpened.current = true;
@@ -234,7 +274,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     if (!isStoryLabPreview) return;
     if ((applications ?? []).length === 0) return;
     const storyApp = (applications ?? []).find(
-      (app) => app.application_id === STORY_LAB_ENDORSEMENT_APPLICATION_ID
+      (app) => app.application_id === STORY_LAB_ENDORSEMENT_APPLICATION_ID,
     );
     if (!storyApp) return;
     if (shouldStoryLabOpenModal) {
@@ -265,15 +305,22 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   };
 
   const handleCloseModal = () => {
-    if (txStep !== "signing" && txStep !== "approving" && txStep !== "bidding") {
+    if (
+      txStep !== "signing" &&
+      txStep !== "approving" &&
+      txStep !== "bidding"
+    ) {
       setModalOpen(false);
       setSelectedApp(null);
       resetTransaction();
     }
   };
 
-  const handlePlaceEndorsement = async (app: EndorsableApplication, amount: string) => {
-    await submitEndorsement(app, amount);
+  const handlePlaceEndorsement = async (
+    app: EndorsableApplication,
+    amount: string,
+  ) => {
+    await submitEndorsement(app, amount, effectiveBalanceWei);
   };
 
   // eslint-disable-next-line no-restricted-syntax -- DOM visibilitychange subscription with runtime callback deps
@@ -292,7 +339,8 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   useEffect(() => {
     const handler = () => refetchEndorsements();
     window.addEventListener("vetted:endorsement-refresh", handler);
-    return () => window.removeEventListener("vetted:endorsement-refresh", handler);
+    return () =>
+      window.removeEventListener("vetted:endorsement-refresh", handler);
   }, [refetchEndorsements]);
 
   // ── Early returns ──
@@ -314,19 +362,19 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   // Hybrid resolution: prefer the chain read (authoritative), fall back to
   // the DB-cached value when the chain hasn't responded yet — survives RPC
   // outages instead of rendering "0" when reads silently return undefined.
-  const effectiveStakeWei: bigint | undefined =
-    stakeInfo
-      ? stakeInfo[0]
-      : tokenAmountToWei(stakeBalanceDb?.stakedAmount);
+  const effectiveStakeWei: bigint | undefined = stakeInfo
+    ? stakeInfo[0]
+    : tokenAmountToWei(stakeBalanceDb?.stakedAmount);
   const effectiveBalanceWei: bigint | undefined =
-    balance !== undefined
-      ? balance
-      : tokenAmountToWei(tokenBalanceDb?.balance);
+    balance !== undefined ? balance : tokenAmountToWei(tokenBalanceDb?.balance);
 
-  const userStake = effectiveStakeWei !== undefined ? formatEther(effectiveStakeWei) : "0";
+  const userStake =
+    effectiveStakeWei !== undefined ? formatEther(effectiveStakeWei) : "0";
   const requiredStake = minimumStake ? formatEther(minimumStake) : "0";
   const meetsMinimumStake = parseFloat(userStake) >= parseFloat(requiredStake);
-  const shortAddress = address ? `${address.substring(0, 6)}...${address.substring(38)}` : "";
+  const shortAddress = address
+    ? `${address.substring(0, 6)}...${address.substring(38)}`
+    : "";
   const formattedBalance =
     effectiveBalanceWei !== undefined
       ? parseFloat(formatEther(effectiveBalanceWei)).toLocaleString("en-US", {
@@ -359,12 +407,18 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       />
 
       {!meetsMinimumStake && (
-        <Card className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <Card
+          className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}
+        >
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} shrink-0`} />
+            <AlertCircle
+              className={`w-5 h-5 ${STATUS_COLORS.warning.icon} shrink-0`}
+            />
             <p className="text-sm text-muted-foreground">
-              You need to stake at least <strong className="text-foreground">{requiredStake} VETD</strong> in this guild to endorse applications.
-              Current stake: {parseFloat(userStake).toFixed(2)} VETD
+              You need to stake at least{" "}
+              <strong className="text-foreground">{requiredStake} VETD</strong>{" "}
+              in this guild to endorse applications. Current stake:{" "}
+              {parseFloat(userStake).toFixed(2)} VETD
             </p>
           </CardContent>
         </Card>
@@ -397,41 +451,51 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       </DataSection>
 
       {/* Applications */}
-      <div className="mt-8" {...dataTourTarget(TOUR_TARGETS.endorsementApplicationsList)}>
+      <div
+        className="mt-8"
+        {...dataTourTarget(TOUR_TARGETS.endorsementApplicationsList)}
+      >
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <h2 className="font-display font-bold text-xl tracking-tight">
             Applications
           </h2>
           {!loading && (
-            <div className="flex items-center gap-3" {...dataTourTarget(TOUR_TARGETS.endorsementFilters)}>
+            <div
+              className="flex items-center gap-3"
+              {...dataTourTarget(TOUR_TARGETS.endorsementFilters)}
+            >
               <Input
                 placeholder="Search applications..."
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
                 className="max-w-xs h-8 text-xs"
               />
               <div className="flex items-center gap-0.5 rounded-lg bg-muted/30 border border-border p-0.5">
                 <button
-                  onClick={() => setApplicationFilter('active')}
+                  onClick={() => setApplicationFilter("active")}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    applicationFilter === 'active'
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                    applicationFilter === "active"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Active
-                  <span className="ml-1.5 font-mono text-[10px] opacity-60">{activeApps.length}</span>
+                  <span className="ml-1.5 font-mono text-[10px] opacity-60">
+                    {activeApps.length}
+                  </span>
                 </button>
                 <button
-                  onClick={() => setApplicationFilter('closed')}
+                  onClick={() => setApplicationFilter("closed")}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    applicationFilter === 'closed'
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                    applicationFilter === "closed"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Closed
-                  <span className="ml-1.5 font-mono text-[10px] opacity-60">{closedApps.length}</span>
+                  <span className="ml-1.5 font-mono text-[10px] opacity-60">
+                    {closedApps.length}
+                  </span>
                 </button>
               </div>
               <span className="font-mono text-xs text-muted-foreground">
@@ -445,13 +509,25 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           loading={loading}
           onSelectApplication={handleViewDetails}
           onViewExistingBid={handleViewEndorsement}
-          emptyTitle={applicationFilter === 'active' ? 'No Active Applications' : 'No Closed Applications'}
-          emptyDescription={applicationFilter === 'active'
-            ? 'All applications on this page have closed bidding, or there are no applications yet.'
-            : 'There are no applications with closed bidding on this page.'}
-          markedApplicationId={isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined}
-          markedCardProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateCard)}
-          markedCtaProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateBidCta)}
+          emptyTitle={
+            applicationFilter === "active"
+              ? "No Active Applications"
+              : "No Closed Applications"
+          }
+          emptyDescription={
+            applicationFilter === "active"
+              ? "All applications on this page have closed bidding, or there are no applications yet."
+              : "There are no applications with closed bidding on this page."
+          }
+          markedApplicationId={
+            isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined
+          }
+          markedCardProps={dataTourTarget(
+            TOUR_TARGETS.endorsementCandidateCard,
+          )}
+          markedCtaProps={dataTourTarget(
+            TOUR_TARGETS.endorsementCandidateBidCta,
+          )}
         />
         {!loading && (
           <PaginationNav
@@ -472,10 +548,18 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         onClose={handleCloseModal}
         mode={modalMode}
         initialStep={modalInitialStep}
-        userBalance={balance ? formatEther(balance) : "0"}
+        userBalance={
+          effectiveBalanceWei !== undefined
+            ? formatEther(effectiveBalanceWei)
+            : "0"
+        }
         userStake={userStake}
         minimumBid={minimumBidFormatted}
-        onPlaceEndorsement={modalMode === "endorse" && meetsMinimumStake ? handlePlaceEndorsement : undefined}
+        onPlaceEndorsement={
+          modalMode === "endorse" && meetsMinimumStake
+            ? handlePlaceEndorsement
+            : undefined
+        }
         txStep={txStep}
         txError={txError}
         approvalTxHash={approvalTxHash}

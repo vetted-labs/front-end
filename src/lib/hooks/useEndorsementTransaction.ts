@@ -22,7 +22,13 @@ export interface EndorsableApplication {
   current_bid?: string;
 }
 
-export type TransactionStep = "idle" | "signing" | "approving" | "bidding" | "success" | "error";
+export type TransactionStep =
+  | "idle"
+  | "signing"
+  | "approving"
+  | "bidding"
+  | "success"
+  | "error";
 
 interface RefetchCallbacks {
   reloadApplications: () => void;
@@ -47,7 +53,11 @@ interface UseEndorsementTransactionReturn {
   /** Raw minimum bid from contract */
   minimumBid: bigint | undefined;
   /** Place an endorsement bid via EIP-2612 permit (1 signature + 1 TX) */
-  submitEndorsement: (app: EndorsableApplication, amount: string) => Promise<void>;
+  submitEndorsement: (
+    app: EndorsableApplication,
+    amount: string,
+    availableBalanceOverride?: bigint,
+  ) => Promise<void>;
   /** Reset all transaction state back to idle */
   resetTransaction: () => void;
   /** Refresh balance from chain */
@@ -70,7 +80,9 @@ async function syncEndorsementWithRetry(
       return true;
     } catch (error) {
       if (attempt >= delays.length - 1) {
-        logger.warn("Endorsement sync retry exhausted", error, { silent: true });
+        logger.warn("Endorsement sync retry exhausted", error, {
+          silent: true,
+        });
         return false;
       }
       await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
@@ -84,10 +96,10 @@ async function waitForInjectedReceipt(hash: `0x${string}`): Promise<void> {
   if (!provider?.request) return;
 
   for (let attempt = 0; attempt < 30; attempt++) {
-    const receipt = await provider.request({
+    const receipt = (await provider.request({
       method: "eth_getTransactionReceipt",
       params: [hash],
-    }) as { status?: string } | null;
+    })) as { status?: string } | null;
 
     if (receipt) {
       if (receipt.status === "0x0") {
@@ -102,6 +114,12 @@ async function waitForInjectedReceipt(hash: `0x${string}`): Promise<void> {
   throw new Error(`Endorsement transaction was not confirmed: ${hash}`);
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string" && error) return error;
+  return fallback;
+}
+
 /**
  * Manages the full endorsement transaction lifecycle with EIP-2612 permit:
  *
@@ -109,11 +127,10 @@ async function waitForInjectedReceipt(hash: `0x${string}`): Promise<void> {
  *   2. Call placeBidWithPermit() — single on-chain transaction
  */
 export function useEndorsementTransaction(
-  refetchCallbacks: RefetchCallbacks
+  refetchCallbacks: RefetchCallbacks,
 ): UseEndorsementTransactionReturn {
   const { address } = useAccount();
-  const { balance, refetchBalance } =
-    useTokenBalance();
+  const { balance, refetchBalance } = useTokenBalance();
   const { placeBidWithPermit, minimumBid } = useEndorsementBidding();
   const { executeWithPermit } = usePermitOrApprove();
 
@@ -131,11 +148,18 @@ export function useEndorsementTransaction(
 
   // ── Public: submit an endorsement via permit (1 signature + 1 TX) ──
   const submitEndorsement = useCallback(
-    async (app: EndorsableApplication, amount: string) => {
+    async (
+      app: EndorsableApplication,
+      amount: string,
+      availableBalanceOverride?: bigint,
+    ) => {
       // Validate: existing bid must be topped
-      if (app.current_bid && parseFloat(amount) <= parseFloat(app.current_bid)) {
+      if (
+        app.current_bid &&
+        parseFloat(amount) <= parseFloat(app.current_bid)
+      ) {
         throw new Error(
-          `New bid must be higher than your current bid of ${parseFloat(app.current_bid).toFixed(2)} VETD`
+          `New bid must be higher than your current bid of ${parseFloat(app.current_bid).toFixed(2)} VETD`,
         );
       }
 
@@ -144,10 +168,15 @@ export function useEndorsementTransaction(
         throw new Error(`Minimum bid is ${minBid} VETD`);
       }
 
-      const currentBalance = balance ? formatEther(balance) : "0";
+      const currentBalance =
+        availableBalanceOverride !== undefined
+          ? formatEther(availableBalanceOverride)
+          : balance
+            ? formatEther(balance)
+            : "0";
       if (parseFloat(currentBalance) < parseFloat(amount)) {
         throw new Error(
-          `Insufficient VETD balance. You have ${parseFloat(currentBalance).toFixed(2)} VETD but need ${amount} VETD`
+          `Insufficient VETD balance. You have ${parseFloat(currentBalance).toFixed(2)} VETD but need ${amount} VETD`,
         );
       }
 
@@ -158,57 +187,81 @@ export function useEndorsementTransaction(
       try {
         await blockchainApi.ensureJobOnChain(app.job_id);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Failed to prepare job on blockchain";
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Failed to prepare job on blockchain";
         setTxStep("error");
         setTxError(msg);
-        toast.error("Could not verify job on blockchain. Please try again later.");
+        toast.error(
+          "Could not verify job on blockchain. Please try again later.",
+        );
         return;
       }
 
-      const { hash } = await executeWithPermit(
-        CONTRACT_ADDRESSES.ENDORSEMENT,
-        amount,
-        (permit) => placeBidWithPermit(
-          app.job_id,
-          app.candidate_id,
+      try {
+        const { hash } = await executeWithPermit(
+          CONTRACT_ADDRESSES.ENDORSEMENT,
           amount,
-          permit.deadline,
-          permit.v,
-          permit.r,
-          permit.s,
-        ),
-      );
+          (permit) =>
+            placeBidWithPermit(
+              app.job_id,
+              app.candidate_id,
+              amount,
+              permit.deadline,
+              permit.v,
+              permit.r,
+              permit.s,
+            ),
+        );
 
-      setTxStep("bidding");
-      setEndorsing(true);
-      setBidTxHash(hash);
-      toast.success("Endorsement submitted! Waiting for confirmation...");
+        setTxStep("bidding");
+        setEndorsing(true);
+        setBidTxHash(hash);
+        toast.success("Endorsement submitted! Waiting for confirmation...");
 
-      await waitForInjectedReceipt(hash);
+        await waitForInjectedReceipt(hash);
 
-      const callbacks = refetchCallbacksRef.current;
-      if (address) {
-        const synced = await syncEndorsementWithRetry(app, address);
-        if (synced) {
-          callbacks.refetchEndorsements();
-        } else {
-          toast.warning(
-            "Your endorsement is confirmed on-chain but could not be synced to the server. It will sync automatically within a few minutes."
-          );
+        const callbacks = refetchCallbacksRef.current;
+        if (address) {
+          const synced = await syncEndorsementWithRetry(app, address);
+          if (synced) {
+            callbacks.refetchEndorsements();
+          } else {
+            toast.warning(
+              "Your endorsement is confirmed on-chain but could not be synced to the server. It will sync automatically within a few minutes.",
+            );
+          }
         }
+
+        setTxStep("success");
+        setEndorsing(false);
+        toast.success(
+          "Endorsement confirmed! Rewards will be distributed on candidate hire.",
+        );
+
+        setTimeout(() => {
+          callbacks.reloadApplications();
+          callbacks.refetchEndorsements();
+          refetchBalance();
+        }, 2000);
+      } catch (error) {
+        const msg = getErrorMessage(error, "Failed to place endorsement");
+        setTxStep("error");
+        setTxError(msg);
+        setEndorsing(false);
+        toast.error(msg);
+        throw error;
       }
-
-      setTxStep("success");
-      setEndorsing(false);
-      toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
-
-      setTimeout(() => {
-        callbacks.reloadApplications();
-        callbacks.refetchEndorsements();
-        refetchBalance();
-      }, 2000);
     },
-    [minimumBid, balance, address, executeWithPermit, placeBidWithPermit, refetchBalance]
+    [
+      minimumBid,
+      balance,
+      address,
+      executeWithPermit,
+      placeBidWithPermit,
+      refetchBalance,
+    ],
   );
 
   // ── Public: reset state (e.g. when closing the modal) ──

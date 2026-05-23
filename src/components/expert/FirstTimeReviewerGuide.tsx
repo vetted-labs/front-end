@@ -6,15 +6,32 @@ import { Button } from "@/components/ui/button";
 import { HelpLink } from "@/components/ui/HelpLink";
 import { DOC_LINKS } from "@/config/docLinks";
 
+function hasDismissedReviewerGuide(): boolean {
+  try {
+    return (
+      typeof window !== "undefined" &&
+      localStorage.getItem("vetted:reviewer-guide-seen") === "true"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function saveDismissedReviewerGuide(): void {
+  try {
+    localStorage.setItem("vetted:reviewer-guide-seen", "true");
+  } catch {
+    // Storage can be unavailable in hardened browsers; the UI should still dismiss.
+  }
+}
+
 export function FirstTimeReviewerGuide() {
-  const [dismissed, setDismissed] = useState(() =>
-    typeof window !== "undefined" && localStorage.getItem("vetted:reviewer-guide-seen") === "true"
-  );
+  const [dismissed, setDismissed] = useState(hasDismissedReviewerGuide);
 
   if (dismissed) return null;
 
   const handleDismiss = () => {
-    localStorage.setItem("vetted:reviewer-guide-seen", "true");
+    saveDismissedReviewerGuide();
     setDismissed(true);
   };
 
@@ -31,12 +48,26 @@ export function FirstTimeReviewerGuide() {
         <BookOpen className="h-6 w-6 text-primary mt-0.5 shrink-0" />
         <div>
           <h3 className="font-bold mb-2">Welcome to your first review!</h3>
-          <p className="text-sm text-muted-foreground mb-3">Here&apos;s how vetting works:</p>
+          <p className="text-sm text-muted-foreground mb-3">
+            Here&apos;s how vetting works:
+          </p>
           <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-            <li><strong>Review the candidate profile</strong> — read their application, experience, and answers</li>
-            <li><strong>Score using the rubric</strong> — rate each criterion with a justification</li>
-            <li><strong>Commit your vote (blind)</strong> — your score is encrypted so other experts can&apos;t see it</li>
-            <li><strong>Reveal your vote</strong> — after all experts commit, reveal your score for consensus</li>
+            <li>
+              <strong>Review the candidate profile</strong> — read their
+              application, experience, and answers
+            </li>
+            <li>
+              <strong>Score using the rubric</strong> — rate each criterion with
+              a justification
+            </li>
+            <li>
+              <strong>Commit your vote (blind)</strong> — your score is
+              encrypted so other experts can&apos;t see it
+            </li>
+            <li>
+              <strong>Reveal your vote</strong> — after all experts commit,
+              reveal your score for consensus
+            </li>
           </ol>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button variant="outline" size="sm" onClick={handleDismiss}>

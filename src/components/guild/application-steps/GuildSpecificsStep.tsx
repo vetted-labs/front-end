@@ -38,6 +38,10 @@ export default function GuildSpecificsStep({
       ]
     : null;
 
+  const hasAnyDomainQuestions = Object.values(template.domainQuestions).some(
+    Boolean,
+  );
+
   const isSetupSubstep = substepIndex === undefined || substepIndex === 0;
   const promptIndex =
     substepIndex !== undefined && substepIndex > 0 ? substepIndex - 1 : null;
@@ -60,7 +64,9 @@ export default function GuildSpecificsStep({
             description={
               requiredLevel
                 ? "Locked to the level the role requires."
-                : "Pick the level that matches your craft. This determines which domain prompts you'll answer next."
+                : hasAnyDomainQuestions
+                  ? "Pick the level that matches your craft. This determines which domain prompts you'll answer next."
+                  : "Pick the level that matches your craft."
             }
           />
 

@@ -1,12 +1,15 @@
-import { useAccount, useChainId, useReadContract, useSignTypedData } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useReadContract,
+  useSignTypedData,
+} from "wagmi";
 import { useCallback } from "react";
 import { VETTED_TOKEN_ABI, CONTRACT_ADDRESSES } from "@/contracts/abis";
 
 /** Deadline for permit signatures — 30 minutes in normal use, longer in E2E where Anvil time may be advanced. */
 const PERMIT_DEADLINE_SECONDS =
-  process.env.NEXT_PUBLIC_E2E_MODE === "true"
-    ? 30 * 24 * 60 * 60
-    : 30 * 60;
+  process.env.NEXT_PUBLIC_E2E_MODE === "true" ? 30 * 24 * 60 * 60 : 30 * 60;
 
 /** Result of a successful permit signing */
 export interface PermitSignature {
@@ -45,13 +48,21 @@ export function usePermitSignature() {
    * Returns the deadline + v/r/s components needed for on-chain permit calls.
    */
   const signPermit = useCallback(
-    async (spender: `0x${string}`, amount: bigint): Promise<PermitSignature> => {
+    async (
+      spender: `0x${string}`,
+      amount: bigint,
+    ): Promise<PermitSignature> => {
       if (!address) throw new Error("Wallet not connected");
-      if (nonce === undefined) throw new Error("Permit nonce not loaded");
 
-      const deadline = BigInt(Math.floor(Date.now() / 1000) + PERMIT_DEADLINE_SECONDS);
+      const nonceResult = await refetchNonce();
+      const activeNonce = (nonceResult.data ?? nonce) as bigint | undefined;
+      if (activeNonce === undefined) throw new Error("Permit nonce not loaded");
 
-      const signature = await signTypedDataAsync({
+      const deadline = BigInt(
+        Math.floor(Date.now() / 1000) + PERMIT_DEADLINE_SECONDS,
+      );
+
+      const typedData = {
         domain: {
           name: "Vetted Token",
           version: "1",
@@ -72,10 +83,24 @@ export function usePermitSignature() {
           owner: address,
           spender,
           value: amount,
-          nonce: nonce as bigint,
+          nonce: activeNonce,
           deadline,
         },
-      });
+      } as const;
+
+      const injectedProvider =
+        typeof window !== "undefined" ? window.ethereum : null;
+      const signature = injectedProvider?.request
+        ? ((await injectedProvider.request({
+            method: "eth_signTypedData_v4",
+            params: [
+              address,
+              JSON.stringify(typedData, (_key, value) =>
+                typeof value === "bigint" ? value.toString() : value,
+              ),
+            ],
+          })) as `0x${string}`)
+        : await signTypedDataAsync(typedData);
 
       // Split the 65-byte signature into v, r, s
       const r = `0x${signature.slice(2, 66)}` as `0x${string}`;
@@ -84,7 +109,7 @@ export function usePermitSignature() {
 
       return { deadline, v, r, s };
     },
-    [address, chainId, nonce, signTypedDataAsync]
+    [address, chainId, nonce, refetchNonce, signTypedDataAsync],
   );
 
   return {

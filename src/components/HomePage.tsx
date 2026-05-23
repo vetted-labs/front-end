@@ -106,10 +106,6 @@ export function HomePage() {
                 height={24}
                 className="h-6 w-auto"
               />
-              <p className="text-xs text-muted-foreground/60 leading-relaxed mt-4 max-w-[320px]">
-                The credibility layer for hiring — domain experts stake reputation on every
-                decision they make.
-              </p>
             </div>
 
             <div>

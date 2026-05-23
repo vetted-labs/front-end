@@ -914,6 +914,11 @@
   },
   {
     "type": "error",
+    "name": "CreatorCannotBid",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EnforcedPause",
     "inputs": []
   },
@@ -949,12 +954,27 @@
   },
   {
     "type": "error",
+    "name": "MaxCandidatesReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MinimumBidTooHigh",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NoActiveEndorsers",
     "inputs": []
   },
   {
     "type": "error",
     "name": "NoBidToWithdraw",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OneCandidatePerExpert",
     "inputs": []
   },
   {

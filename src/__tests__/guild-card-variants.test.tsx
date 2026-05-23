@@ -41,13 +41,19 @@ describe("GuildCard variants render", () => {
       />,
     );
     expect(screen.getByText(/pending review/i)).toBeInTheDocument();
-    expect(screen.getByText("Engineering.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Engineering" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("8")).toBeInTheDocument();
     expect(screen.getByText("Staked")).toBeInTheDocument();
   });
   it("marketplace shows N OPEN tag and 'Experts' label", () => {
     render(
-      <GuildCard variant="marketplace" guild={basePublicGuild} catalogueIndex={2} />,
+      <GuildCard
+        variant="marketplace"
+        guild={basePublicGuild}
+        catalogueIndex={2}
+      />,
     );
     expect(screen.getByText(/6 OPEN/)).toBeInTheDocument();
     expect(screen.getByText("Experts")).toBeInTheDocument();
@@ -61,14 +67,23 @@ describe("GuildCard variants render", () => {
         currentUserId="m1"
       />,
     );
-    expect(screen.getByText("Engineering.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Engineering" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Rep")).toBeInTheDocument();
   });
-  it("profile shows tenure row, hides member hero", () => {
+  it("profile shows guild position stats and hides member hero", () => {
     render(
-      <GuildCard variant="profile" guild={baseExpertGuild} catalogueIndex={2} />,
+      <GuildCard
+        variant="profile"
+        guild={baseExpertGuild}
+        catalogueIndex={2}
+      />,
     );
-    expect(screen.getByText(/Member since/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Engineering" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Reputation")).toBeInTheDocument();
     expect(screen.queryByText("Members")).not.toBeInTheDocument();
   });
 });

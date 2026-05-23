@@ -8,11 +8,15 @@ describe("JobAnalyticsWorkspace", () => {
     render(<JobAnalyticsWorkspace data={jobAnalyticsFixture} isFixtureMode />);
 
     expect(screen.getByText("Role intelligence")).toBeInTheDocument();
-    expect(screen.getByText("Senior Back-end Developer")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Senior Back-end Developer").length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText("Ronan Webb").length).toBeGreaterThan(0);
     expect(screen.getByText("Selected endorser amount")).toBeInTheDocument();
     expect(screen.getByText("Fixture until persisted")).toBeInTheDocument();
     expect(screen.getByText("What predicts success here?")).toBeInTheDocument();
-    expect(screen.getByText("2 of 5 tracked hire outcomes collected")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 of 5 tracked hire outcomes collected"),
+    ).toBeInTheDocument();
   });
 });

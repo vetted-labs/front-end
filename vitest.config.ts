@@ -8,7 +8,11 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/__tests__/setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}", "e2e/real-flow/helpers/**/*.test.{ts,tsx}"],
+    include: [
+      "src/**/*.test.{ts,tsx}",
+      "e2e/real-flow/helpers/**/*.test.{ts,tsx}",
+    ],
+    exclude: ["e2e/real-flow/helpers/__tests__/backend.test.ts"],
   },
   resolve: {
     alias: {

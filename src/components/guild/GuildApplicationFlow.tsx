@@ -49,6 +49,18 @@ const STEP_META: Record<
   },
 };
 
+// Override for guilds with no domain rubric — the step is just the level
+// selector + attestation, so the copy must not promise "domain prompts".
+const GUILD_STEP_META_NO_DOMAIN: Pick<
+  (typeof STEP_META)["guild"],
+  "sub" | "headline" | "description"
+> = {
+  sub: "Level & attestation",
+  headline: "Confirm your experience level",
+  description:
+    "Pick the level that matches your experience — your reviewers use it for context.",
+};
+
 export default function GuildApplicationFlow() {
   const router = useRouter();
   const flow = useGuildApplicationFlow();
@@ -171,10 +183,18 @@ export default function GuildApplicationFlow() {
 
   if (!flow.template) return null;
 
+  const hasDomainQuestions = Object.values(
+    flow.template.domainQuestions,
+  ).some(Boolean);
+
   const stepDefs = flow.steps.map((_, idx) => {
     const type: StepType =
       idx === 0 ? "resume" : flow.hasJobStep && idx === 1 ? "job" : "guild";
-    return { num: idx + 1, type, ...STEP_META[type] };
+    const meta =
+      type === "guild" && !hasDomainQuestions
+        ? { ...STEP_META.guild, ...GUILD_STEP_META_NO_DOMAIN }
+        : STEP_META[type];
+    return { num: idx + 1, type, ...meta };
   });
 
   const totalSteps = stepDefs.length;

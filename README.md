@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vetted Frontend
 
-## Getting Started
+Next.js frontend for Vetted, with Playwright coverage wired for Auto Mate.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The default dev server uses `.env.local` and starts on `http://localhost:3000`.
+For local Auto Mate runs, use an alternate port when other projects are busy:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+NEXT_PUBLIC_E2E_MODE=true npm run dev -- -p 3001
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tests
 
-## Learn More
+```bash
+npm run typecheck
+npm test
+npm run test:e2e
+```
 
-To learn more about Next.js, take a look at the following resources:
+Real-flow tests need the backend, database, local Anvil chain, and deployed local
+contracts to be running. The backend must expose the test fixture routes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd ../backend
+NODE_ENV=test E2E_FIXTURE_ENABLED=true npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run the full real-flow suite with:
 
-## Deploy on Vercel
+```bash
+npm run e2e:real-flow
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run one Playwright spec against an already-running frontend:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/public-pages.spec.ts
+```
+
+## Auto Mate
+
+Auto Mate reads Playwright `test.step(...)` events to show a human-readable
+progress list while a test is running. Every spec under `e2e/` now emits at
+least one named step. Larger real-flow scenarios use multiple product-level
+steps such as applying to a guild, reviewer approval, bidding, hire outcome,
+reward forfeiture, and slashing checks.
+
+When adding or editing Playwright tests:
+
+- Wrap each meaningful product action in `await test.step("clear user-facing step", async () => { ... })`.
+- Prefer step names that describe what the user or system is doing, not the implementation detail.
+- Keep setup, navigation, interaction, and assertion phases as separate steps when the flow is longer than a smoke test.
+- Do not put Vitest-only helper tests under files that Playwright will collect as specs.
+
+Use [e2e/PLAYWRIGHT_TEMPLATE.md](e2e/PLAYWRIGHT_TEMPLATE.md) as the template
+for new tests. It documents the fast UI lane, the real-flow lane, role/session
+helpers, multi-page Auto Mate preview behavior, and focused verification
+commands.
+
+To slow down the browser while watching tests in Auto Mate:
+
+```bash
+PLAYWRIGHT_WATCH_UI=1 PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/public-pages.spec.ts
+```
+
+For a custom delay:
+
+```bash
+PLAYWRIGHT_SLOW_MO=500 PLAYWRIGHT_WATCH_PAUSE_MS=1000 PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/real-flow/__tests__/candidate-endorsement-ui.spec.ts
+```
+
+`PLAYWRIGHT_SLOW_MO` slows browser actions. `PLAYWRIGHT_WATCH_PAUSE_MS` is used
+by real-flow watch helpers for intentional pauses between named stages.
