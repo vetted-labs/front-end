@@ -70,35 +70,30 @@ test("candidate filters notifications and marks one read, count drops", async ({
     });
   });
 
+  // Each notification row is rendered as a `<button class="group ...">` in the
+  // NotificationsShell list. Scope to those to count/click rows.
+  const notificationRows = page.locator("button.group");
+  // The "Unread" filter tab is a button; its trailing count badge is a span.
+  const unreadTab = page.getByRole("button", { name: /^Unread/ });
+
   await test.step("assert all notifications are initially visible", async () => {
-    // The NotificationsShell renders each notification as a button with a role.
-    // Initially all 3 should be present.
-    const notificationButtons = page.locator(
-      'button[type="button"]:has(> div > div > div > div > h3)',
-    );
-    await expect(notificationButtons).toHaveCount(3, { timeout: 15_000 });
+    await expect(notificationRows).toHaveCount(3, { timeout: 15_000 });
   });
 
   await test.step("click the unread filter tab", async () => {
-    await page.getByRole("button", { name: /unread/i }).click();
+    await unreadTab.click();
     // Allow time for filter to apply.
     await page.waitForTimeout(500);
   });
 
   await test.step("assert all notifications still appear (unread filter)", async () => {
-    const notificationButtons = page.locator(
-      'button[type="button"]:has(> div > div > div > div > h3)',
-    );
-    await expect(notificationButtons).toHaveCount(3, { timeout: 15_000 });
+    // None are read yet, so all 3 remain under the Unread filter.
+    await expect(notificationRows).toHaveCount(3, { timeout: 15_000 });
   });
 
   await test.step("click the first notification", async () => {
-    const firstNotification = page
-      .locator('button[type="button"]:has(> div > div > div > div > h3)')
-      .first();
-    await firstNotification.click();
-    // The click handler marks the notification as read and navigates.
-    // Allow time for the request to complete and navigation to occur.
+    await notificationRows.first().click();
+    // The click handler marks the notification as read and navigates away.
     await page.waitForTimeout(1500);
   });
 
@@ -110,11 +105,9 @@ test("candidate filters notifications and marks one read, count drops", async ({
   });
 
   await test.step("assert notification count decreased after marking one read", async () => {
-    // With one notification marked as read, the "Unread" filter should now show 2.
-    const unreadBadge = page.locator(
-      'button:has-text("Unread") span.font-medium.rounded-lg',
-    );
-    // The badge text should be "2" (since one was marked as read).
-    await expect(unreadBadge.first()).toHaveText("2", { timeout: 15_000 });
+    // With one notification marked as read, the "Unread" filter count badge
+    // should now read "2".
+    const unreadBadge = unreadTab.locator("span").first();
+    await expect(unreadBadge).toHaveText("2", { timeout: 15_000 });
   });
 });

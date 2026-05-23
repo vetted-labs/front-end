@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from "@/lib/api";
 import { STATUS_COLORS, getCandidateStatusDot } from "@/config/colors";
 import type { CompanyActivityItem } from "@/types/api-responses";
@@ -113,6 +114,10 @@ const PIPELINE_COL_ACCENT: Record<string, string> = {
 };
 
 export function CompanyDashboardOverview() {
+  // Guard the route: redirect unauthenticated (or wrong-type) users to login.
+  // Other company pages (Settings, Candidates, Analytics) already do this; the
+  // overview was missing it, leaving /dashboard reachable while signed out.
+  useRequireAuth("company");
   const { userId } = useAuthContext();
 
   // Critical data — renders stats, jobs, and welcome header immediately

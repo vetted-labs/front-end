@@ -129,6 +129,15 @@ export interface GuildApplication {
   my_reward_amount?: number;
   my_slashing_tier?: SlashingTier;
   my_slash_percent?: number;
+  // IQR consensus stats (surfaced on the finalized proposal detail view).
+  iqr?: {
+    median: number;
+    q1: number;
+    q3: number;
+    iqr: number;
+    includedCount?: number;
+    excludedCount?: number;
+  };
   // Item type: "proposal" (Schelling voting), "guild_application" (candidate membership), or "expert_application" (expert membership)
   item_type?: "proposal" | "guild_application" | "expert_application";
   // Consensus failure / tiebreaker fields

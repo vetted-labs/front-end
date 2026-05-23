@@ -27,12 +27,14 @@ Cross-stack Playwright suites that exercise the full candidate-review flow (Suit
    forge script script/MintTokens.s.sol --rpc-url http://localhost:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
    ```
 5. **Backend** running on `:4000` with `E2E_FIXTURE_ENABLED=true`:
+
    ```sh
    cd ../backend
    E2E_FIXTURE_ENABLED=true ENDORSEMENT_RETENTION_SECONDS=5 ENDORSEMENT_CHALLENGE_SECONDS=10 npm run dev
    ```
 
    `E2E_FIXTURE_ENABLED=true` also gates `FinalizeProposalsCron.start` and `BlockchainOpsCron.start` (per T7 of the plan). The cron jobs MUST stay disabled in test mode — tests drive cron-equivalent work via `/api/test/drain` and `/api/test/endorsement/*`. If you see `isRunning lock held` errors, a cron started against intent — confirm `E2E_FIXTURE_ENABLED=true` is actually exported in the BE process env.
+
 6. **Frontend** auto-starts via Playwright config on `:3030`.
 
 ### Suite-level setup script (copy-paste)

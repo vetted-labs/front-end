@@ -18,100 +18,118 @@ const ACCOUNT_2_KEY =
 const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
 
 test("eth_accounts returns the active address", async () => {
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
-  const accounts = (await w.request({ method: "eth_accounts" })) as string[];
-  expect(accounts[0].toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  await test.step("Verify: eth_accounts returns the active address", async () => {
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+    const accounts = (await w.request({ method: "eth_accounts" })) as string[];
+    expect(accounts[0].toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });
 
 test("eth_chainId returns 0xaa36a7 (sepolia)", async () => {
-  // We run anvil with `--chain-id 11155111` so the whole stack aligns on
-  // sepolia (BE provider, FE wagmi sepolia, CommitmentForm's sepolia gate).
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
-  const id = await w.request({ method: "eth_chainId" });
-  expect(id).toBe("0xaa36a7");
+  await test.step("Verify: eth_chainId returns 0xaa36a7 (sepolia)", async () => {
+    // We run anvil with `--chain-id 11155111` so the whole stack aligns on
+    // sepolia (BE provider, FE wagmi sepolia, CommitmentForm's sepolia gate).
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+    const id = await w.request({ method: "eth_chainId" });
+    expect(id).toBe("0xaa36a7");
+  });
 });
 
 test("personal_sign produces a recoverable signature", async () => {
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+  await test.step("Verify: personal_sign produces a recoverable signature", async () => {
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
 
-  // Encode a SIWE-style challenge as hex per personal_sign convention
-  const message = "Vetted wants you to sign in.\n\nNonce: abc123";
-  const hexMessage = `0x${Buffer.from(message, "utf8").toString("hex")}` as Hex;
+    // Encode a SIWE-style challenge as hex per personal_sign convention
+    const message = "Vetted wants you to sign in.\n\nNonce: abc123";
+    const hexMessage =
+      `0x${Buffer.from(message, "utf8").toString("hex")}` as Hex;
 
-  const sig = (await w.request({
-    method: "personal_sign",
-    params: [hexMessage, ACCOUNT_1_ADDR],
-  })) as Hex;
+    const sig = (await w.request({
+      method: "personal_sign",
+      params: [hexMessage, ACCOUNT_1_ADDR],
+    })) as Hex;
 
-  expect(sig).toMatch(/^0x[0-9a-f]+$/i);
+    expect(sig).toMatch(/^0x[0-9a-f]+$/i);
 
-  // Recover and confirm it matches the active account
-  const recovered = await recoverMessageAddress({ message, signature: sig });
-  expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+    // Recover and confirm it matches the active account
+    const recovered = await recoverMessageAddress({ message, signature: sig });
+    expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });
 
 test("eth_sendTransaction submits to anvil and returns a tx hash", async () => {
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+  await test.step("Verify: eth_sendTransaction submits to anvil and returns a tx hash", async () => {
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
 
-  const hash = (await w.request({
-    method: "eth_sendTransaction",
-    params: [
-      {
-        from: ACCOUNT_1_ADDR,
-        to: "0x0000000000000000000000000000000000000001",
-        value: "0x1", // 1 wei
-      },
-    ],
-  })) as Hex;
+    const hash = (await w.request({
+      method: "eth_sendTransaction",
+      params: [
+        {
+          from: ACCOUNT_1_ADDR,
+          to: "0x0000000000000000000000000000000000000001",
+          value: "0x1", // 1 wei
+        },
+      ],
+    })) as Hex;
 
-  expect(hash).toMatch(/^0x[0-9a-f]{64}$/i);
+    expect(hash).toMatch(/^0x[0-9a-f]{64}$/i);
 
-  // Confirm anvil actually mined it. eth_sendTransaction returns when the tx
-  // is submitted; receipt may lag by a tick on auto-mine. Poll briefly.
-  let receipt: unknown = null;
-  for (let i = 0; i < 20 && !receipt; i++) {
-    receipt = await w.request({
-      method: "eth_getTransactionReceipt",
-      params: [hash],
-    });
-    if (!receipt) await new Promise((r) => setTimeout(r, 50));
-  }
-  expect(receipt).toBeTruthy();
+    // Confirm anvil actually mined it. eth_sendTransaction returns when the tx
+    // is submitted; receipt may lag by a tick on auto-mine. Poll briefly.
+    let receipt: unknown = null;
+    for (let i = 0; i < 20 && !receipt; i++) {
+      receipt = await w.request({
+        method: "eth_getTransactionReceipt",
+        params: [hash],
+      });
+      if (!receipt) await new Promise((r) => setTimeout(r, 50));
+    }
+    expect(receipt).toBeTruthy();
+  });
 });
 
 test("setAccount swaps the active key + emits accountsChanged", async () => {
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+  await test.step("Verify: setAccount swaps the active key + emits accountsChanged", async () => {
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
 
-  const events: string[][] = [];
-  w.on("accountsChanged", (accounts: string[]) => events.push(accounts));
+    const events: string[][] = [];
+    w.on("accountsChanged", (accounts: string[]) => events.push(accounts));
 
-  // Switch to account 2
-  w.setAccount(ACCOUNT_2_KEY);
+    // Switch to account 2
+    w.setAccount(ACCOUNT_2_KEY);
 
-  const accounts = (await w.request({ method: "eth_accounts" })) as string[];
-  expect(accounts[0]).not.toBe(ACCOUNT_1_ADDR);
+    const accounts = (await w.request({ method: "eth_accounts" })) as string[];
+    expect(accounts[0]).not.toBe(ACCOUNT_1_ADDR);
 
-  expect(events.length).toBe(1);
-  expect(events[0][0]).toBe(accounts[0]);
+    expect(events.length).toBe(1);
+    expect(events[0][0]).toBe(accounts[0]);
 
-  // Sign with the new account and confirm recovery matches
-  const message = "switch test";
-  const hexMessage = `0x${Buffer.from(message, "utf8").toString("hex")}` as Hex;
-  const sig = (await w.request({
-    method: "personal_sign",
-    params: [hexMessage, accounts[0]],
-  })) as Hex;
-  const recovered = await recoverMessageAddress({ message, signature: sig });
-  expect(recovered.toLowerCase()).toBe(accounts[0].toLowerCase());
+    // Sign with the new account and confirm recovery matches
+    const message = "switch test";
+    const hexMessage =
+      `0x${Buffer.from(message, "utf8").toString("hex")}` as Hex;
+    const sig = (await w.request({
+      method: "personal_sign",
+      params: [hexMessage, accounts[0]],
+    })) as Hex;
+    const recovered = await recoverMessageAddress({ message, signature: sig });
+    expect(recovered.toLowerCase()).toBe(accounts[0].toLowerCase());
+  });
 });
 
 test("unknown methods are passed through to anvil", async () => {
-  const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
-  const blockNumber = (await w.request({ method: "eth_blockNumber" })) as string;
-  expect(blockNumber).toMatch(/^0x[0-9a-f]+$/i);
+  await test.step("Verify: unknown methods are passed through to anvil", async () => {
+    const w = new HeadlessWallet({ privateKey: ACCOUNT_1_KEY, rpcUrl: RPC });
+    const blockNumber = (await w.request({
+      method: "eth_blockNumber",
+    })) as string;
+    expect(blockNumber).toMatch(/^0x[0-9a-f]+$/i);
+  });
 });
 
-test("hexToBytes import is available (typecheck sanity)", () => {
-  // Just ensure the import compiles; not testing behavior here.
-  expect(typeof hexToBytes).toBe("function");
+test("hexToBytes import is available (typecheck sanity)", async () => {
+  await test.step("Verify: hexToBytes import is available (typecheck sanity)", async () => {
+    // Just ensure the import compiles; not testing behavior here.
+    expect(typeof hexToBytes).toBe("function");
+  });
 });

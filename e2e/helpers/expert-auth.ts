@@ -144,7 +144,15 @@ export async function mockLeaderboardApi(page: Page): Promise<void> {
       contentType: "application/json",
       body: JSON.stringify({
         success: true,
-        data: { experts: [], stats: { totalExperts: 0, avgReviews: 0, topEarnings: 0, totalEarnings: 0 } },
+        data: {
+          experts: [],
+          stats: {
+            totalExperts: 0,
+            avgReviews: 0,
+            topEarnings: 0,
+            totalEarnings: 0,
+          },
+        },
       }),
     });
   });

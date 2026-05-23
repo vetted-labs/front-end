@@ -22,7 +22,10 @@ export async function approveCandidateGuildApplicationViaUI(
     });
   }
 
-  await testApi.candidateReviews.expireAndFinalize(basePage.request, args.applicationId);
+  await testApi.candidateReviews.expireAndFinalize(
+    basePage.request,
+    args.applicationId,
+  );
 }
 
 async function reviewApplicationAsExpert(
@@ -31,7 +34,8 @@ async function reviewApplicationAsExpert(
   args: { guildId: string; applicationId: string; score: number },
 ): Promise<void> {
   const browser = basePage.context().browser();
-  if (!browser) throw new Error("reviewApplicationAsExpert: browser handle unavailable");
+  if (!browser)
+    throw new Error("reviewApplicationAsExpert: browser handle unavailable");
 
   const reviewContext = await browser.newContext({
     baseURL: new URL(basePage.url()).origin,

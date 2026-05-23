@@ -66,10 +66,10 @@ test.describe("Expert earnings page", () => {
     });
 
     await test.step("all four time range filter buttons are visible", async () => {
-      await expect(page.getByRole("button", { name: "All Time" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "All", exact: true })).toBeVisible();
       await expect(page.getByRole("button", { name: "24h" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "7d" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "30d" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "7D" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "30D" })).toBeVisible();
     });
   });
 
@@ -99,7 +99,7 @@ test.describe("Expert earnings page", () => {
     await test.step("expert clicks the 7d filter and a new API call is made", async () => {
       const initialCount = fetchCount;
 
-      await page.getByRole("button", { name: "7d" }).click();
+      await page.getByRole("button", { name: "7D" }).click();
       await page.waitForTimeout(1000);
 
       expect(fetchCount).toBeGreaterThan(initialCount);

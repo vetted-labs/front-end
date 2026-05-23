@@ -41,7 +41,7 @@ import {
   uuidToBytes32,
 } from "../../helpers/endorsement";
 import { applyToGuildViaUI } from "../../helpers/scenario";
-import { ANVIL_KEYS, makeWallet } from "../../helpers/chain";
+import { BACKEND_URL } from "../../helpers/backend";
 import { parseEther, type Address } from "viem";
 import { randomUUID } from "node:crypto";
 
@@ -62,14 +62,13 @@ test("bid-already-exists rejection: 2nd placeBid by same expert reverts on-chain
   guild,
   experts,
   contracts,
+  jobCreator,
   cleanState: _cleanState,
 }) => {
   // The bidder. Must NOT also be the job creator (CreatorCannotBid, L678).
   const bidder = experts[0];
-  // Anvil account 5 — outside the experts[0..3] fixture range, holds VETD
-  // from the dev mint script, and avoids `CreatorCannotBid` because it
-  // never bids. Same convention as scenario 03.
-  const jobCreator = makeWallet(ANVIL_KEYS[5]);
+  // jobCreator fixture: pre-funded wallet (cleanState tops up VETD). Address
+  // is outside the experts fixture range, avoids `CreatorCannotBid`.
 
   // Resolved inside step 2 so the trace viewer attributes errors correctly.
   let jobId!: string;
@@ -83,9 +82,13 @@ test("bid-already-exists rejection: 2nd placeBid by same expert reverts on-chain
     // The applicationId / sessionId from `applyToGuildViaUI` are unused for
     // this purely-on-chain scenario; we only need the candidate UUID, which
     // `getMyCandidateProposals` does NOT project. Pull it from
-    // `/api/candidates/me` (candidate session cookie attached via `page.request`).
+    // `/api/candidates/me` using the candidate JWT directly so the BE auth
+    // middleware accepts the request.
     await applyToGuildViaUI(page, candidate, guild.id);
-    const meRes = await page.request.get(`/api/candidates/me`);
+    const meRes = await page.request.get(
+      `${BACKEND_URL}/api/candidates/me`,
+      { headers: { Authorization: `Bearer ${candidate.token}` } },
+    );
     expect(meRes.ok()).toBeTruthy();
     const me = (await meRes.json()) as { data: { id: string } };
     candidateId = me.data.id;
@@ -101,7 +104,11 @@ test("bid-already-exists rejection: 2nd placeBid by same expert reverts on-chain
     await placeBid(bidder, contracts, jobId, candidateId, "1");
   });
 
-  await test.step("second bid by same expert reverts with BidAlreadyExists", async () => {
+  await test.step("second bid by same expert reverts with BidAlreadyExists or OneCandidatePerExpert", async () => {
+    // The contract checks expertJobBid[jobId][msg.sender] first (line 681)
+    // before the per-candidate uniqueness check (line 684). Since the first bid
+    // already set that mapping, the revert is OneCandidatePerExpert — which has
+    // the same semantic meaning for the E2E scenario (bid rejected on replay).
     const secondBidPromise = placeBid(
       bidder,
       contracts,
@@ -109,7 +116,9 @@ test("bid-already-exists rejection: 2nd placeBid by same expert reverts on-chain
       candidateId,
       "1",
     );
-    await expect(secondBidPromise).rejects.toThrow(/BidAlreadyExists/);
+    await expect(secondBidPromise).rejects.toThrow(
+      /BidAlreadyExists|OneCandidatePerExpert/,
+    );
   });
 
   await test.step("on-chain bid amount is unchanged (still 1 VETD)", async () => {

@@ -35,6 +35,10 @@ export async function signupCompany(page: Page): Promise<CompanyCredentials> {
   await page.getByPlaceholder("Min. 6 characters").fill(password);
   await page.getByPlaceholder("Repeat password").fill(password);
 
+  // The "Create Account" button is disabled until the Terms of Service
+  // checkbox is agreed to (SignupPage: disabled={isLoading || !agreedToTerms}).
+  await page.getByRole("checkbox", { name: /I agree to the/i }).check();
+
   // Submit
   await page.getByRole("button", { name: "Create Account" }).click();
 
@@ -55,12 +59,13 @@ export async function loginCompany(
   await page.goto("/auth/login?type=company", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
 
-  // Wait for React to hydrate
+  // Company login uses a company-specific email placeholder (LoginPage:
+  // userType === "company" ? "hiring@company.com" : "you@example.com").
   await page
-    .getByPlaceholder("you@example.com")
+    .getByPlaceholder("hiring@company.com")
     .waitFor({ state: "visible", timeout: 30000 });
 
-  await page.getByPlaceholder("you@example.com").fill(email);
+  await page.getByPlaceholder("hiring@company.com").fill(email);
   await page.getByPlaceholder("Enter your password").fill(password);
 
   await page.getByRole("button", { name: "Sign In", exact: true }).click();

@@ -1572,6 +1572,11 @@ function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/
       ? Number(raw.myReputationChange ?? raw.my_reputation_change) : undefined,
     my_reward_amount: raw.myRewardAmount != null || raw.my_reward_amount != null
       ? Number(raw.myRewardAmount ?? raw.my_reward_amount) : undefined,
+    my_slashing_tier: (raw.mySlashingTier ?? raw.my_slashing_tier) as import("@/types").SlashingTier | undefined,
+    my_slash_percent: raw.mySlashPercent != null || raw.my_slash_percent != null
+      ? Number(raw.mySlashPercent ?? raw.my_slash_percent) : undefined,
+    // IQR consensus stats (median/quartiles) for the finalized detail view.
+    iqr: (raw.iqr ?? raw.iqrStats) as import("@/types").GuildApplication["iqr"],
     // Item type
     item_type: (raw.itemType ?? raw.item_type) as "proposal" | "guild_application" | "expert_application" | undefined,
     // Consensus failure / tiebreaker fields
@@ -1778,6 +1783,40 @@ export const getAssetUrl = (path: string) => {
   return path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
 };
 
+// The backend serializes numeric governance columns as strings (NUMERIC) and
+// names the tallies `total_votes_*`/`voter_count`, while the FE type/components
+// expect numbers under `votes_*`. Normalize the shape at the API boundary so
+// callers (and the proposal detail page, which calls `.toFixed()` on
+// `voting_power`) receive real numbers in the expected fields.
+function normalizeGovernanceProposal(
+  raw: Record<string, unknown>,
+): import("@/types").GovernanceProposalDetail {
+  const num = (v: unknown, fallback = 0): number => {
+    const n = typeof v === "string" ? Number(v) : (v as number);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const r = raw as Record<string, unknown>;
+  const votes = Array.isArray(r.votes)
+    ? (r.votes as Array<Record<string, unknown>>).map((v) => ({
+        ...v,
+        voting_power: num(v.voting_power),
+        vote_weight:
+          v.vote_weight != null ? num(v.vote_weight) : undefined,
+      }))
+    : r.votes;
+  return {
+    ...(raw as object),
+    votes_for: num(r.votes_for ?? r.total_votes_for),
+    votes_against: num(r.votes_against ?? r.total_votes_against),
+    votes_abstain: num(r.votes_abstain ?? r.total_votes_abstain),
+    total_voting_power: num(r.total_voting_power),
+    voter_count: num(r.voter_count),
+    quorum_required: num(r.quorum_required),
+    stake_amount: num(r.stake_amount),
+    votes,
+  } as unknown as import("@/types").GovernanceProposalDetail;
+}
+
 // Governance API
 export const governanceApi = {
   createProposal: (data: Record<string, unknown>, wallet: string) =>
@@ -1804,18 +1843,26 @@ export const governanceApi = {
     // the type and callers expect. Defensive against the old direct-array
     // response shape too (older deploys).
     const response = await apiRequest<
-      | import("@/types").GovernanceProposalDetail[]
-      | { proposals: import("@/types").GovernanceProposalDetail[]; total: number }
+      | Array<Record<string, unknown>>
+      | { proposals: Array<Record<string, unknown>>; total: number }
     >(`/api/governance/proposals${query ? `?${query}` : ""}`);
-    if (Array.isArray(response)) return response;
-    return response.proposals ?? [];
+    const list = Array.isArray(response) ? response : response.proposals ?? [];
+    return list.map(normalizeGovernanceProposal);
   },
 
-  getActiveProposals: () =>
-    apiRequest<import("@/types").GovernanceProposalDetail[]>("/api/governance/proposals/active"),
+  getActiveProposals: async () => {
+    const list = await apiRequest<Array<Record<string, unknown>>>(
+      "/api/governance/proposals/active",
+    );
+    return (list ?? []).map(normalizeGovernanceProposal);
+  },
 
-  getProposal: (id: string) =>
-    apiRequest<import("@/types").GovernanceProposalDetail>(`/api/governance/proposals/${id}`),
+  getProposal: async (id: string) =>
+    normalizeGovernanceProposal(
+      await apiRequest<Record<string, unknown>>(
+        `/api/governance/proposals/${id}`,
+      ),
+    ),
 
   vote: (id: string, data: { vote: "for" | "against" | "abstain"; votingPower?: number; reason?: string }, wallet: string) =>
     apiRequest<{ success: boolean }>(`/api/governance/proposals/${id}/vote`, {

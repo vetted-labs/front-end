@@ -39,8 +39,9 @@ test("company admin invites a teammate and they appear pending", async ({
   await test.step("company admin navigates to Settings → Team tab", async () => {
     await page.goto("/dashboard/settings", { waitUntil: "domcontentloaded" });
 
-    // The left-rail nav item for Team is a <button> with text "Team"
-    await page.getByRole("button", { name: /^team$/i }).click();
+    // The left-rail nav item for Team is a <button> whose accessible name is
+    // "Team Members and roles" (label + description).
+    await page.getByRole("button", { name: /team/i }).click();
 
     // Confirm the Team section is now visible — TeamManagement renders an h2
     // with "Team" text as the card header
@@ -62,11 +63,9 @@ test("company admin invites a teammate and they appear pending", async ({
   });
 
   await test.step("company admin fills in the invite form and submits", async () => {
-    // Full Name field — plain input, identified by its label text
-    await page.getByLabel(/full name/i).fill(inviteeName);
-
-    // Email field
-    await page.getByLabel(/email/i).fill(inviteeEmail);
+    // The dialog uses unassociated <label>s, so target inputs by placeholder.
+    await page.getByPlaceholder("Jane Smith").fill(inviteeName);
+    await page.getByPlaceholder("jane@company.com").fill(inviteeEmail);
 
     // Role defaults to "recruiter" — leave as-is for this scenario
 
@@ -82,7 +81,11 @@ test("company admin invites a teammate and they appear pending", async ({
     // NOTE: If the BE invite endpoint is not yet implemented, the toast will
     // show an error and this assertion will fail. The spec is still committed
     // as scaffolding — see file-level comment.
-    await expect(page.getByText(inviteeEmail)).toBeVisible({ timeout: 15_000 });
+    // The invitee email also appears transiently in the success toast, so
+    // scope to the persistent team member row (a <p> in the list).
+    await expect(
+      page.locator("p", { hasText: inviteeEmail }),
+    ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/^pending$/i).first()).toBeVisible({
       timeout: 5_000,
     });

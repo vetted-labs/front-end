@@ -46,7 +46,10 @@ export function readContractAddresses(): ContractAddresses {
   return JSON.parse(raw) as ContractAddresses;
 }
 
-export function makeContracts(addresses: ContractAddresses, client: PublicClient) {
+export function makeContracts(
+  addresses: ContractAddresses,
+  client: PublicClient,
+) {
   return {
     vettingManager: getContract({
       address: addresses.VettingManager,

@@ -79,8 +79,6 @@ export async function signupCandidate(
     clearConflicting: true,
   });
 
-  await page.goto("/candidate/dashboard", { waitUntil: "domcontentloaded" });
-
   return { email, password, token, candidateId: candidate.id, fullName };
 }
 

@@ -29,8 +29,8 @@ interface ApplicationFinalizationDisplayProps {
       q1: number;
       q3: number;
       iqr: number;
-      includedCount: number;
-      excludedCount: number;
+      includedCount?: number;
+      excludedCount?: number;
     };
   };
   myVote?: {

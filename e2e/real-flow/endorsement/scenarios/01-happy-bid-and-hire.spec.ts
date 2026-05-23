@@ -2,57 +2,22 @@
 //
 // Suite B — Scenario 01: happy-bid-and-hire.
 //
-// Canonical happy path for the endorsement-bidding flow: candidate applies via
-// the UI, three experts place increasing on-chain bids on (jobId, candidateId),
-// the company records `hired`, the BE outbox is drained so the immediate-half
-// rewards reach `RewardDistributor`, and the top-3 endorsers + reward rows are
-// asserted on both sides (chain + BE).
+// Canonical happy path for the endorsement-bidding flow: a company job is
+// seeded, the candidate applies to it, three experts place increasing on-chain
+// bids on (jobId, candidateId), each bid is synced to the BE
+// endorsement_bids table, the company records `hired`, the BE outbox is
+// drained so the immediate-half rewards reach `RewardDistributor`, and the
+// top-3 endorsers + reward rows are asserted on both sides (chain + BE).
 //
-// This is the first scenario in Suite B and (alongside the already-shipped
-// Scenario 07) doubles as a smoke test for the Suite B helper stack
-// (`helpers/endorsement.ts`, the `experts` worker fixture, and the test-API
-// blockchain-ops drain).
+// This is the first scenario in Suite B and doubles as a smoke test for the
+// Suite B helper stack (`helpers/endorsement.ts`, the `experts` worker
+// fixture, and the test-API blockchain-ops drain).
 //
-// Known mismatches with the plan code block (documented for the reviewer):
-//   1. The plan reads jobId/candidateId from
-//      `GET /api/candidate-guild-applications/:applicationId`. That route does
-//      not exist. We use `GET /api/candidates/me/guild-applications` (the same
-//      route Suite A scenario 01 uses to read `proposalOutcome`) and find the
-//      row by `id`. NOTE: the BE projection currently returns `jobId` in
-//      camelCase and does not project `candidateId` at all (see
-//      `candidate-proposal-queries.service.ts:273-298`); the BE fix needed for
-//      Suite B is the same as Scenario 07 — track once.
-//   2. `applyToGuildViaUI(page, candidate, guildId)` applies to a guild
-//      _without_ a job (no `?jobId=` query param). When applied this way, the
-//      BE writes `candidate_guild_applications.job_id = NULL`. The validation
-//      schema for `POST /api/endorsements/hire-outcome` requires a UUID for
-//      `jobId`, so the test will fail at `recordHireOutcome` until the suite
-//      bootstrap seeds a real job and the apply helper accepts a `?jobId=`
-//      override (or the validation/route is loosened). We surface this by
-//      throwing an explicit error if `job_id` is null on the application row.
-//   3. The plan calls `recordHireOutcome(request, companyToken, applicationId,
-//      "hired", 100_000)`. The current helper signature does take exactly that
-//      shape, but the BE schema additionally requires `jobId` and
-//      `candidateId` in the body. The helper as shipped (commit `d6342ac`) does
-//      _not_ pass them, so the request will 400 until the helper is extended.
-//      Mirrored from Scenario 07.
-//   4. The plan reads `rewards.total` from the rewards endpoint. The BE
-//      actually returns an array of `ExpertRewardWithOutcome` rows (see
-//      `hire-accountability.service.ts:739`). We assert the latest row's
-//      `total_reward` is positive instead.
-//   5. The plan UI spot-check goes to `/candidate/applications/${applicationId}`
-//      — that detail route does not exist. We use the list page
-//      `/candidate/applications` (same as Suite A) and look for the application
-//      ID or guild name on the page. The candidate UI does NOT currently
-//      render the literal word "hired"; the closest stable smoke check is
-//      asserting the page loaded and the application row is visible.
-//
-// Critical concern — company JWT:
-//   `recordHireOutcome` requires a company-typed Bearer token (the route uses
-//   `verifyCompanyToken`). The fixtures do not mint one and the BE has no
-//   `/api/test/seed/company` endpoint, so this test reads
-//   `process.env.E2E_COMPANY_TOKEN`. It throws a clear error if unset rather
-//   than silently passing. Mirrored from Scenario 07.
+// Bid sync: after each on-chain `placeBid`, we call
+// `POST /api/blockchain/endorsements/sync` with `walletAddress` in the body.
+// The `identifyExpertWallet` middleware resolves expert identity from the
+// wallet address (no SIWE required) so the BE can write the `endorsement_bids`
+// row that `hire_outcomes` needs to calculate rewards.
 //
 // Critical concern — bytes32 conversion for jobId/candidateId:
 //   `placeBid` calls `uuidToBytes32(jobId)` (`keccak256(toHex(uuid))`). If the
@@ -65,11 +30,11 @@
 import { test, expect } from "../../fixtures";
 import {
   approveExpertsForBidding,
+  createJob,
   placeBid,
   recordHireOutcome,
   uuidToBytes32,
 } from "../../helpers/endorsement";
-import { applyToGuildViaUI } from "../../helpers/scenario";
 import { testApi, BACKEND_URL } from "../../helpers/backend";
 import type { Address } from "viem";
 
@@ -93,6 +58,8 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
   experts,
   contracts,
   request,
+  jobCreator,
+  company,
   cleanState: _cleanState,
 }) => {
   // Hoisted bindings so later steps can read what step 1 produced. Resolved
@@ -100,7 +67,7 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
   // correctly in the trace viewer.
   let applicationId!: string;
   let jobId!: string;
-  let candidateId!: string;
+  const candidateId = candidate.candidateId;
 
   const bidders = experts.slice(0, 3);
   // Bid amounts in whole VETD strings (helper uses `parseEther`). >=1 VETD per
@@ -111,65 +78,66 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
     await approveExpertsForBidding(bidders, contracts);
   });
 
-  await test.step("apply to guild via UI", async () => {
-    const result = await applyToGuildViaUI(page, candidate, guild.id);
-    applicationId = result.applicationId;
-  });
+  await test.step("seed job + candidate applies to job; create on-chain job", async () => {
+    // Seed a real jobs row (hire_outcomes FK requires applications.job_id →
+    // jobs.id). The `company` fixture provides the company id + token.
+    const seededJob = await testApi.seedJob(request, {
+      companyId: company.id,
+      title: "E2E Endorsement Test Job",
+      guild: guild.name,
+    });
+    jobId = seededJob.jobId;
 
-  await test.step("read jobId + candidateId off the application row", async () => {
-    // The candidate-authenticated list endpoint is the only BE route that
-    // currently surfaces job/candidate identifiers for a candidate's own
-    // applications (no per-id GET exists). `page.request` carries the
-    // candidate session set up by the `candidate` fixture.
-    //
-    // Known BE gap (Suite B blocker, see file header): the projection returns
-    // `jobId` in camelCase and does NOT project a `candidate_id` field. We
-    // accept either snake_case or camelCase here so this scenario picks up the
-    // BE fix the moment it lands.
-    const res = await page.request.get(
-      `/api/candidates/me/guild-applications`,
+    // Candidate applies to the seeded job — creates an `applications` row
+    // whose id we pass to `recordHireOutcome` as `applicationId`.
+    const applyRes = await page.request.post(
+      `${BACKEND_URL}/api/applications`,
+      {
+        headers: { Authorization: `Bearer ${candidate.token}` },
+        data: {
+          jobId,
+          coverLetter:
+            "E2E test application for endorsement scenario 01. This cover letter meets the minimum length requirement.",
+        },
+      },
     );
-    expect(res.ok()).toBeTruthy();
-    const body = (await res.json()) as {
-      data: Array<{
-        id: string;
-        job_id?: string | null;
-        jobId?: string | null;
-        candidate_id?: string | null;
-        candidateId?: string | null;
-      }>;
+    expect(applyRes.ok()).toBeTruthy();
+    const applyBody = (await applyRes.json()) as {
+      data: { id: string };
     };
-    const app = body.data.find((row) => row.id === applicationId);
-    expect(app).toBeDefined();
+    applicationId = applyBody.data.id;
 
-    const resolvedJobId = app?.job_id ?? app?.jobId;
-    const resolvedCandidateId = app?.candidate_id ?? app?.candidateId;
-    if (!resolvedJobId || !resolvedCandidateId) {
-      throw new Error(
-        `BE did not project job_id/candidate_id for application ${applicationId}. ` +
-          `applyToGuildViaUI applies without a jobId so the application row's job_id is NULL; ` +
-          `the suite bootstrap must seed a real job and pass it to the apply helper, ` +
-          `and the candidate-proposals projection must surface candidate_id (Suite B blocker).`,
-      );
-    }
-    jobId = resolvedJobId;
-    candidateId = resolvedCandidateId;
+    // Create the on-chain job entry so placeBid doesn't revert with
+    // InvalidJob. Creator must differ from bidders (CreatorCannotBid).
+    await createJob(jobCreator, contracts, jobId);
   });
 
-  await test.step("3 experts place bids (1, 2, 3 VETD)", async () => {
+  await test.step("3 experts place bids (1, 2, 3 VETD) + sync each to BE", async () => {
     for (let i = 0; i < bidders.length; i++) {
       await placeBid(bidders[i], contracts, jobId, candidateId, bidAmounts[i]);
+
+      // Sync the on-chain bid to the BE `endorsement_bids` table so that
+      // `recordHireOutcome` can find endorsers and create reward rows.
+      // `identifyExpertWallet` resolves expert identity from wallet address
+      // (no SIWE required — pass `walletAddress` in the body).
+      const syncRes = await page.request.post(
+        `${BACKEND_URL}/api/blockchain/endorsements/sync`,
+        {
+          headers: { "x-wallet-address": bidders[i].address },
+          data: {
+            applicationId,
+            jobId,
+            candidateId,
+            walletAddress: bidders[i].address,
+          },
+        },
+      );
+      expect(syncRes.ok()).toBeTruthy();
     }
   });
 
   await test.step("company records hire", async () => {
-    const companyToken = process.env.E2E_COMPANY_TOKEN ?? "";
-    if (!companyToken) {
-      throw new Error(
-        "E2E_COMPANY_TOKEN env var is required (mirror T21 — seeded by suite bootstrap).",
-      );
-    }
-    await recordHireOutcome(request, companyToken, {
+    await recordHireOutcome(request, company.token, {
       applicationId,
       candidateId,
       jobId,
@@ -190,20 +158,30 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
     // indexable; the contract guarantees 3 slots (`MAX_ENDORSEMENTS = 3`)
     // even when fewer bids are placed (zero-address sentinels fill empty
     // ranks), so we filter those out before counting.
-    const top = (await contracts.endorsementBidding.read.getTopEndorsers([
+    // Non-`as const` ABI: viem may return the named tuple as an array
+    // `[experts, amounts]` rather than `{ experts, amounts }`. Support both.
+    const rawTop = await contracts.endorsementBidding.read.getTopEndorsers([
       uuidToBytes32(jobId),
       uuidToBytes32(candidateId),
-    ])) as { experts: readonly Address[]; amounts: readonly bigint[] };
-    const nonZero = top.experts.filter(
-      (addr) => addr.toLowerCase() !== "0x0000000000000000000000000000000000000000",
+    ]);
+    const topExperts: readonly Address[] =
+      Array.isArray(rawTop) ? (rawTop as unknown[])[0] as Address[]
+      : (rawTop as { experts: readonly Address[] }).experts;
+    const topAmounts: readonly bigint[] =
+      Array.isArray(rawTop) ? (rawTop as unknown[])[1] as bigint[]
+      : (rawTop as { amounts: readonly bigint[] }).amounts;
+
+    const nonZero = topExperts.filter(
+      (addr) =>
+        addr.toLowerCase() !== "0x0000000000000000000000000000000000000000",
     );
     expect(nonZero).toHaveLength(3);
     // Sanity-check: amounts non-increasing (rank 1 = highest bid). Bids were
     // 1, 2, 3 VETD — so rank 1 is the 3-VETD bidder, rank 3 is the 1-VETD
     // bidder. The fixed-size array preserves rank ordering even with sentinels.
-    expect(top.amounts[0]).toBeGreaterThan(0n);
-    expect(top.amounts[0]).toBeGreaterThanOrEqual(top.amounts[1]);
-    expect(top.amounts[1]).toBeGreaterThanOrEqual(top.amounts[2]);
+    expect(topAmounts[0]).toBeGreaterThan(0n);
+    expect(topAmounts[0]).toBeGreaterThanOrEqual(topAmounts[1]);
+    expect(topAmounts[1]).toBeGreaterThanOrEqual(topAmounts[2]);
   });
 
   await test.step("assert BE rewards positive for each bidder", async () => {
@@ -214,6 +192,7 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
     for (const expert of bidders) {
       const res = await page.request.get(
         `${BACKEND_URL}/api/endorsements/rewards/${expert.id}`,
+        { headers: { Authorization: `Bearer ${company.token}` } },
       );
       expect(res.ok()).toBeTruthy();
       const body = (await res.json()) as { data: ExpertRewardRow[] };
@@ -222,24 +201,21 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
       );
       expect(rewardsForThisExpert.length).toBeGreaterThanOrEqual(1);
       const reward = rewardsForThisExpert[0];
-      // total_reward is a numeric Postgres column the BE returns as a string;
-      // BigInt-parse before comparing so we don't hit JS-number precision on
-      // wei-scale values.
-      expect(BigInt(reward.total_reward)).toBeGreaterThan(0n);
+      // total_reward is a numeric Postgres column (USD, not wei) returned as a
+      // string with decimal precision. Parse as float before comparing.
+      expect(parseFloat(reward.total_reward)).toBeGreaterThan(0);
     }
   });
 
   await test.step("UI spot-check: applications list renders the application", async () => {
-    // The candidate UI does NOT currently render the literal word "hired"
-    // anywhere on `/candidate/applications` (no UI surface exists for the hire
-    // outcome — see `CandidateApplications.tsx`). The plan's
-    // `/candidate/applications/${applicationId}` detail route also does not
-    // exist. The closest stable smoke check is asserting the list page loaded
-    // and the row for our application is visible (by guild name — every
-    // application card in this fixture is for the seeded "Engineering" guild).
-    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
+    // The candidate UI job-applications list. The closest stable smoke check
+    // is asserting the list page loaded and the row for our application is
+    // visible by the job title we seeded.
+    await page.goto(`/candidate/applications`, {
+      waitUntil: "domcontentloaded",
+    });
     await expect(
-      page.getByText(new RegExp(guild.name, "i")).first(),
+      page.getByText(/E2E Endorsement Test Job/i).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 });

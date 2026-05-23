@@ -527,7 +527,9 @@ export const MOCK_VOTE_HISTORY: MockVoteHistoryItem[] = [
 // ---------------------------------------------------------------------------
 
 const baseReputationTimeline: MockReputationTimeline = {
-  timeline: [
+  // ReputationPage reads `data.items` (canonical ReputationTimelineResponse),
+  // not the legacy `timeline` envelope.
+  items: [
     {
       id: "rep-001",
       change_amount: 5,
@@ -1196,12 +1198,27 @@ export async function setupCommonExpertMocks(
     });
   });
 
-  // Guild stakes
+  // Guild stakes — the redesigned voting pages derive "is staked in this guild"
+  // from getExpertGuildStakes (/api/blockchain/staking/guilds/{wallet}), checking
+  // an entry whose guildId matches the application's guild with stakedAmount > 0.
+  // Honor the resolved staking status so MOCK_STAKING_MET enables voting while
+  // MOCK_STAKING_NOT_MET leaves the expert un-staked.
+  const meetsMinimum = (staking as { meetsMinimum?: boolean })?.meetsMinimum !== false;
+  const guildStakes = meetsMinimum
+    ? [
+        {
+          guildId: ENGINEERING_GUILD_ID,
+          guildName: "Engineering",
+          stakedAmount: (staking as { stakedAmount?: string })?.stakedAmount ?? "100",
+          meetsMinimum: true,
+        },
+      ]
+    : [];
   await page.route("**/api/blockchain/staking/guilds/**", (route) => {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, data: [] }),
+      body: JSON.stringify({ success: true, data: guildStakes }),
     });
   });
 }
@@ -1510,7 +1527,8 @@ export async function setupGuildApplicationMocks(
 
   // Membership check
   const membership = options?.membershipStatus ?? null;
-  await page.route(`**/api/guilds/${guildId}/membership**`, (route) => {
+  // app calls guildsApi.checkMembership → /api/guilds/membership/{userId}/{guildId}
+  await page.route(`**/api/guilds/membership/*/${guildId}**`, (route) => {
     if (membership) {
       route.fulfill({
         status: 200,

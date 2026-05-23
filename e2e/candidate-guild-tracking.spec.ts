@@ -4,6 +4,12 @@ import {
   MOCK_GUILD_APPLICATION_SUMMARIES,
 } from "./helpers/guild-mocks";
 
+// Post-IA-restructure, /candidate/guilds ("My guilds") groups applications into
+// "My guilds" (approved), "Pending applications", and "Closed applications"
+// sections, with KPI tiles (Total applied / Verified / Pending review). The old
+// status filter pills + "X applications" summary chips were removed, so those
+// assertions are re-pinned to the sectioned layout + KPI counts.
+
 test.describe("Candidate guild tracking page", () => {
   test("empty state for new candidate with no applications", async ({ page }) => {
     await test.step("candidate signs up and the guild applications API returns an empty list", async () => {
@@ -18,18 +24,18 @@ test.describe("Candidate guild tracking page", () => {
       });
     });
 
-    await test.step("candidate opens the My Guilds page", async () => {
+    await test.step("candidate opens the My guilds page", async () => {
       await page.goto("/candidate/guilds", { waitUntil: "networkidle" });
-      await expect(page.getByText("My Guilds").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "My guilds", level: 1 })).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("empty state message and Browse Guilds call to action are visible", async () => {
+    await test.step("empty state message and Browse guilds call to action are visible", async () => {
       await expect(page.getByText("No guild applications yet").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByRole("button", { name: /Browse Guilds/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Browse guilds" })).toBeVisible();
     });
   });
 
-  test("shows application cards with guild name and status badge", async ({ page }) => {
+  test("shows application cards with guild names and status labels", async ({ page }) => {
     await test.step("candidate signs up and the guild applications API returns a list of applications", async () => {
       await signupCandidate(page);
 
@@ -42,20 +48,25 @@ test.describe("Candidate guild tracking page", () => {
       });
     });
 
-    await test.step("candidate opens the My Guilds page", async () => {
+    await test.step("candidate opens the My guilds page", async () => {
       await page.goto("/candidate/guilds", { waitUntil: "networkidle" });
-      await expect(page.getByText("My Guilds").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "My guilds", level: 1 })).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("all three application cards are visible with their guild names and an application count", async () => {
+    await test.step("all three application cards are visible with their guild names", async () => {
       await expect(page.getByText("Engineering").first()).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("Design").first()).toBeVisible();
       await expect(page.getByText("Data Science").first()).toBeVisible();
-      await expect(page.getByText("3 applications").first()).toBeVisible();
+    });
+
+    await test.step("each application surfaces its status as a label", async () => {
+      await expect(page.getByText("APPROVED").first()).toBeVisible();
+      await expect(page.getByText("PENDING").first()).toBeVisible();
+      await expect(page.getByText("REJECTED").first()).toBeVisible();
     });
   });
 
-  test("filter pills show correct counts", async ({ page }) => {
+  test("KPI tiles show correct counts across statuses", async ({ page }) => {
     await test.step("candidate signs up and the guild applications API returns a mixed-status list", async () => {
       await signupCandidate(page);
 
@@ -68,20 +79,20 @@ test.describe("Candidate guild tracking page", () => {
       });
     });
 
-    await test.step("candidate opens the My Guilds page", async () => {
+    await test.step("candidate opens the My guilds page", async () => {
       await page.goto("/candidate/guilds", { waitUntil: "networkidle" });
-      await expect(page.getByText("My Guilds").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "My guilds", level: 1 })).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("filter pills show the correct count for each status", async () => {
-      await expect(page.getByText("All (3)").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Pending (1)").first()).toBeVisible();
-      await expect(page.getByText("Approved (1)").first()).toBeVisible();
-      await expect(page.getByText("Rejected (1)").first()).toBeVisible();
+    await test.step("the KPI tiles summarise total / verified / pending review", async () => {
+      // Mock list: 3 total, 1 approved (Verified), 1 pending (Pending review).
+      await expect(page.getByText("Total applied", { exact: true })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Verified", { exact: true })).toBeVisible();
+      await expect(page.getByText("Pending review", { exact: true })).toBeVisible();
     });
   });
 
-  test("filter click shows filtered results", async ({ page }) => {
+  test("applications are grouped into status sections", async ({ page }) => {
     await test.step("candidate signs up and the guild applications API returns a mixed-status list", async () => {
       await signupCandidate(page);
 
@@ -94,25 +105,22 @@ test.describe("Candidate guild tracking page", () => {
       });
     });
 
-    await test.step("candidate opens the My Guilds page", async () => {
+    await test.step("candidate opens the My guilds page", async () => {
       await page.goto("/candidate/guilds", { waitUntil: "networkidle" });
-      await expect(page.getByText("My Guilds").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "My guilds", level: 1 })).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("selecting the Pending filter shows only the pending application", async () => {
-      await page.getByText("Pending (1)").click();
-      await expect(page.getByText("Engineering").first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText("Design")).not.toBeVisible();
-    });
-
-    await test.step("selecting the Approved filter shows only the approved application", async () => {
-      await page.getByText("Approved (1)").click();
-      await expect(page.getByText("Design").first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText("Data Science")).not.toBeVisible();
+    await test.step("the approved, pending, and closed sections are all present", async () => {
+      // Section headings render as uppercase labels alongside the page header.
+      await expect(page.getByRole("heading", { name: "Pending applications" })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("heading", { name: "Closed applications" })).toBeVisible();
+      // The approved "My guilds" section heading is distinct from the page title;
+      // the page title is the level-1 heading while the section uses an h2.
+      await expect(page.getByRole("heading", { name: "My guilds", level: 2 })).toBeVisible();
     });
   });
 
-  test("Explore Guilds button navigates to guilds page", async ({ page }) => {
+  test("Explore guilds button navigates to guilds page", async ({ page }) => {
     await test.step("candidate signs up and the guild applications API returns a list of applications", async () => {
       await signupCandidate(page);
 
@@ -125,13 +133,13 @@ test.describe("Candidate guild tracking page", () => {
       });
     });
 
-    await test.step("candidate opens the My Guilds page", async () => {
+    await test.step("candidate opens the My guilds page", async () => {
       await page.goto("/candidate/guilds", { waitUntil: "networkidle" });
-      await expect(page.getByText("My Guilds").first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "My guilds", level: 1 })).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("clicking Explore Guilds navigates to the guilds listing page", async () => {
-      await page.getByText("Explore Guilds").click();
+    await test.step("clicking Explore guilds navigates to the guilds listing page", async () => {
+      await page.getByRole("button", { name: "Explore guilds" }).click();
       await page.waitForURL("**/guilds", { timeout: 10000 });
     });
   });

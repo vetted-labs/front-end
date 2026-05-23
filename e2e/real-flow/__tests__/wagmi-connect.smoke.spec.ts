@@ -34,53 +34,59 @@ test.beforeEach(async ({ context }) => {
 });
 
 test("wagmi connect via injected populates useAccount", async ({ page }) => {
-  await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
+  await test.step("Verify: wagmi connect via injected populates useAccount", async () => {
+    await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
 
-  // Don't assert pre-state — wagmi's cookieStorage may carry a connection
-  // hint across tests despite beforeEach clearCookies (the SSR-hydrated
-  // initial state can survive page reloads). What matters is that AFTER
-  // connect, useAccount surfaces the address we just attached.
+    // Don't assert pre-state — wagmi's cookieStorage may carry a connection
+    // hint across tests despite beforeEach clearCookies (the SSR-hydrated
+    // initial state can survive page reloads). What matters is that AFTER
+    // connect, useAccount surfaces the address we just attached.
 
-  await connectWalletViaUI(page);
+    await connectWalletViaUI(page);
 
-  const addr = await readWagmiAddress(page);
-  expect(addr?.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+    const addr = await readWagmiAddress(page);
+    expect(addr?.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });
 
 test("wagmi signMessage produces signature recoverable to injected address", async ({
   page,
 }) => {
-  await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
-  await connectWalletViaUI(page);
+  await test.step("Verify: wagmi signMessage produces signature recoverable to injected address", async () => {
+    await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
+    await connectWalletViaUI(page);
 
-  const message = "Vetted SIWE test — sign this exact message";
-  const sig = (await signMessageViaWagmi(page, message)) as Hex;
+    const message = "Vetted SIWE test — sign this exact message";
+    const sig = (await signMessageViaWagmi(page, message)) as Hex;
 
-  expect(sig).toMatch(/^0x[0-9a-f]+$/i);
-  const recovered = await recoverMessageAddress({ message, signature: sig });
-  expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+    expect(sig).toMatch(/^0x[0-9a-f]+$/i);
+    const recovered = await recoverMessageAddress({ message, signature: sig });
+    expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });
 
 test("switchAccount swaps wagmi's connected address", async ({ page }) => {
-  const handle = await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
-  await connectWalletViaUI(page);
+  await test.step("Verify: switchAccount swaps wagmi's connected address", async () => {
+    const handle = await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
+    await connectWalletViaUI(page);
 
-  await expectWagmiAddress(page, ACCOUNT_1_ADDR);
+    await expectWagmiAddress(page, ACCOUNT_1_ADDR);
 
-  await switchAccountUI(page, handle, ACCOUNT_2_KEY);
+    await switchAccountUI(page, handle, ACCOUNT_2_KEY);
 
-  await expectWagmiAddress(page, ACCOUNT_2_ADDR);
+    await expectWagmiAddress(page, ACCOUNT_2_ADDR);
 
-  // Post-switch signature must come from account 2
-  const sig = (await signMessageViaWagmi(page, "post-switch")) as Hex;
-  const recovered = await recoverMessageAddress({
-    message: "post-switch",
-    signature: sig,
+    // Post-switch signature must come from account 2
+    const sig = (await signMessageViaWagmi(page, "post-switch")) as Hex;
+    const recovered = await recoverMessageAddress({
+      message: "post-switch",
+      signature: sig,
+    });
+    expect(recovered.toLowerCase()).toBe(ACCOUNT_2_ADDR.toLowerCase());
   });
-  expect(recovered.toLowerCase()).toBe(ACCOUNT_2_ADDR.toLowerCase());
 });
 
 // Note: `disconnectWalletUI` clears wagmi's connector but the injected

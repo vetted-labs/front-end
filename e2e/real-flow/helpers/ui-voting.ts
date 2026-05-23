@@ -74,8 +74,14 @@ export async function revealVoteViaUI(page: Page): Promise<void> {
  * page is `/expert/voting`; per-application drill-in uses `?applicationId=...`
  * as the canonical query param.
  */
-export async function gotoExpertReview(page: Page, applicationId: string): Promise<void> {
-  await page.goto(`/expert/voting?applicationId=${encodeURIComponent(applicationId)}`, {
-    waitUntil: "domcontentloaded",
-  });
+export async function gotoExpertReview(
+  page: Page,
+  applicationId: string,
+): Promise<void> {
+  await page.goto(
+    `/expert/voting?applicationId=${encodeURIComponent(applicationId)}`,
+    {
+      waitUntil: "domcontentloaded",
+    },
+  );
 }

@@ -106,48 +106,47 @@ test.describe("Bug 1: Candidate login shows expert wallet address", () => {
   });
 });
 
-test.describe("Bug 7: Candidate dashboard guild applications tab", () => {
-  test("Guild Applications tab is visible on candidate profile", async ({
+test.describe("Bug 7: Candidate dashboard guild applications section", () => {
+  // Post-IA-restructure, the candidate dashboard (/candidate/dashboard) no longer
+  // uses tabs — the guild applications surface is now a dedicated "Guild
+  // Applications" section in the dashboard grid.
+  test("Guild Applications section is visible on the candidate dashboard", async ({
     page,
   }) => {
-    await test.step("candidate signs up and opens their profile page", async () => {
+    await test.step("candidate signs up and opens their dashboard", async () => {
       await signupCandidate(page);
-      await page.goto("/candidate/profile");
-      await expect(page.getByText("Loading your dashboard...")).toBeHidden({
+      await page.goto("/candidate/dashboard");
+      await expect(page.getByText(/Welcome back, E2E/)).toBeVisible({
         timeout: 15000,
       });
     });
 
-    await test.step("Guild Applications tab is present in the dashboard navigation", async () => {
-      const guildTab = page.getByRole("button", { name: /Guild Applications/i });
-      await expect(guildTab).toBeVisible();
+    await test.step("Guild Applications section is present on the dashboard", async () => {
+      await expect(
+        page.getByRole("heading", { name: "Guild Applications" })
+      ).toBeVisible();
     });
   });
 
-  test("Guild Applications tab shows empty state with Browse Guilds", async ({
+  test("Guild Applications section shows empty state with Explore Guilds", async ({
     page,
   }) => {
-    await test.step("candidate signs up and opens their profile page", async () => {
+    await test.step("candidate signs up and opens their dashboard", async () => {
       await signupCandidate(page);
-      await page.goto("/candidate/profile");
-      await expect(page.getByText("Loading your dashboard...")).toBeHidden({
+      await page.goto("/candidate/dashboard");
+      await expect(page.getByText(/Welcome back, E2E/)).toBeVisible({
         timeout: 15000,
       });
     });
 
-    await test.step("candidate opens the Guild Applications tab", async () => {
-      await page.getByRole("button", { name: /Guild Applications/i }).click();
-    });
+    await test.step("empty state is shown with an Explore Guilds call to action that navigates correctly", async () => {
+      await expect(page.getByText("No guild applications")).toBeVisible();
 
-    await test.step("empty state is shown with a Browse Guilds call to action that navigates correctly", async () => {
-      await expect(page.getByText("No guild applications yet")).toBeVisible();
-      await expect(
-        page.getByText("Apply to guilds to get vetted by expert reviewers")
-      ).toBeVisible();
-
-      const browseGuildsBtn = page.getByRole("button", { name: "Browse Guilds" });
-      await expect(browseGuildsBtn).toBeVisible();
-      await browseGuildsBtn.click();
+      // Two "Explore Guilds" links exist (Guild Applications empty state + the
+      // Quick Actions panel); both navigate to /guilds. Use the first.
+      const exploreGuildsLink = page.getByRole("link", { name: "Explore Guilds" }).first();
+      await expect(exploreGuildsLink).toBeVisible();
+      await exploreGuildsLink.click();
       await page.waitForURL("**/guilds", { timeout: 10000 });
     });
   });
@@ -159,7 +158,7 @@ test.describe("Bug 7: Candidate dashboard guild applications tab", () => {
       await signupCandidate(page);
     });
 
-    await test.step("candidate opens their profile page and the guild applications API responds without a server error", async () => {
+    await test.step("candidate opens their dashboard and the guild applications API responds without a server error", async () => {
       const guildAppsRequest = page.waitForResponse(
         (resp) =>
           resp.url().includes("/guild-applications") &&
@@ -167,33 +166,30 @@ test.describe("Bug 7: Candidate dashboard guild applications tab", () => {
         { timeout: 15000 },
       );
 
-      await page.goto("/candidate/profile");
+      await page.goto("/candidate/dashboard");
       const response = await guildAppsRequest;
 
       expect(response.status()).toBeLessThan(500);
     });
   });
 
-  test("candidate dashboard shows both applications and guild applications tabs", async ({
+  test("candidate dashboard shows both applications and guild applications sections", async ({
     page,
   }) => {
-    await test.step("candidate signs up and opens their profile page", async () => {
+    await test.step("candidate signs up and opens their dashboard", async () => {
       await signupCandidate(page);
-      await page.goto("/candidate/profile");
-      await expect(page.getByText("Loading your dashboard...")).toBeHidden({
+      await page.goto("/candidate/dashboard");
+      await expect(page.getByText(/Welcome back, E2E/)).toBeVisible({
         timeout: 15000,
       });
     });
 
-    await test.step("all three primary dashboard tabs are visible", async () => {
+    await test.step("the Active Applications and Guild Applications sections are both visible", async () => {
       await expect(
-        page.getByRole("button", { name: "My Applications" })
+        page.getByRole("heading", { name: "Active Applications" })
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: /Guild Applications/i })
-      ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: "Profile & Resume" })
+        page.getByRole("heading", { name: "Guild Applications" })
       ).toBeVisible();
     });
   });

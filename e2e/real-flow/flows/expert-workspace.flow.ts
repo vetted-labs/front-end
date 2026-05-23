@@ -21,7 +21,10 @@ export async function openExpertGuildWorkspaceViaUI(
   },
 ): Promise<Page> {
   const browser = basePage.context().browser();
-  if (!browser) throw new Error("openExpertGuildWorkspaceViaUI: browser handle unavailable");
+  if (!browser)
+    throw new Error(
+      "openExpertGuildWorkspaceViaUI: browser handle unavailable",
+    );
 
   const context = await browser.newContext({
     baseURL: new URL(basePage.url()).origin,
@@ -42,7 +45,9 @@ export async function openExpertGuildWorkspaceViaUI(
   await page.goto(`/expert/guild/${encodeURIComponent(args.guildId)}`, {
     waitUntil: "domcontentloaded",
   });
-  await expect(page.getByRole("heading", { name: /workspace/i }).first()).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: /workspace/i }).first(),
+  ).toBeVisible({
     timeout: 30_000,
   });
   return page;
@@ -56,7 +61,9 @@ export async function expectWorkspaceShellViaUI(page: Page): Promise<void> {
   await expect(page.getByText(/^reputation$/i).first()).toBeVisible();
 
   for (const tab of WORKSPACE_TABS) {
-    await expect(page.getByRole("button", { name: new RegExp(tab, "i") }).first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: new RegExp(tab, "i") }).first(),
+    ).toBeVisible();
   }
 }
 
@@ -67,8 +74,12 @@ export async function expectWorkspaceQueueShowsAssignedApplicationViaUI(
   await clickWorkspaceTabViaUI(page, "Queue");
   await expect(page.getByText(/due soon/i).first()).toBeVisible();
   await expect(page.getByText(/waiting on you/i).first()).toBeVisible();
-  await expect(page.getByText(/unclaimed in this guild/i).first()).toBeVisible();
-  await expect(candidateReviewLink(page, applicationId)).toBeVisible({ timeout: 30_000 });
+  await expect(
+    page.getByText(/unclaimed in this guild/i).first(),
+  ).toBeVisible();
+  await expect(candidateReviewLink(page, applicationId)).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 export async function expectWorkspaceMyReviewsShowsAssignedApplicationViaUI(
@@ -77,13 +88,26 @@ export async function expectWorkspaceMyReviewsShowsAssignedApplicationViaUI(
 ): Promise<void> {
   await clickWorkspaceTabViaUI(page, "My Reviews");
   await expect(page).toHaveURL(/tab=reviews/);
-  for (const filter of ["Active", "Awaiting reveal", "Reveal open", "Past", "Slashed", "All"]) {
-    await expect(page.getByRole("button", { name: new RegExp(filter, "i") }).first()).toBeVisible();
+  for (const filter of [
+    "Active",
+    "Awaiting reveal",
+    "Reveal open",
+    "Past",
+    "Slashed",
+    "All",
+  ]) {
+    await expect(
+      page.getByRole("button", { name: new RegExp(filter, "i") }).first(),
+    ).toBeVisible();
   }
-  await expect(candidateReviewLink(page, applicationId)).toBeVisible({ timeout: 30_000 });
+  await expect(candidateReviewLink(page, applicationId)).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
-export async function expectWorkspaceNonReviewTabsRenderViaUI(page: Page): Promise<void> {
+export async function expectWorkspaceNonReviewTabsRenderViaUI(
+  page: Page,
+): Promise<void> {
   await clickWorkspaceTabViaUI(page, "Governance");
   await expect(page).toHaveURL(/tab=governance/);
   await expect(page.getByText(/open proposals/i).first()).toBeVisible();
@@ -92,20 +116,32 @@ export async function expectWorkspaceNonReviewTabsRenderViaUI(page: Page): Promi
   await clickWorkspaceTabViaUI(page, "Feed");
   await expect(page).toHaveURL(/tab=feed/);
   await expect(page.getByText(/^guild feed/i).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /hot/i }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /new/i }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /top/i }).first()).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /hot/i }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /new/i }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /top/i }).first(),
+  ).toBeVisible();
 
   await clickWorkspaceTabViaUI(page, "Members");
   await expect(page).toHaveURL(/tab=members/);
-  await expect(page.getByRole("button", { name: /experts/i }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /candidates/i }).first()).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /experts/i }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /candidates/i }).first(),
+  ).toBeVisible();
 
   await clickWorkspaceTabViaUI(page, "Earnings");
   await expect(page).toHaveURL(/tab=earnings/);
   await expect(page.getByText(/total points earned/i).first()).toBeVisible();
   await expect(page.getByText(/endorsement earnings/i).first()).toBeVisible();
-  await expect(page.getByText(/recent earnings history/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/recent earnings history/i).first(),
+  ).toBeVisible();
 
   await clickWorkspaceTabViaUI(page, "Leaderboard");
   await expect(page).toHaveURL(/tab=leaderboard/);
@@ -114,11 +150,16 @@ export async function expectWorkspaceNonReviewTabsRenderViaUI(page: Page): Promi
 }
 
 async function clickWorkspaceTabViaUI(page: Page, name: string): Promise<void> {
-  await page.getByRole("button", { name: new RegExp(name, "i") }).first().click();
+  await page
+    .getByRole("button", { name: new RegExp(name, "i") })
+    .first()
+    .click();
 }
 
 function candidateReviewLink(page: Page, applicationId: string) {
   return page
-    .locator(`a[href*="reviewAppId=${applicationId}"][href*="reviewType=candidate"]`)
+    .locator(
+      `a[href*="reviewAppId=${applicationId}"][href*="reviewType=candidate"]`,
+    )
     .first();
 }

@@ -92,6 +92,17 @@ type WorkerFixtures = {
 type TestFixtures = {
   cleanState: void;
   candidate: Candidate;
+  /** Pre-funded job creator wallet (reads JOB_CREATOR_WALLET_PRIVATE_KEY from
+   *  backend/.env, falling back to ANVIL_KEYS[5]). The `cleanState` fixture
+   *  tops up its VETD balance before each test, so this wallet can always pay
+   *  the EndorsementBidding.createJob anti-spam fee. */
+  jobCreator: Wallet;
+  /** Seeded test company. Use in scenarios that call `recordHireOutcome`
+   *  (POST /api/endorsements/hire-outcome) or `seedJob`. Replaces the
+   *  deprecated `process.env.E2E_COMPANY_TOKEN` pattern. */
+  company: { id: string; token: string };
+  /** Convenience alias: `company.token`. Use when you only need the JWT. */
+  companyToken: string;
   wallet: {
     /** Attach the headless wallet to `page` with the given key. Call once per test. */
     attach: (
@@ -147,6 +158,15 @@ function resolveJobCreatorAddress(): Address {
   }
 
   return makeWallet(ANVIL_KEYS[5]).address;
+}
+
+function resolveJobCreatorWallet(): Wallet {
+  const env = parseBackendEnv();
+  const privateKey = env.JOB_CREATOR_WALLET_PRIVATE_KEY;
+  if (privateKey?.startsWith("0x") && privateKey.length === 66) {
+    return makeWallet(privateKey as `0x${string}`);
+  }
+  return makeWallet(ANVIL_KEYS[5]);
 }
 
 function resolveBackendWalletAddress(): Address {
@@ -298,7 +318,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // only READ the manifest and do not mutate the chain, the snapshot reliably
   // captures the clean post-bootstrap baseline every time. See DETERMINISM_FINDING.md.
   cleanState: [
-    async ({ anvil, contracts, request }, use) => {
+    async ({ anvil, contracts, request, manifest }, use) => {
       const snapshotId = await anvil.snapshot();
       const jobCreatorAddress = resolveJobCreatorAddress();
       const backendWalletAddress = resolveBackendWalletAddress();
@@ -361,6 +381,17 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       // state are dropped.
       await anvil.revert(snapshotId);
       await testApi.reset(request);
+      // experts/guild_memberships are KEPT across reset, so scenario-seeded
+      // experts accumulate and bloat the random reviewer-selection pool. Prune
+      // back to the bootstrap manifest so panel assignment stays deterministic.
+      await testApi
+        .pruneExperts(
+          request,
+          manifest.experts.map((e) => ({ wallet: e.address, guildId: e.guildId })),
+        )
+        .catch(() => {
+          /* prune is best-effort cleanup; never fail teardown on it */
+        });
       await testApi.drain(request);
     },
     { scope: "test" },
@@ -375,6 +406,44 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       void _experts;
       const creds = await signupCandidate(page);
       await use({ ...creds, page });
+    },
+    { scope: "test" },
+  ],
+
+  // Test-scoped: the pre-funded job creator wallet. Resolves the same key as
+  // `resolveJobCreatorAddress()` so this wallet is guaranteed to hold the VETD
+  // that `cleanState` tops up before each test (JOB_CREATOR_TOKEN_FLOAT).
+  // Scenarios that call `createJob` should use this fixture instead of the
+  // hardcoded ANVIL_KEYS[5], which is NOT funded by `cleanState`.
+  jobCreator: [
+    async ({ cleanState: _cs }, use) => {
+      void _cs; // ensure cleanState (and its VETD top-up) runs first
+      await use(resolveJobCreatorWallet());
+    },
+    { scope: "test" },
+  ],
+
+  // Test-scoped: freshly seeded test company. Scenarios that call
+  // `recordHireOutcome` (POST /api/endorsements/hire-outcome) or `seedJob`
+  // need a company id + bearer token; this fixture provides both without
+  // requiring E2E_COMPANY_TOKEN to be set in the environment.
+  company: [
+    async ({ request, cleanState: _cs }, use) => {
+      void _cs; // ensure cleanState's DB reset runs before we seed
+      const timestamp = Date.now();
+      const seeded = await testApi.seedCompany(request, {
+        name: `E2E Company ${timestamp}`,
+        email: `e2e-company-${timestamp}@vetted-test.com`,
+      });
+      await use({ id: seeded.id, token: seeded.token });
+    },
+    { scope: "test" },
+  ],
+
+  // Convenience alias for scenarios that only need the JWT string.
+  companyToken: [
+    async ({ company }, use) => {
+      await use(company.token);
     },
     { scope: "test" },
   ],

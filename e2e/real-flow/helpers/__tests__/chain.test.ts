@@ -12,6 +12,8 @@ describe("chain helper", () => {
 
   it("makeWallet derives correct address for account 1", () => {
     const w = makeWallet(ANVIL_KEYS[1]);
-    expect(w.address.toLowerCase()).toBe("0x70997970c51812dc3a010c7d01b50e0d17dc79c8");
+    expect(w.address.toLowerCase()).toBe(
+      "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    );
   });
 });

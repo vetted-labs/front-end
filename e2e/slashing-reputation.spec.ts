@@ -30,9 +30,11 @@ test.describe("Slashing reputation page", () => {
       });
     });
 
-    await test.step("the Review Accuracy and Consistency breakdown cards are visible", async () => {
-      await expect(page.getByText("Review Accuracy").first()).toBeVisible();
-      await expect(page.getByText("Consistency").first()).toBeVisible();
+    await test.step("the hero score breakdown tiles (Alignment and Reviews) are visible", async () => {
+      // Redesign replaced the Review Accuracy / Consistency cards with hero KPI
+      // tiles that break the score down into Alignment and Reviews.
+      await expect(page.getByText("Alignment").first()).toBeVisible();
+      await expect(page.getByText("Reviews").first()).toBeVisible();
     });
   });
 
@@ -60,11 +62,13 @@ test.describe("Slashing reputation page", () => {
       });
     });
 
-    await test.step("the summary shows +8 total gains and -25 total losses", async () => {
-      // Gains: +8 (Carol Davis aligned entry)
+    await test.step("the hero gains total and the individual slash losses are shown", async () => {
+      // Hero Gains KPI tile aggregates positive changes: +8 (Carol Davis aligned entry).
       await expect(page.getByText("+8").first()).toBeVisible({ timeout: 10000 });
-      // Losses: -25 (severe -20 + mild -5)
-      await expect(page.getByText("-25").first()).toBeVisible();
+      // Redesign dropped the aggregated losses total from the hero; the losses now
+      // surface as individual slash deltas in the timeline: severe -20 and mild -5.
+      await expect(page.getByText("-20").first()).toBeVisible();
+      await expect(page.getByText("-5").first()).toBeVisible();
     });
   });
 
@@ -76,9 +80,9 @@ test.describe("Slashing reputation page", () => {
       });
     });
 
-    await test.step("the hero banner displays FOUNDATION TIER for a 350-reputation expert", async () => {
-      // Hero shows "FOUNDATION TIER" (tier.name.toUpperCase() + " TIER")
-      await expect(page.getByText("FOUNDATION TIER").first()).toBeVisible({ timeout: 10000 });
+    await test.step("the hero banner displays the Foundation tier for a 350-reputation expert", async () => {
+      // Redesigned hero badge renders "Foundation · 1× rewards" for a 350-rep expert.
+      await expect(page.getByText(/Foundation/).first()).toBeVisible({ timeout: 10000 });
     });
   });
 

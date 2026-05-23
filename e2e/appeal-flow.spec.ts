@@ -152,6 +152,16 @@ async function setupMocks(page: Page) {
     });
   });
 
+  // Expert guild workspace detail — the redesigned GuildWorkspacePage fetches
+  // `/api/experts/guilds/{id}?wallet=...` via expertApi.getGuildDetails.
+  await page.route(`**/api/experts/guilds/${ENGINEERING_GUILD_ID}**`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_GUILD_DETAIL }),
+    });
+  });
+
   // Guild detail
   await page.route(`**/api/guilds/${ENGINEERING_GUILD_ID}/**`, (route) => {
     route.fulfill({
@@ -247,33 +257,24 @@ async function setupMocks(page: Page) {
 
 test.describe("Appeal flow: Guild → Proposals → Rejected Application → Appeal", () => {
 
-  test("navigates from guild detail to rejected proposal and sees appeal form", async ({ page }) => {
+  test("rejected proposal detail surfaces the appeal entry point", async ({ page }) => {
+    // NOTE (redesign): the original version of this test navigated the expert
+    // guild detail page (`/expert/guilds/{id}` → "Candidate Proposals" tab →
+    // per-row "View"). That flow was wholesale replaced: the route is now
+    // `/expert/guild/{id}` (singular) rendering GuildWorkspacePage, which has
+    // no "Candidate Proposals" tab and gates its data fetch on a *live* wagmi
+    // wallet connection that the mocked E2E lane does not provide — so the
+    // workspace cannot be exercised here without wallet-injection helpers
+    // (see test report). The reachable, redesign-stable invariant is verified
+    // directly on the rejected proposal's detail page below.
     await test.step("expert session and API mocks are established", async () => {
       await page.goto("/", { waitUntil: "networkidle" });
       await setExpertSession(page, EXPERT);
       await setupMocks(page);
     });
 
-    await test.step("expert opens the Engineering guild detail page", async () => {
-      await page.goto(`/expert/guilds/${ENGINEERING_GUILD_ID}`, { waitUntil: "networkidle" });
-      await expect(page.getByText("Engineering").first()).toBeVisible({ timeout: 15000 });
-    });
-
-    await test.step("expert opens the Candidate Proposals sub-tab and sees the rejected application", async () => {
-      const proposalsTab = page.getByRole("button", { name: "Candidate Proposals" });
-      await expect(proposalsTab).toBeVisible({ timeout: 10000 });
-      await proposalsTab.click();
-
-      await expect(page.getByText("Dr. Stewart Weimann")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Rejected").first()).toBeVisible();
-    });
-
-    await test.step("expert clicks View on the rejected proposal and the appeal form is shown", async () => {
-      const viewButton = page.getByRole("button", { name: "View" }).first();
-      await expect(viewButton).toBeVisible();
-      await viewButton.click();
-
-      await page.waitForURL(`**/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { timeout: 10000 });
+    await test.step("expert opens the rejected proposal detail and the appeal entry point is shown", async () => {
+      await page.goto(`/expert/voting/applications/${REJECTED_PROPOSAL_ID}`, { waitUntil: "networkidle" });
 
       await expect(page.getByText("Dr. Stewart Weimann").first()).toBeVisible({ timeout: 15000 });
       await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 10000 });
@@ -298,10 +299,10 @@ test.describe("Appeal flow: Guild → Proposals → Rejected Application → App
     await test.step("finalization section shows the rejection outcome, consensus score, and expert performance", async () => {
       await expect(page.getByText("Engineering").first()).toBeVisible();
       await expect(page.getByText("Application Rejected")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("9.5")).toBeVisible();
+      await expect(page.getByText("9.5").first()).toBeVisible();
       await expect(page.getByText("3").first()).toBeVisible();
       await expect(page.getByText("Your Performance")).toBeVisible();
-      await expect(page.getByText("10/100")).toBeVisible();
+      await expect(page.getByText("10/100").first()).toBeVisible();
     });
   });
 
@@ -319,9 +320,9 @@ test.describe("Appeal flow: Guild → Proposals → Rejected Application → App
       await expect(appealButton).toBeVisible({ timeout: 15000 });
       await appealButton.click();
 
-      await expect(page.getByText("File Appeal")).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText("Justification")).toBeVisible();
-      await expect(page.getByText("Stake Amount")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "File Appeal" })).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("Justification", { exact: false }).last()).toBeVisible();
+      await expect(page.getByText("Stake Amount", { exact: false })).toBeVisible();
       await expect(page.getByPlaceholder(/Explain specifically/i)).toBeVisible();
     });
 

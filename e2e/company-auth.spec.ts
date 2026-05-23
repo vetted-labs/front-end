@@ -52,6 +52,8 @@ test.describe("Company authentication", () => {
       await page.getByPlaceholder("Min. 6 characters").fill("TestPass123!");
       await page.getByPlaceholder("Repeat password").fill("TestPass123!");
 
+      // "Create Account" is disabled until the Terms of Service box is checked.
+      await page.getByRole("checkbox", { name: /I agree to the/i }).check();
       await page.getByRole("button", { name: "Create Account" }).click();
     });
 
@@ -63,9 +65,9 @@ test.describe("Company authentication", () => {
   test("shows error for invalid login credentials", async ({ page }) => {
     await test.step("company navigates to the login page and submits wrong credentials", async () => {
       await page.goto("/auth/login?type=company", { waitUntil: "networkidle" });
-      await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 30000 });
+      await page.getByPlaceholder("hiring@company.com").waitFor({ state: "visible", timeout: 30000 });
 
-      await page.getByPlaceholder("you@example.com").fill("nonexistent@vetted-test.com");
+      await page.getByPlaceholder("hiring@company.com").fill("nonexistent@vetted-test.com");
       await page.getByPlaceholder("Enter your password").fill("WrongPassword1!");
 
       await page.getByRole("button", { name: "Sign In", exact: true }).click();
@@ -83,7 +85,9 @@ test.describe("Company authentication", () => {
       await page.goto("/auth/signup?type=company", { waitUntil: "networkidle" });
       await page.getByPlaceholder("Acme Inc.").waitFor({ state: "visible", timeout: 30000 });
 
-      // Try to submit with empty form
+      // Agree to terms so the submit button is enabled, then submit the
+      // otherwise-empty form to trigger required-field validation.
+      await page.getByRole("checkbox", { name: /I agree to the/i }).check();
       await page.getByRole("button", { name: "Create Account" }).click();
     });
 

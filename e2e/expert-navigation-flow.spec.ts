@@ -164,6 +164,22 @@ test.describe("Expert sidebar navigation flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
     await setExpertSession(page);
+
+    // The redesigned expert experience forces a first-run guided story
+    // (ExpertStoryLabDriver) that makes the app shell inert until completed,
+    // which would hide the sidebar this spec navigates. Mark onboarding
+    // complete for the mock expert's identity keys so the story stays closed
+    // and the real sidebar/navigation is interactive. The key format is
+    // `vetted:expert-onboarding-tour:v1:<expertId|walletAddress>` and the
+    // legacy "completed" value is accepted as a completed state.
+    await page.evaluate(() => {
+      const prefix = "vetted:expert-onboarding-tour:v1";
+      const walletAddress = localStorage.getItem("walletAddress")?.toLowerCase();
+      const expertId = localStorage.getItem("expertId");
+      [expertId, walletAddress, expertId ? `${expertId}:${walletAddress}` : null]
+        .filter((id): id is string => Boolean(id))
+        .forEach((id) => localStorage.setItem(`${prefix}:${id}`, "completed"));
+    });
   });
 
   test("expert sidebar shows all navigation items", async ({ page }) => {

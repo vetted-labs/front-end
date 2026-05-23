@@ -9,9 +9,9 @@ test.describe("Expert login page", () => {
     });
 
     await test.step("all three user type tabs are visible", async () => {
-      await expect(page.getByText("Job Seeker")).toBeVisible({ timeout: 15000 });
-      await expect(page.getByText("Employer")).toBeVisible();
-      await expect(page.getByText("Expert")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Job Seeker" })).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("button", { name: "Company" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Expert" })).toBeVisible();
     });
   });
 
@@ -22,24 +22,31 @@ test.describe("Expert login page", () => {
 
     await test.step("the wallet connection subtitle is shown on the Expert tab", async () => {
       await expect(
-        page.getByText("connect your wallet to get started", { exact: false }),
+        page.getByText("Experts authenticate with their Web3 wallet", { exact: false }),
       ).toBeVisible({ timeout: 15000 });
     });
   });
 
-  test("expert tab shows wallet connector buttons", async ({ page }) => {
+  test("expert tab shows a wallet connection entry point", async ({ page }) => {
     await test.step("visitor opens the login page on the Expert tab", async () => {
       await page.goto("/auth/login?type=expert", { waitUntil: "networkidle" });
 
-      // Wait for connectors to mount (wagmi hydration)
+      // Wait for the wallet panel to mount (wagmi hydration)
       await expect(
-        page.getByText("connect your wallet to get started", { exact: false }),
+        page.getByText("Experts authenticate with their Web3 wallet", { exact: false }),
       ).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("MetaMask and Coinbase Wallet connector buttons are rendered", async () => {
-      await expect(page.getByText("MetaMask")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Coinbase Wallet")).toBeVisible();
+    await test.step("the Connect Wallet action and supported-wallets note are rendered", async () => {
+      // The redesign moved individual connectors (MetaMask, Coinbase, etc.)
+      // into the RainbowKit modal that this button opens. The page itself now
+      // surfaces a single Connect Wallet entry point plus a supported-wallets note.
+      await expect(
+        page.getByRole("button", { name: /Connect Wallet/i }),
+      ).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.getByText(/Supports MetaMask, Coinbase/i),
+      ).toBeVisible();
     });
   });
 
@@ -66,7 +73,7 @@ test.describe("Expert login page", () => {
     await test.step("visitor opens the login page on the Expert tab", async () => {
       await page.goto("/auth/login?type=expert", { waitUntil: "networkidle" });
       await expect(
-        page.getByText("connect your wallet to get started", { exact: false }),
+        page.getByText("Experts authenticate with their Web3 wallet", { exact: false }),
       ).toBeVisible({ timeout: 15000 });
     });
 
@@ -75,7 +82,7 @@ test.describe("Expert login page", () => {
     });
 
     await test.step("visitor switches to the Job Seeker tab", async () => {
-      await page.getByText("Job Seeker").click();
+      await page.getByRole("button", { name: "Job Seeker" }).click();
       await page.waitForURL(/type=candidate/);
     });
 

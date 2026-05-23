@@ -12,8 +12,8 @@ test.describe("Candidate applications page", () => {
       await expect(page.getByText("Loading your dashboard...")).toBeHidden({ timeout: 15000 });
     });
 
-    await test.step("My Applications heading is visible", async () => {
-      await expect(page.getByRole("heading", { name: "My Applications" })).toBeVisible({ timeout: 15000 });
+    await test.step("My applications heading is visible", async () => {
+      await expect(page.getByRole("heading", { name: "My applications" })).toBeVisible({ timeout: 15000 });
     });
   });
 
@@ -27,11 +27,13 @@ test.describe("Candidate applications page", () => {
       await expect(page.getByText("Loading your dashboard...")).toBeHidden({ timeout: 15000 });
     });
 
-    await test.step("empty state message and Browse Jobs call to action are visible", async () => {
+    await test.step("empty state message and Browse jobs call to action are visible", async () => {
       await expect(page.getByText("No applications yet")).toBeVisible({ timeout: 15000 });
-      await expect(page.getByText("Start applying to jobs to see them here")).toBeVisible();
+      await expect(
+        page.getByText("Start applying to roles and watch them move through the vetting pipeline here.")
+      ).toBeVisible();
 
-      const browseJobsButton = page.getByRole("button", { name: "Browse Jobs" });
+      const browseJobsButton = page.getByRole("button", { name: "Browse jobs" });
       await expect(browseJobsButton).toBeVisible();
     });
   });
@@ -43,8 +45,8 @@ test.describe("Candidate applications page", () => {
       await expect(page.getByText("Loading your dashboard...")).toBeHidden({ timeout: 15000 });
     });
 
-    await test.step("candidate clicks Browse Jobs and lands on the job listings page", async () => {
-      await page.getByRole("button", { name: "Browse Jobs" }).click();
+    await test.step("candidate clicks Browse jobs and lands on the job listings page", async () => {
+      await page.getByRole("button", { name: "Browse jobs" }).click();
       await page.waitForURL("**/browse/jobs", { timeout: 10000 });
     });
   });

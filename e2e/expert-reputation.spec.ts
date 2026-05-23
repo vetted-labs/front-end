@@ -48,13 +48,12 @@ test.describe("Expert reputation page", () => {
 
     await test.step("the reputation heading and score overview cards render with correct values", async () => {
       await expect(page.getByText("Reputation").first()).toBeVisible({ timeout: 15000 });
-      // Score card shows the expert's reputation value
-      await expect(page.getByText("Score").first()).toBeVisible();
+      // Hero ring shows the expert's reputation value (350 from the mocked profile)
       await expect(page.getByText("350").first()).toBeVisible();
-      // Gains card
-      await expect(page.getByText("Gained").first()).toBeVisible();
-      // Losses card
-      await expect(page.getByText("Lost").first()).toBeVisible();
+      // KPI tiles in the hero card
+      await expect(page.getByText("Gains").first()).toBeVisible();
+      await expect(page.getByText("Alignment").first()).toBeVisible();
+      await expect(page.getByText("Reviews").first()).toBeVisible();
     });
   });
 
@@ -70,10 +69,10 @@ test.describe("Expert reputation page", () => {
       await expect(page.getByText("Reputation").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the Reward Tier card shows the Established tier for a 350-point reputation", async () => {
-      await expect(page.getByText("Reward Tier").first()).toBeVisible();
-      // With reputation 350, should be "Established" tier (101-500)
-      await expect(page.getByText("Established").first()).toBeVisible();
+    await test.step("the tier display shows the Foundation tier for a 350-point reputation", async () => {
+      // Redesigned 3-tier model: Foundation 0-999, Established 1000-1999, Authority 2000+.
+      // The hero badge renders "Foundation · 1× rewards" for a 350-rep expert.
+      await expect(page.getByText(/Foundation/).first()).toBeVisible();
     });
   });
 
@@ -90,9 +89,9 @@ test.describe("Expert reputation page", () => {
     });
 
     await test.step("the timeline section lists entries with alignment reasons and candidate names", async () => {
-      await expect(page.getByText("Timeline").first()).toBeVisible({ timeout: 10000 });
-      // Check for timeline entries
-      await expect(page.getByText("Aligned").first()).toBeVisible();
+      // The redesigned page renders timeline entries directly (no "Timeline"
+      // section heading); assert the entries themselves carry reasons + names.
+      await expect(page.getByText("Aligned").first()).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("Alex Smith").first()).toBeVisible();
     });
   });

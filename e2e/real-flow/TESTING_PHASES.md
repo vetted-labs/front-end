@@ -3,6 +3,7 @@
 A staged roadmap for end-to-end coverage of the Vetted product through the **real** UI against a **real** local stack (anvil + backend + frontend), with **no mocks** at any layer. The headless wallet shim removes MetaMask as a blocker for Connect Wallet + SIWE + on-chain writes — every phase below assumes that infrastructure is in place.
 
 > Companion docs:
+>
 > - `README.md` — local stack bootstrap (anvil, contracts, BE env)
 > - `helpers/headless-wallet.ts` + `helpers/wallet-injection.ts` — wallet shim
 > - `helpers/ui-auth.ts` — UI-driven login + wagmi programmatic helpers
@@ -13,13 +14,13 @@ A staged roadmap for end-to-end coverage of the Vetted product through the **rea
 
 Everything below depends on this being green.
 
-| Piece | File | Status |
-|---|---|---|
-| Node-side EIP-1193 wallet | `helpers/headless-wallet.ts` | ✅ |
-| Page-side `window.ethereum` stub + EIP-6963 announce | `helpers/wallet-injection.ts` | ✅ |
-| Custom RainbowKit wallet entry + `injected()` connector branch | `wagmi-config.ts` (E2E branch) | ✅ |
-| `__wagmiTest` programmatic harness | `src/components/Providers.tsx` (E2E branch) | ✅ |
-| UI-auth helpers (`connectWalletViaUI`, `loginAsExpertViaUI`, `switchAccountUI`) | `helpers/ui-auth.ts` | ✅ |
+| Piece                                                                           | File                                        | Status |
+| ------------------------------------------------------------------------------- | ------------------------------------------- | ------ |
+| Node-side EIP-1193 wallet                                                       | `helpers/headless-wallet.ts`                | ✅     |
+| Page-side `window.ethereum` stub + EIP-6963 announce                            | `helpers/wallet-injection.ts`               | ✅     |
+| Custom RainbowKit wallet entry + `injected()` connector branch                  | `wagmi-config.ts` (E2E branch)              | ✅     |
+| `__wagmiTest` programmatic harness                                              | `src/components/Providers.tsx` (E2E branch) | ✅     |
+| UI-auth helpers (`connectWalletViaUI`, `loginAsExpertViaUI`, `switchAccountUI`) | `helpers/ui-auth.ts`                        | ✅     |
 
 Non-obvious requirements baked into `playwright.real-flow.config.ts`:
 
@@ -38,19 +39,19 @@ Non-obvious requirements baked into `playwright.real-flow.config.ts`:
 
 The shim itself ships with its own smoke project (run via `--project=smoke`). 28 tests across 11 specs — all green is the gate before any phase work:
 
-| Spec | Tests | Layer |
-|---|---|---|
-| `headless-wallet.smoke.spec.ts` | 7 | Node-side shim (sign, send, chain id) |
-| `wallet-injection.smoke.spec.ts` | 5 | Browser bridge (`window.ethereum`, EIP-6963) |
-| `wagmi-connect.smoke.spec.ts` | 3 | Wagmi programmatic via `__wagmiTest` |
-| `rk-modal.smoke.spec.ts` | 1 | RainbowKit modal → shim click path |
-| `ui-detect.smoke.spec.ts` | 2 | Shim surfaces as "Installed" in RK modal |
-| `ui-connect.smoke.spec.ts` | 3 | Connect → useAccount populated |
-| `ui-diag.smoke.spec.ts` | 2 | Diagnostic prints (manual debugging) |
-| `expert-login.smoke.spec.ts` | 2 | SIWE-equivalent login → `/expert/dashboard` |
-| `candidate-to-expert-review.smoke.spec.ts` | 1 | Multi-actor flow (Phase 1+2) |
-| `expert-stake.smoke.spec.ts` | 1 | Real on-chain tx via UI (Phase 4) |
-| `fixtures-smoke.spec.ts` | 1 | Fixture sanity |
+| Spec                                       | Tests | Layer                                        |
+| ------------------------------------------ | ----- | -------------------------------------------- |
+| `headless-wallet.smoke.spec.ts`            | 7     | Node-side shim (sign, send, chain id)        |
+| `wallet-injection.smoke.spec.ts`           | 5     | Browser bridge (`window.ethereum`, EIP-6963) |
+| `wagmi-connect.smoke.spec.ts`              | 3     | Wagmi programmatic via `__wagmiTest`         |
+| `rk-modal.smoke.spec.ts`                   | 1     | RainbowKit modal → shim click path           |
+| `ui-detect.smoke.spec.ts`                  | 2     | Shim surfaces as "Installed" in RK modal     |
+| `ui-connect.smoke.spec.ts`                 | 3     | Connect → useAccount populated               |
+| `ui-diag.smoke.spec.ts`                    | 2     | Diagnostic prints (manual debugging)         |
+| `expert-login.smoke.spec.ts`               | 2     | SIWE-equivalent login → `/expert/dashboard`  |
+| `candidate-to-expert-review.smoke.spec.ts` | 1     | Multi-actor flow (Phase 1+2)                 |
+| `expert-stake.smoke.spec.ts`               | 1     | Real on-chain tx via UI (Phase 4)            |
+| `fixtures-smoke.spec.ts`                   | 1     | Fixture sanity                               |
 
 ---
 
@@ -65,6 +66,7 @@ Phases are ordered by **dependency**, not value. Each phase adds an axis of cove
 **Scope:** Candidate applies to a guild via UI → expert logs in via the real Connect Wallet modal → expert dashboard surfaces the pending review → expert opens the candidate detail panel.
 
 **Proves:**
+
 - RainbowKit modal works against the shim end-to-end.
 - Vetted's wallet-address-based auth (the SIWE-equivalent for experts) flows through `useAccount` + the dashboard guards correctly.
 - Multi-actor isolation: cookies/localStorage cleared between actors, second login picks up first actor's writes.
@@ -88,6 +90,7 @@ Phases are ordered by **dependency**, not value. Each phase adds an axis of cove
 **Status:** Pending.
 
 **Scope:** Replace the BE-API review submit in Phase 2 with a real UI driver that:
+
 - Opens the candidate review modal from the dashboard.
 - Walks the 4-step wizard (rubric scores per dimension, written feedback, recommendation, confirmation).
 - Submits → waits for the success toast → asserts the review appears on the my-reviews tab.
@@ -110,7 +113,7 @@ Phases are ordered by **dependency**, not value. Each phase adds an axis of cove
 
 **Test isolation:** Anvil snapshot/revert per scenario; per-test cookie clear (already in `beforeEach`).
 
-**Coverage gap this closes:** Today's `e2e/real-flow/scenarios/*.spec.ts` (Suite A) drive consensus through commit/reveal at the BE/chain layer. Phase 3 closes the UI-layer assertion (does the FE actually *render* the consensus that the chain computed?).
+**Coverage gap this closes:** Today's `e2e/real-flow/scenarios/*.spec.ts` (Suite A) drive consensus through commit/reveal at the BE/chain layer. Phase 3 closes the UI-layer assertion (does the FE actually _render_ the consensus that the chain computed?).
 
 ---
 
@@ -143,6 +146,7 @@ Phases are ordered by **dependency**, not value. Each phase adds an axis of cove
 **Status:** Pending.
 
 **Scope:**
+
 - Company logs in (JWT path, not wallet) → posts a job via UI → job appears on browse.
 - Candidate logs in → opens the job detail panel → submits an application via the JobApplicationModal.
 - Expert sees the application surface on the dashboard (closes the loop with Phase 1).

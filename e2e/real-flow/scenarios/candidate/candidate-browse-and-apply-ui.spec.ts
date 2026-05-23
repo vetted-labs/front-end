@@ -99,6 +99,9 @@ test(
     // ── 2. Sign up a fresh candidate ────────────────────────────────────────
     await test.step("candidate signs up and lands on the dashboard", async () => {
       await signupCandidate(page);
+      // signupCandidate sets auth in localStorage and leaves the page on "/".
+      // Navigate explicitly to the dashboard.
+      await page.goto("/candidate/dashboard", { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/candidate\/dashboard/, {
         timeout: 30_000,
       });

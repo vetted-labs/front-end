@@ -1,14 +1,40 @@
-import { test, expect } from "@playwright/test";
-import { setExpertSession, MOCK_EXPERT } from "./helpers/expert-auth";
+import { test, expect, Page } from "@playwright/test";
+import { setExpertSession } from "./helpers/expert-auth";
 import {
   APPLICATION_ID,
+  ENGINEERING_GUILD_ID,
   MOCK_APPLICATION_ACTIVE,
   MOCK_CR_DIRECT,
   MOCK_CR_COMMIT,
-  MOCK_CR_REVEAL,
   MOCK_CR_FINALIZED,
   setupVotingDetailMocks,
 } from "./helpers/guild-mocks";
+
+// NOTE ON THE REDESIGN:
+// The commit-reveal flow was collapsed from a four-phase (direct → commit →
+// reveal → finalized) plaintext-nonce flow into a three-phase on-chain flow
+// (direct → commit → finalized). The "reveal" phase, the plaintext nonce
+// reveal form, the localStorage auto-fill and the "Save your nonce!" reminder
+// no longer exist — votes are committed on-chain and revealed automatically
+// once all reviewers commit. The former reveal-phase tests are re-pinned to the
+// surviving commit/finalized UI (the on-chain commitment form + the voting
+// status card), since the reveal-phase UI they targeted was removed.
+
+// The redesigned detail page gates "Cast Your Vote" on per-guild stake info.
+// The shared mock defaults to no stake, so register a staked-guild override
+// after the common mocks (last-registered route wins in Playwright).
+async function stakeInEngineeringGuild(page: Page) {
+  await page.route("**/api/blockchain/staking/guilds/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: [{ guildId: ENGINEERING_GUILD_ID, stakedAmount: "100", meetsMinimum: true }],
+      }),
+    });
+  });
+}
 
 test.describe("Commit-reveal voting", () => {
   test.beforeEach(async ({ page }) => {
@@ -21,6 +47,7 @@ test.describe("Commit-reveal voting", () => {
       await setupVotingDetailMocks(page, APPLICATION_ID, {
         crPhase: MOCK_CR_DIRECT,
       });
+      await stakeInEngineeringGuild(page);
     });
 
     await test.step("expert navigates to the voting detail page", async () => {
@@ -52,8 +79,8 @@ test.describe("Commit-reveal voting", () => {
     await test.step("commit phase indicator shows phase label and 1/3 progress", async () => {
       await expect(page.getByText("Commit-Reveal Voting").first()).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("Commit Phase").first()).toBeVisible();
-      // Progress: 1/3 committed
-      await expect(page.getByText("1/3 committed").first()).toBeVisible();
+      // Progress: 1/3 voted (the redesign labels committed reviewers as "voted")
+      await expect(page.getByText("1/3 voted").first()).toBeVisible();
     });
   });
 
@@ -70,20 +97,21 @@ test.describe("Commit-reveal voting", () => {
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("commitment form is visible with score, nonce, and save-nonce reminder", async () => {
-      await expect(page.getByText("Submit Commitment").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Your score is hidden until the reveal phase").first()).toBeVisible();
+    await test.step("the on-chain commitment form shows score, stake, and the hidden-until-consensus note", async () => {
+      await expect(page.getByText("Submit Your Vote").first()).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.getByText("Your score is hidden until all reviewers have voted.").first(),
+      ).toBeVisible();
       await expect(page.getByText("Your Score").first()).toBeVisible();
-      await expect(page.getByText("Your Secret Nonce").first()).toBeVisible();
-      await expect(page.getByText("Save your nonce!").first()).toBeVisible();
+      await expect(page.getByText("Stake Amount (VETD)").first()).toBeVisible();
     });
   });
 
-  test("reveal phase shows indicator with progress", async ({ page }) => {
-    await test.step("voting detail mocks are set up for reveal phase", async () => {
+  test("commit phase shows the voting status card with progress", async ({ page }) => {
+    await test.step("voting detail mocks are set up for commit phase", async () => {
       await setupVotingDetailMocks(page, APPLICATION_ID, {
-        crPhase: MOCK_CR_REVEAL,
-        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "reveal" },
+        crPhase: MOCK_CR_COMMIT,
+        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "commit" },
       });
     });
 
@@ -92,20 +120,31 @@ test.describe("Commit-reveal voting", () => {
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("reveal phase indicator shows phase label and 2/3 progress", async () => {
-      await expect(page.getByText("Commit-Reveal Voting").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Reveal Phase").first()).toBeVisible();
-      // Progress: 2/3 revealed
-      await expect(page.getByText("2/3 revealed").first()).toBeVisible();
+    await test.step("the voting status card reports the reviewer's status and progress", async () => {
+      await expect(page.getByText("Voting Status").first()).toBeVisible({ timeout: 10000 });
+      // The reviewer has not committed yet in MOCK_CR_COMMIT.
+      await expect(page.getByText("Not Yet Voted").first()).toBeVisible();
     });
   });
 
-  test("reveal form without localStorage shows manual entry warning", async ({ page }) => {
-    await test.step("voting detail mocks are set up for reveal phase with no saved commitment", async () => {
-      // Don't set localStorage — simulate lost commitment data
+  test("committed reviewer sees a read-only on-chain confirmation", async ({ page }) => {
+    await test.step("voting detail mocks are set up for commit phase", async () => {
       await setupVotingDetailMocks(page, APPLICATION_ID, {
-        crPhase: MOCK_CR_REVEAL,
-        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "reveal" },
+        crPhase: MOCK_CR_COMMIT,
+        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "commit" },
+      });
+      // The redesigned commit form asks the BE for the reviewer's review state.
+      // When the server reports a recorded on-chain commit, the form switches to
+      // a read-only confirmation instead of the editable score/stake fields.
+      await page.route(`**/api/proposals/${APPLICATION_ID}/review/state`, (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            data: { kind: "committed", txHash: "0xabc123" },
+          }),
+        });
       });
     });
 
@@ -114,56 +153,21 @@ test.describe("Commit-reveal voting", () => {
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("reveal form warns the expert that commitment data could not be found", async () => {
-      await expect(page.getByText("Reveal Your Vote").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText(/Could not find saved commitment data/i).first()).toBeVisible();
+    await test.step("the committed reviewer sees the auto-reveal confirmation copy", async () => {
+      await expect(
+        page.getByText(/revealed automatically/i).first(),
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 
-  test("reveal phase shows reveal form with auto-fill from localStorage", async ({ page }) => {
-    await test.step("expert's prior commitment is stored in localStorage", async () => {
-      // Pre-populate localStorage with commitment data
-      await page.evaluate(
-        ({ appId, expertId }) => {
-          const key = `commitReveal:${appId}:${expertId}`;
-          localStorage.setItem(key, JSON.stringify({ score: 72, nonce: "abc123def456" }));
-        },
-        { appId: APPLICATION_ID, expertId: MOCK_EXPERT.expertId },
-      );
-    });
-
-    await test.step("voting detail mocks are set up for reveal phase", async () => {
-      await setupVotingDetailMocks(page, APPLICATION_ID, {
-        crPhase: MOCK_CR_REVEAL,
-        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "reveal" },
-      });
-    });
-
-    await test.step("expert navigates to the voting detail page", async () => {
-      await page.goto(`/expert/voting/applications/${APPLICATION_ID}`, { waitUntil: "networkidle" });
-      await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
-    });
-
-    await test.step("reveal form auto-fills from the saved commitment data", async () => {
-      await expect(page.getByText("Reveal Your Vote").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Auto-filled").first()).toBeVisible();
-    });
-  });
-
-  test("finalized phase shows finalized indicator", async ({ page }) => {
-    await test.step("voting detail mocks are set up for finalized phase", async () => {
+  test("finalized commit-reveal phase shows the completion indicator", async ({ page }) => {
+    await test.step("voting detail mocks are set up with a finalized commit-reveal phase on an active application", async () => {
+      // Keep the application active (not finalized) so the voting workspace —
+      // and therefore the commit-reveal indicator — renders. The indicator's
+      // finalized state is what we are asserting here.
       await setupVotingDetailMocks(page, APPLICATION_ID, {
         crPhase: MOCK_CR_FINALIZED,
-        application: {
-          ...MOCK_APPLICATION_ACTIVE,
-          voting_phase: "finalized",
-          finalized: true,
-          outcome: "approved",
-          consensus_score: 78.5,
-          status: "approved",
-          has_voted: true,
-          my_vote_score: 82,
-        },
+        application: { ...MOCK_APPLICATION_ACTIVE, voting_phase: "finalized" },
       });
     });
 
@@ -172,7 +176,7 @@ test.describe("Commit-reveal voting", () => {
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("finalized phase indicator shows final outcome and completion message", async () => {
+    await test.step("finalized phase indicator shows the final label and completion message", async () => {
       await expect(page.getByText("Commit-Reveal Voting").first()).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("Finalized Phase").first()).toBeVisible();
       await expect(page.getByText("Voting complete. Results are final.").first()).toBeVisible();

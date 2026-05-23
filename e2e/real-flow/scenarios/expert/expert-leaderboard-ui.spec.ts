@@ -70,18 +70,19 @@ test("leaderboard ranks, filters by guild, and filters by role", async ({
   });
 
   await test.step("role chip filter narrows the list", async () => {
-    // The chip row contains: All Ranks | Master | Officer | Craftsman | Apprentice | Recruit
-    // Click "Apprentice" — bootstrap experts are seeded as recruits/apprentices by default,
-    // so there should be at least one match.  If zero rows appear, the assertion still
-    // proves the filter fired; the empty-state path is handled by LeaderboardTable.
-    const apprenticeChip = page
-      .getByRole("button", { name: /^apprentice$/i })
+    // The chip row contains: All Ranks | Master | Officer | Craftsman | Apprentice | Recruit.
+    // The filter is applied server-side (refetch with a `role` param). Bootstrap
+    // experts are seeded with the default "craftsman" role, so filtering by
+    // "Craftsman" must keep at least one matching row visible.
+    const craftsmanChip = page
+      .getByRole("button", { name: /^craftsman$/i })
       .first();
-    await apprenticeChip.click();
+    await craftsmanChip.click();
 
-    // After clicking, wait briefly for state to settle then assert table is still mounted.
-    // We don't assert exact count because expert ranks depend on bootstrap state.
+    // The table stays mounted and still has at least one data row for the
+    // matching craftsman experts.
     await expect(page.getByRole("table")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("row").nth(1)).toBeVisible({ timeout: 10_000 });
 
     // Restore "All Ranks"
     const allRanksChip = page

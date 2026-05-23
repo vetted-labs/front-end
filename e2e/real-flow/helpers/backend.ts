@@ -53,6 +53,19 @@ async function postJson<T>(
 export const testApi = {
   reset: (req: APIRequestContext) =>
     postJson<{ truncated: number }>(req, "/api/test/reset"),
+  /** Restore the expert pool to exactly `keepWallets` (the bootstrap manifest).
+   *  experts/guild_memberships are KEPT across reset, so scenario-seeded experts
+   *  accumulate and bloat the random reviewer-selection pool — call this after
+   *  reset() so panel assignment deterministically draws from the manifest. */
+  pruneExperts: (
+    req: APIRequestContext,
+    keep: Array<{ wallet: string; guildId: string }>,
+  ) =>
+    postJson<{ pruned: number; membershipsPruned: number }>(
+      req,
+      "/api/test/seed/prune-experts",
+      { keep },
+    ),
   drain: (req: APIRequestContext) => postJson<void>(req, "/api/test/drain"),
   seedGuild: (
     req: APIRequestContext,
@@ -201,123 +214,111 @@ export const testApi = {
       return body.data;
     },
   },
-  // ── DIV-XXX stubs: BE endpoints pending ──────────────────────────────────
-  // Each helper throws on call so test failures clearly point to the missing
-  // BE work rather than silently producing undefined behaviour.
+  // ── Seed fixtures (BE endpoints under /api/test/seed/*) ───────────────────
 
-  /**
-   * Seed a governance proposal authored by the given expert.
-   * STUB — POST /api/test/seed/governance-proposal not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Seed a governance proposal authored by the given expert. */
   seedGovernanceProposal: (
-    _req: APIRequestContext,
-    _opts: { proposerExpertId: string; title: string; description?: string },
-  ): Promise<SeededGovernanceProposal> => {
-    throw new Error(
-      "testApi.seedGovernanceProposal not implemented yet — POST /api/test/seed/governance-proposal missing on BE; track as DIV-XXX",
-    );
-  },
+    req: APIRequestContext,
+    opts: {
+      proposerExpertId: string;
+      title: string;
+      description?: string;
+      /**
+       * Voting window offset in seconds from now. Negative → already-closed
+       * proposal (needed to exercise outcome/finalize). Defaults to +7 days.
+       */
+      votingEndsInSeconds?: number;
+    },
+  ): Promise<SeededGovernanceProposal> =>
+    postJson<SeededGovernanceProposal>(
+      req,
+      "/api/test/seed/governance-proposal",
+      opts,
+    ),
 
-  /**
-   * Cast a governance vote on behalf of an expert.
-   * STUB — POST /api/test/seed/governance-vote not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Cast a governance vote on behalf of an expert. */
   castGovernanceVote: (
-    _req: APIRequestContext,
-    _opts: {
+    req: APIRequestContext,
+    opts: {
       proposalId: string;
       expertId: string;
       choice: "for" | "against" | "abstain";
     },
-  ): Promise<void> => {
-    throw new Error(
-      "testApi.castGovernanceVote not implemented yet — POST /api/test/seed/governance-vote missing on BE; track as DIV-XXX",
-    );
-  },
+  ): Promise<void> =>
+    postJson<void>(req, "/api/test/seed/governance-vote", opts),
 
   /**
-   * Seed a message thread between a candidate and a recruiter.
-   * STUB — POST /api/test/seed/message-thread not yet wired on BE.
-   * Track as DIV-XXX.
+   * Finalize a governance proposal whose voting window has closed, so its
+   * outcome (passed/rejected) is computed and surfaced. The production finalize
+   * endpoint authenticates the caller via the X-Wallet-Address header, so pass
+   * an expert's wallet address.
    */
+  finalizeGovernanceProposal: (
+    req: APIRequestContext,
+    proposalId: string,
+    wallet: string,
+  ): Promise<void> =>
+    postJson<void>(
+      req,
+      `/api/governance/proposals/${proposalId}/finalize`,
+      { wallet },
+      { "X-Wallet-Address": wallet },
+    ),
+
+  /** Seed a message thread between a candidate and a recruiter. */
   seedMessageThread: (
-    _req: APIRequestContext,
-    _opts: {
+    req: APIRequestContext,
+    opts: {
       candidateEmail: string;
       recruiterName: string;
       initialBody: string;
     },
-  ): Promise<SeededMessageThread> => {
-    throw new Error(
-      "testApi.seedMessageThread not implemented yet — POST /api/test/seed/message-thread missing on BE; track as DIV-XXX",
-    );
-  },
+  ): Promise<SeededMessageThread> =>
+    postJson<SeededMessageThread>(req, "/api/test/seed/message-thread", opts),
 
-  /**
-   * Seed in-app notifications for a candidate.
-   * STUB — POST /api/test/seed/notifications not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Seed in-app notifications for a candidate. */
   seedNotifications: (
-    _req: APIRequestContext,
-    _opts: {
+    req: APIRequestContext,
+    opts: {
       candidateEmail: string;
       items: Array<{ type: string; body: string }>;
     },
-  ): Promise<void> => {
-    throw new Error(
-      "testApi.seedNotifications not implemented yet — POST /api/test/seed/notifications missing on BE; track as DIV-XXX",
-    );
-  },
+  ): Promise<void> =>
+    postJson<void>(req, "/api/test/seed/notifications", opts),
 
-  /**
-   * Seed in-app notifications for an expert.
-   * STUB — POST /api/test/seed/expert-notifications not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Seed in-app notifications for an expert. */
   seedExpertNotifications: (
-    _req: APIRequestContext,
-    _opts: {
+    req: APIRequestContext,
+    opts: {
       expertId: string;
       items: Array<{ type: string; body: string }>;
     },
-  ): Promise<void> => {
-    throw new Error(
-      "testApi.seedExpertNotifications not implemented yet — POST /api/test/seed/expert-notifications missing on BE; track as DIV-XXX",
-    );
-  },
+  ): Promise<void> =>
+    postJson<void>(req, "/api/test/seed/expert-notifications", opts),
 
-  /**
-   * Seed N applicant records for a given job.
-   * STUB — POST /api/test/seed/applicants-for-job not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Seed N applicant records for a given job. */
   seedApplicantsForJob: (
-    _req: APIRequestContext,
-    _opts: { jobId: string; count: number },
-  ): Promise<{ items: SeededApplicant[] }> => {
-    throw new Error(
-      "testApi.seedApplicantsForJob not implemented yet — POST /api/test/seed/applicants-for-job missing on BE; track as DIV-XXX",
-    );
-  },
+    req: APIRequestContext,
+    opts: { jobId: string; count: number },
+  ): Promise<{ items: SeededApplicant[] }> =>
+    postJson<{ items: SeededApplicant[] }>(
+      req,
+      "/api/test/seed/applicants-for-job",
+      opts,
+    ),
 
-  /**
-   * Seed a fully-approved candidate (job + application) owned by a company.
-   * STUB — POST /api/test/seed/approved-candidate not yet wired on BE.
-   * Track as DIV-XXX.
-   */
+  /** Seed a fully-approved candidate (job + application) owned by a company. */
   seedApprovedCandidate: (
-    _req: APIRequestContext,
-    _opts: { ownerCompanyId: string },
-  ): Promise<SeededApprovedCandidate> => {
-    throw new Error(
-      "testApi.seedApprovedCandidate not implemented yet — POST /api/test/seed/approved-candidate missing on BE; track as DIV-XXX",
-    );
-  },
+    req: APIRequestContext,
+    opts: { ownerCompanyId: string },
+  ): Promise<SeededApprovedCandidate> =>
+    postJson<SeededApprovedCandidate>(
+      req,
+      "/api/test/seed/approved-candidate",
+      opts,
+    ),
 
-  // ── End DIV-XXX stubs ─────────────────────────────────────────────────────
+  // ── End seed fixtures ─────────────────────────────────────────────────────
 
   candidateReviews: {
     /**
@@ -335,6 +336,19 @@ export const testApi = {
         req,
         `/api/test/candidate-reviews/${applicationId}/assign-panel`,
         { reviewerIds },
+      ),
+    /** Record a candidate review for one assigned reviewer via the real review
+     *  service (drives consensus). Used to complete the panel deterministically
+     *  after the first reviewer reviews through the full UI. */
+    submitReview: (
+      req: APIRequestContext,
+      applicationId: string,
+      body: { reviewerId: string; vote?: "approve" | "reject"; overallScore?: number },
+    ) =>
+      postJson<unknown>(
+        req,
+        `/api/test/candidate-reviews/${applicationId}/submit-review`,
+        body,
       ),
     expireAndFinalize: (req: APIRequestContext, applicationId: string) =>
       postJson<{

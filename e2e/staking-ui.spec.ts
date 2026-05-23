@@ -24,8 +24,10 @@ test.describe("Staking requirement UI", () => {
       await page.goto("/expert/voting", { waitUntil: "networkidle" });
     });
 
-    await test.step("the Guild Applications & Voting page loads with the staking warning visible", async () => {
-      await expect(page.getByText("Guild Applications & Voting").first()).toBeVisible({ timeout: 15000 });
+    await test.step("the Reviews page loads with the staking warning visible", async () => {
+      await expect(page.getByRole("heading", { name: "Reviews" }).first()).toBeVisible({ timeout: 15000 });
+      // Insufficient stake surfaces the "Stake VETD to Start Reviewing" prompt.
+      await expect(page.getByText("Stake VETD to Start Reviewing").first()).toBeVisible();
     });
   });
 

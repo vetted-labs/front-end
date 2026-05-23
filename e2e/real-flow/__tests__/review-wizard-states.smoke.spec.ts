@@ -39,6 +39,24 @@ test.beforeEach(async ({ context }) => {
   await context.clearCookies();
 });
 
+/**
+ * Dismiss any open Sonner toasts. The expert workspace surfaces a non-fatal
+ * "Could not load expert apps from: …" warning toast at bottom-right that
+ * overlaps the review modal's footer Next/Submit buttons and intercepts
+ * pointer events, blocking the click. Closing toasts clears the overlay.
+ * Mirrors the helper in ui-candidate-review-flow.ts.
+ */
+async function dismissToasts(page: Page): Promise<void> {
+  const closeButtons = page.getByRole("button", { name: /close toast/i });
+  const count = await closeButtons.count().catch(() => 0);
+  for (let i = 0; i < count; i++) {
+    await closeButtons
+      .first()
+      .click({ timeout: 1_000 })
+      .catch(() => {});
+  }
+}
+
 /** Seed a fresh guild and a set of experts from the manifest fixtures. */
 async function seedReviewPanel(
   page: Page,
@@ -169,9 +187,14 @@ test.describe("review wizard — 4-step state machine", () => {
         page.locator('[id^="review-field-general-"]').first(),
       ).not.toBeVisible();
 
-      // Next button must be enabled on step 1 (profile is read-only, no gating)
+      // The Profile step renders ReviewProfileStep only — no rubric anchors —
+      // so the negative assertion above holds. Next is always enabled on step 1.
       const nextBtn = page.getByRole("button", { name: /^next$/i }).first();
       await expect(nextBtn).toBeEnabled();
+      // Clear the bottom-right warning toast that overlaps the footer and
+      // intercepts the click (the modal mounts while the workspace's
+      // "Could not load expert apps" toast is still settling).
+      await dismissToasts(page);
       await nextBtn.click();
     });
 
@@ -233,6 +256,7 @@ test.describe("review wizard — 4-step state machine", () => {
 
         const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
         await expect(nextBtn).toBeEnabled({ timeout: 5_000 });
+        await dismissToasts(page);
         await nextBtn.click();
         await page.waitForTimeout(200);
       }
@@ -260,6 +284,7 @@ test.describe("review wizard — 4-step state machine", () => {
         if (isDomainSummary) {
           const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
           await expect(nextBtn).toBeEnabled({ timeout: 5_000 });
+          await dismissToasts(page);
           await nextBtn.click();
           await page.waitForTimeout(200);
           break;
@@ -312,6 +337,7 @@ test.describe("review wizard — 4-step state machine", () => {
 
         const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
         await expect(nextBtn).toBeEnabled({ timeout: 5_000 });
+        await dismissToasts(page);
         await nextBtn.click();
         await page.waitForTimeout(200);
       }

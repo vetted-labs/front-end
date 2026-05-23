@@ -59,10 +59,10 @@ test.describe("Expert route protection", () => {
     });
   });
 
-  test("/expert/withdrawals shows 'Wallet Not Connected' with expert localStorage set", async ({
+  test("/expert/withdrawals renders the staking portfolio for a seeded expert", async ({
     page,
   }) => {
-    await test.step("expert session is seeded in localStorage without a real wallet", async () => {
+    await test.step("expert session is seeded in localStorage", async () => {
       await page.goto("/", { waitUntil: "networkidle" });
       await setExpertSession(page);
     });
@@ -71,8 +71,27 @@ test.describe("Expert route protection", () => {
       await page.goto("/expert/withdrawals", { waitUntil: "networkidle" });
     });
 
-    await test.step("the withdrawals page prompts the expert to connect a wallet", async () => {
-      // Page should show wallet not connected message since there's no real wallet
+    await test.step("the withdrawals page shows the staking portfolio", async () => {
+      // In E2E mode useExpertAccount treats the seeded localStorage walletAddress
+      // as a connected wallet, so the page renders the portfolio (not the
+      // "Wallet Not Connected" gate, which only appears with no expert session).
+      await expect(
+        page.getByRole("heading", { name: "Withdrawals", level: 1 }),
+      ).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("Total staked").first()).toBeVisible();
+    });
+  });
+
+  test("/expert/withdrawals shows 'Wallet Not Connected' without an expert session", async ({
+    page,
+  }) => {
+    await test.step("visitor opens the withdrawals page with no expert session", async () => {
+      await page.goto("/expert/withdrawals", { waitUntil: "networkidle" });
+    });
+
+    await test.step("the withdrawals page prompts to connect a wallet", async () => {
+      // With no wagmi wallet and no localStorage expert session, useExpertAccount
+      // returns no address, so the wallet gate is shown.
       await expect(
         page.getByText("Wallet Not Connected"),
       ).toBeVisible({ timeout: 15000 });

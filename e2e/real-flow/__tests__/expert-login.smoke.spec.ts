@@ -23,30 +23,35 @@ test("expert connects wallet → auto-login → lands on dashboard", async ({
   wallet,
   cleanState: _cleanState,
 }) => {
-  const expert = experts[0];
+  await test.step("Verify: expert connects wallet → auto-login → lands on dashboard", async () => {
+    const expert = experts[0];
 
-  await wallet.attach(page, expert.privateKey);
-  await loginAsExpertViaUI(page, expert.address);
+    await wallet.attach(page, expert.privateKey);
+    await loginAsExpertViaUI(page, expert.address);
 
-  // We're on the expert dashboard. Verify wagmi knows about us + the URL
-  // matches + something dashboard-y rendered.
-  expect(page.url()).toMatch(/\/expert\/dashboard/);
-  expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
-    expert.address.toLowerCase(),
-  );
+    // We're on the expert dashboard. Verify wagmi knows about us + the URL
+    // matches + something dashboard-y rendered.
+    expect(page.url()).toMatch(/\/expert\/dashboard/);
+    expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
+      expert.address.toLowerCase(),
+    );
 
-  // Sanity check: the expert layout includes the address chip or a logout
-  // affordance. Look for either — copy may shift over time.
-  await expect(
-    page
-      .getByRole("button", { name: /log\s*out|disconnect/i })
-      .or(
-        page.getByText(
-          new RegExp(`${expert.address.slice(0, 6)}.{0,5}${expert.address.slice(-4)}`, "i"),
-        ),
-      )
-      .first(),
-  ).toBeVisible({ timeout: 15_000 });
+    // Sanity check: the expert layout includes the address chip or a logout
+    // affordance. Look for either — copy may shift over time.
+    await expect(
+      page
+        .getByRole("button", { name: /log\s*out|disconnect/i })
+        .or(
+          page.getByText(
+            new RegExp(
+              `${expert.address.slice(0, 6)}.{0,5}${expert.address.slice(-4)}`,
+              "i",
+            ),
+          ),
+        )
+        .first(),
+    ).toBeVisible({ timeout: 15_000 });
+  });
 });
 
 test("two experts can log in sequentially with different identities", async ({
@@ -55,22 +60,24 @@ test("two experts can log in sequentially with different identities", async ({
   wallet,
   cleanState: _cleanState,
 }) => {
-  const [expertA, expertB] = experts;
+  await test.step("Verify: two experts can log in sequentially with different identities", async () => {
+    const [expertA, expertB] = experts;
 
-  // First expert
-  const handle = await wallet.attach(page, expertA.privateKey);
-  await loginAsExpertViaUI(page, expertA.address);
-  expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
-    expertA.address.toLowerCase(),
-  );
+    // First expert
+    const handle = await wallet.attach(page, expertA.privateKey);
+    await loginAsExpertViaUI(page, expertA.address);
+    expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
+      expertA.address.toLowerCase(),
+    );
 
-  // Switch identity and re-login. Clear cookies so the fresh session
-  // doesn't auto-restore the previous expert.
-  await page.context().clearCookies();
-  await handle.switchAccount(expertB.privateKey);
-  await loginAsExpertViaUI(page, expertB.address);
+    // Switch identity and re-login. Clear cookies so the fresh session
+    // doesn't auto-restore the previous expert.
+    await page.context().clearCookies();
+    await handle.switchAccount(expertB.privateKey);
+    await loginAsExpertViaUI(page, expertB.address);
 
-  expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
-    expertB.address.toLowerCase(),
-  );
+    expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
+      expertB.address.toLowerCase(),
+    );
+  });
 });

@@ -116,7 +116,15 @@ test.describe("Slashing finalization display", () => {
   test("aligned (no slash) — shows Approved banner, aligned tier, +10 rep, 12.50 VETD, High alignment", async ({ page }) => {
     await test.step("voting detail mock is set up with an aligned finalized application", async () => {
       await setupVotingDetailMocks(page, FINALIZED_ID, {
-        application: MOCK_APPLICATION_FINALIZED,
+        // FinalizedView builds the "your vote" panel from the application's
+        // my_* fields, so carry the aligned-tier outcome on the application.
+        application: {
+          ...MOCK_APPLICATION_FINALIZED,
+          my_slashing_tier: "aligned",
+          my_slash_percent: 0,
+          my_reputation_change: 10,
+          my_reward_amount: 12.5,
+        },
         voteHistory: [VOTE_ALIGNED],
         crPhase: CR_FINALIZED,
       });

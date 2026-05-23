@@ -36,7 +36,7 @@ Scenario 05's expected outcome (rewards remain forfeited after dismissal) reflec
 `EndorsementBidding.placeBid` requires a job to exist on-chain. The endorsement helper exposes:
 
 ```ts
-createJob(creator, contracts, jobId)
+createJob(creator, contracts, jobId);
 ```
 
 The `creator` (typically anvil account 5) **must** be distinct from the bidders (`experts[0..3]`) — see `EndorsementBidding.sol:678 CreatorCannotBid`. Scenarios 03 and 08 demonstrate the pattern.
@@ -47,12 +47,12 @@ A plain guild apply leaves `candidate_guild_applications.job_id` NULL. Suite B s
 
 ## 6. Required env vars (in addition to top-level README)
 
-| Var | Purpose |
-|---|---|
-| `E2E_COMPANY_TOKEN` | JWT for the test company. Mint via `POST /api/test/seed/company`. |
-| `E2E_EXPERT_TOKENS` | JSON array of expert JWTs. Alternatively set `E2E_EXPERT_TOKEN_0` … `E2E_EXPERT_TOKEN_3` per expert. Mint via `POST /api/test/seed/expert-token`. |
-| `ENDORSEMENT_RETENTION_SECONDS=5` | Short retention window so scenarios 04 + 07 finish in seconds, not days. |
-| `ENDORSEMENT_CHALLENGE_SECONDS=10` | Short dispute challenge window. |
+| Var                                | Purpose                                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `E2E_COMPANY_TOKEN`                | JWT for the test company. Mint via `POST /api/test/seed/company`.                                                                                 |
+| `E2E_EXPERT_TOKENS`                | JSON array of expert JWTs. Alternatively set `E2E_EXPERT_TOKEN_0` … `E2E_EXPERT_TOKEN_3` per expert. Mint via `POST /api/test/seed/expert-token`. |
+| `ENDORSEMENT_RETENTION_SECONDS=5`  | Short retention window so scenarios 04 + 07 finish in seconds, not days.                                                                          |
+| `ENDORSEMENT_CHALLENGE_SECONDS=10` | Short dispute challenge window.                                                                                                                   |
 
 ## 7. Soft-pass UI assertions
 

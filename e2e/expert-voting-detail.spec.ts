@@ -1,16 +1,33 @@
-import { test, expect } from "@playwright/test";
-import { setExpertSession, MOCK_EXPERT } from "./helpers/expert-auth";
+import { test, expect, Page } from "@playwright/test";
+import { setExpertSession } from "./helpers/expert-auth";
 import {
   APPLICATION_ID,
   FINALIZED_APPLICATION_ID,
-  MOCK_APPLICATION_ACTIVE,
+  ENGINEERING_GUILD_ID,
   MOCK_APPLICATION_FINALIZED,
   MOCK_APPLICATION_VOTED,
-  MOCK_CANDIDATE_PROFILE,
   MOCK_VOTE_HISTORY,
   MOCK_STAKING_NOT_MET,
   setupVotingDetailMocks,
 } from "./helpers/guild-mocks";
+
+// The redesigned detail page derives "can I vote?" from per-guild stake info
+// (blockchainApi.getExpertGuildStakes) rather than the old staking-balance
+// endpoint. The shared mock defaults to no stake, so tests that exercise the
+// active voting interface register their own staked-guild override after the
+// common mocks are installed (last-registered route wins in Playwright).
+async function stakeInEngineeringGuild(page: Page) {
+  await page.route("**/api/blockchain/staking/guilds/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: [{ guildId: ENGINEERING_GUILD_ID, stakedAmount: "100", meetsMinimum: true }],
+      }),
+    });
+  });
+}
 
 test.describe("Expert voting detail page", () => {
   test.beforeEach(async ({ page }) => {
@@ -48,6 +65,7 @@ test.describe("Expert voting detail page", () => {
   test("shows Cast Your Vote button when assigned and staked", async ({ page }) => {
     await test.step("mocks are set up and expert opens the detail page for an assigned application", async () => {
       await setupVotingDetailMocks(page, APPLICATION_ID);
+      await stakeInEngineeringGuild(page);
       await page.goto(`/expert/voting/applications/${APPLICATION_ID}`, { waitUntil: "networkidle" });
     });
 
@@ -60,6 +78,7 @@ test.describe("Expert voting detail page", () => {
   test("Cast Your Vote button opens voting slider UI", async ({ page }) => {
     await test.step("mocks are set up and expert opens the detail page", async () => {
       await setupVotingDetailMocks(page, APPLICATION_ID);
+      await stakeInEngineeringGuild(page);
       await page.goto(`/expert/voting/applications/${APPLICATION_ID}`, { waitUntil: "networkidle" });
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
@@ -82,6 +101,7 @@ test.describe("Expert voting detail page", () => {
 
     await test.step("mocks are set up including the vote submission endpoint", async () => {
       await setupVotingDetailMocks(page, APPLICATION_ID);
+      await stakeInEngineeringGuild(page);
 
       // Mock the vote endpoint
       await page.route(`**/api/proposals/${APPLICATION_ID}/vote`, (route) => {
@@ -157,10 +177,12 @@ test.describe("Expert voting detail page", () => {
       await expect(page.getByText("Alex Smith").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the Vote History section lists each reviewer's name and score", async () => {
+    await test.step("the Vote History section lists each reviewer (anonymized) and their score", async () => {
       await expect(page.getByText("Vote History").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("E2E Expert").first()).toBeVisible();
-      await expect(page.getByText("Second Reviewer").first()).toBeVisible();
+      // Reviewer identities are now anonymized: the current expert renders as
+      // "You" and the rest as "Expert N". Scores remain visible per reviewer.
+      await expect(page.getByText("You", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("Expert 2").first()).toBeVisible();
       await expect(page.getByText("82/100").first()).toBeVisible();
     });
   });
@@ -185,14 +207,14 @@ test.describe("Expert voting detail page", () => {
       await expect(page.getByText("Jane Doe").first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the Back to Applications link is visible on the detail page", async () => {
-      const backLink = page.getByText("Back to Applications").first();
+    await test.step("the Back to queue link is visible on the detail page", async () => {
+      const backLink = page.getByRole("button", { name: /Back to queue/i }).first();
       await expect(backLink).toBeVisible();
     });
 
-    await test.step("clicking Back to Applications leaves the detail page", async () => {
+    await test.step("clicking Back to queue leaves the detail page", async () => {
       // Verify clicking navigates away from the detail page
-      await page.getByText("Back to Applications").first().click();
+      await page.getByRole("button", { name: /Back to queue/i }).first().click();
       await page.waitForTimeout(2000);
       expect(page.url()).not.toContain(`/applications/${APPLICATION_ID}`);
     });

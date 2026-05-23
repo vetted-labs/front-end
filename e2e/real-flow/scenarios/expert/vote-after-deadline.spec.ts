@@ -67,32 +67,9 @@ import { loginAsExpertViaUI } from "../../helpers/ui-auth";
 import { applyToGuildDirectVote } from "../../helpers/scenario";
 import { BACKEND_URL, CRON_SECRET, cronApi } from "../../helpers/backend";
 
-/** Milliseconds to wait after enabling the near-zero commit window, ensuring
- *  the Postgres timestamp is strictly in the past when the cron runs. */
+/** Milliseconds to wait after finalising so the proposal's finalized/past-
+ *  deadline state has settled before the UI assertions read it. */
 const DEADLINE_SETTLE_MS = 1_500;
-
-/**
- * Enable commit-reveal on `proposalId` with an effectively-expired commit
- * window (0.01 minutes ≈ 600 ms). By the time `processProposalTransitions`
- * is invoked the deadline will already be past in Postgres time.
- */
-async function enableNearZeroCommitReveal(
-  request: import("@playwright/test").APIRequestContext,
-  proposalId: string,
-): Promise<void> {
-  const res = await request.post(
-    `${BACKEND_URL}/api/proposals/${encodeURIComponent(proposalId)}/commit-reveal/enable`,
-    {
-      headers: { "x-cron-secret": CRON_SECRET },
-      data: { commitDurationMinutes: 0.01 }, // ≈ 600 ms → already past on next tick
-    },
-  );
-  if (!res.ok()) {
-    throw new Error(
-      `enableNearZeroCommitReveal(${proposalId}): ${res.status()} ${await res.text()}`,
-    );
-  }
-}
 
 test(
   "expert cannot cast a vote once the voting window has closed; UI reflects finalised state",
@@ -129,27 +106,70 @@ test(
       expect(proposalId, "proposalId must be a non-empty string").toBeTruthy();
     });
 
-    // ─── Phase 2: Enable commit-reveal with an expired window ─────────────
+    // ─── Phase 2+3: Expire the voting window and finalise the PROPOSAL ────
+    //
+    // ROOT-CAUSE FIX (this spec was failing at `review-queue-item-expired`):
+    //
+    // The dashboard ReviewQueue is fed by `guildApplicationsApi.getAssigned`,
+    // which reads the Pipeline B `candidate_proposals` row (via
+    // `proposal_reviewer_assignments`) and maps `cp.finalized` /
+    // `cp.voting_deadline` into the GuildApplication. ReviewQueue renders the
+    // disabled `review-queue-item-expired` row only when
+    // `app.finalized || voting_deadline < now` (ReviewQueue.tsx:93-96).
+    //
+    // The previous fixture call `testApi.candidateReviews.expireAndFinalize`
+    // only touches the LEGACY `candidate_guild_applications` table + the
+    // dormant `candidate_guild_application_reviewer_assignments`
+    // (CandidateProposalRewardsService.finalizeExpiredReviews — see
+    // candidate-proposal-rewards.service.ts:181 + 242-285). It NEVER sets
+    // `candidate_proposals.finalized` nor moves `candidate_proposals.voting_
+    // deadline` into the past. So `getAssigned` kept returning the proposal as
+    // finalized=false with a future deadline → ReviewQueue rendered the
+    // CLICKABLE "Review →" button, and `review-queue-item-expired` never
+    // appeared. That was a test-FIXTURE bug, not a product bug — the component
+    // correctly renders the expired state when the proposal IS finalized.
+    //
+    // Correct path (the strategy already documented in this file's header):
+    // enable commit-reveal with a near-zero commit window (deadline ~600ms out,
+    // already in the past by assertion time), then run the real
+    // `processProposalTransitions` cron. That cron flips
+    // `voting_phase='finalized'` and `finalizationService.finalizeProposal`
+    // sets `candidate_proposals.finalized = TRUE` + `finalized_at`
+    // (commit-reveal-automation.service.ts:347-373,
+    // proposal-finalization.service.ts:327-332). With finalized=true on the
+    // proposal the dashboard now reads `isPastDeadline=true` and renders the
+    // expired row.
     await test.step(
-      "commit-reveal is enabled with a near-zero commit window so the deadline is immediately in the past",
+      "the candidate proposal's commit window is collapsed and the proposal is finalised via the real transition cron",
       async () => {
-        await enableNearZeroCommitReveal(page.request, proposalId);
+        // Enable commit-reveal with a ~0.01-minute (≈600ms) commit window.
+        // The cronApi.enableCommitReveal helper doesn't expose a duration
+        // param, so we hit the endpoint directly with the cron secret and a
+        // `commitDurationMinutes` body (commit-reveal.controller.ts:12-14
+        // validates it must be a positive number).
+        const enableRes = await page.request.post(
+          `${BACKEND_URL}/api/proposals/${encodeURIComponent(proposalId)}/commit-reveal/enable`,
+          {
+            headers: { "x-cron-secret": CRON_SECRET },
+            data: { commitDurationMinutes: 0.01 },
+          },
+        );
+        expect(
+          enableRes.ok(),
+          `commit-reveal/enable must succeed (got ${enableRes.status()}: ${await enableRes.text().catch(() => "")})`,
+        ).toBeTruthy();
 
-        // Give Postgres time to record the timestamp and ensure it is strictly
-        // before the next CURRENT_TIMESTAMP read inside processPhaseTransitions.
+        // Let the ~600ms commit window elapse so the deadline is strictly in
+        // the past before the transition cron evaluates `commit_deadline <=
+        // CURRENT_TIMESTAMP`.
         await new Promise((r) => setTimeout(r, DEADLINE_SETTLE_MS));
-      },
-    );
 
-    // ─── Phase 3: Run the automation cron to advance through expiry ───────
-    await test.step(
-      "processProposalTransitions cron detects the expired commit deadline and auto-finalises",
-      async () => {
-        // Up to 3 rounds to handle the fire-and-forget finalisation path.
-        for (let i = 0; i < 3; i++) {
-          await cronApi.processProposalTransitions(page.request);
-          await new Promise((r) => setTimeout(r, 400));
-        }
+        // Run the production transition cron: expired commit deadline →
+        // voting_phase='finalized' → finalizeProposal sets finalized=TRUE.
+        await cronApi.processProposalTransitions(page.request);
+
+        // Brief settle so the finalized state is committed before the UI reads.
+        await new Promise((r) => setTimeout(r, DEADLINE_SETTLE_MS));
       },
     );
 

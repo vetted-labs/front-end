@@ -71,10 +71,9 @@ export async function withdrawRefund(
   contracts: ContractHandles,
 ): Promise<{ txHash: Hex }> {
   // withdrawRefund() takes no on-chain args; pass [] then options.
-  const txHash = await contracts.endorsementBidding.write.withdrawRefund(
-    [],
-    { account: expert.client.account },
-  );
+  const txHash = await contracts.endorsementBidding.write.withdrawRefund([], {
+    account: expert.client.account,
+  });
   return { txHash };
 }
 
@@ -92,17 +91,21 @@ export async function recordHireOutcome(
     finalCompensation?: number;
   },
 ): Promise<{ id: string }> {
-  const res = await request.post(`${BACKEND_URL}/api/endorsements/hire-outcome`, {
-    headers: { Authorization: `Bearer ${companyToken}` },
-    data: {
-      applicationId: args.applicationId,
-      candidateId: args.candidateId,
-      jobId: args.jobId,
-      outcome: args.outcome,
-      finalCompensation: args.finalCompensation,
+  const res = await request.post(
+    `${BACKEND_URL}/api/endorsements/hire-outcome`,
+    {
+      headers: { Authorization: `Bearer ${companyToken}` },
+      data: {
+        applicationId: args.applicationId,
+        candidateId: args.candidateId,
+        jobId: args.jobId,
+        outcome: args.outcome,
+        finalCompensation: args.finalCompensation,
+      },
     },
-  });
-  if (!res.ok()) throw new Error(`recordHireOutcome failed: ${await res.text()}`);
+  );
+  if (!res.ok())
+    throw new Error(`recordHireOutcome failed: ${await res.text()}`);
   return (await res.json()).data;
 }
 
@@ -115,11 +118,15 @@ export async function reportPerformanceIssue(
   notes: string,
   rating?: number,
 ): Promise<void> {
-  const res = await request.post(`${BACKEND_URL}/api/endorsements/performance-issue`, {
-    headers: { Authorization: `Bearer ${companyToken}` },
-    data: { applicationId, performanceNotes: notes, companyRating: rating },
-  });
-  if (!res.ok()) throw new Error(`reportPerformanceIssue failed: ${await res.text()}`);
+  const res = await request.post(
+    `${BACKEND_URL}/api/endorsements/performance-issue`,
+    {
+      headers: { Authorization: `Bearer ${companyToken}` },
+      data: { applicationId, performanceNotes: notes, companyRating: rating },
+    },
+  );
+  if (!res.ok())
+    throw new Error(`reportPerformanceIssue failed: ${await res.text()}`);
 }
 
 // POST /api/endorsements/disputes — verifyAnyUser middleware (company or expert).
@@ -145,9 +152,12 @@ export async function castDisputeVote(
   disputeId: string,
   vote: "uphold" | "dismiss",
 ): Promise<void> {
-  const res = await request.post(`${BACKEND_URL}/api/endorsements/disputes/${disputeId}/vote`, {
-    headers: { Authorization: `Bearer ${expertToken}` },
-    data: { vote },
-  });
+  const res = await request.post(
+    `${BACKEND_URL}/api/endorsements/disputes/${disputeId}/vote`,
+    {
+      headers: { Authorization: `Bearer ${expertToken}` },
+      data: { vote },
+    },
+  );
   if (!res.ok()) throw new Error(`castDisputeVote failed: ${await res.text()}`);
 }

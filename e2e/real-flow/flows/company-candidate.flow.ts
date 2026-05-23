@@ -42,11 +42,15 @@ export async function acceptCandidateViaCompanyPipelineUI(
   await advanceStatus(page, "Mark Interviewed");
 
   await page.getByRole("button", { name: "Accept" }).click();
-  await expect(page.getByRole("dialog").getByText(/accept candidate/i)).toBeVisible({
+  await expect(
+    page.getByRole("dialog").getByText(/accept candidate/i),
+  ).toBeVisible({
     timeout: 10_000,
   });
   await page.getByLabel(/final compensation/i).fill("100000");
-  await page.getByLabel(/note/i).fill("Accepted through the real-flow company pipeline.");
+  await page
+    .getByLabel(/note/i)
+    .fill("Accepted through the real-flow company pipeline.");
 
   const statusResponse = page.waitForResponse(
     (resp) =>
@@ -58,7 +62,12 @@ export async function acceptCandidateViaCompanyPipelineUI(
   const response = await statusResponse;
   expect(response.ok(), await response.text()).toBeTruthy();
 
-  await expect(page.getByText(/^accepted$/i).filter({ visible: true }).first()).toBeVisible({
+  await expect(
+    page
+      .getByText(/^accepted$/i)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -80,10 +89,14 @@ export async function rejectCandidateViaCompanyPipelineUI(
   await advanceStatus(page, "Mark Interviewed");
 
   await page.getByRole("button", { name: "Reject" }).click();
-  await expect(page.getByRole("dialog").getByText(/reject candidate/i)).toBeVisible({
+  await expect(
+    page.getByRole("dialog").getByText(/reject candidate/i),
+  ).toBeVisible({
     timeout: 10_000,
   });
-  await page.getByLabel(/note/i).fill("Rejected through the real-flow company pipeline.");
+  await page
+    .getByLabel(/note/i)
+    .fill("Rejected through the real-flow company pipeline.");
 
   const statusResponse = page.waitForResponse(
     (resp) =>
@@ -95,7 +108,12 @@ export async function rejectCandidateViaCompanyPipelineUI(
   const response = await statusResponse;
   expect(response.ok(), await response.text()).toBeTruthy();
 
-  await expect(page.getByText(/^rejected$/i).filter({ visible: true }).first()).toBeVisible({
+  await expect(
+    page
+      .getByText(/^rejected$/i)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible({
     timeout: 30_000,
   });
 }

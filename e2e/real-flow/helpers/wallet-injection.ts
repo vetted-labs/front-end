@@ -140,6 +140,9 @@ declare global {
     __hwProvider?: {
       _emit: (event: string, ...args: unknown[]) => void;
     };
-    __hwRequest: (req: { method: string; params?: unknown[] }) => Promise<unknown>;
+    __hwRequest: (req: {
+      method: string;
+      params?: unknown[];
+    }) => Promise<unknown>;
   }
 }

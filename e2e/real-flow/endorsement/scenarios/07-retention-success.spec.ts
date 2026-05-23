@@ -2,11 +2,11 @@
 //
 // Suite B — Scenario 07: retention-success.
 //
-// Builds on Scenario 01 (happy-bid-and-hire). The candidate applies, three
-// experts place bids, the company records `hired`, the outbox is drained, and
-// the immediate-half rewards land on-chain. Then we wait past the (test-tuned)
-// retention deadline, kick the BE retention processor, and drain the outbox a
-// second time so the now-released locked-half rewards reach
+// Builds on Scenario 01 (happy-bid-and-hire). The candidate applies to a
+// seeded job, three experts place bids, the company records `hired`, the outbox
+// is drained, and the immediate-half rewards land on-chain. Then we wait past
+// the (test-tuned) retention deadline, kick the BE retention processor, and
+// drain the outbox a second time so the now-released locked-half rewards reach
 // `RewardDistributor.distributeSingleReward`.
 //
 // Backend assumes `ENDORSEMENT_RETENTION_SECONDS=5` for the dev/test env (see
@@ -15,42 +15,25 @@
 // gives Postgres a 1s buffer past the deadline before we ask the processor to
 // pick the row up.
 //
-// Inherits T21 concerns:
-//   - `recordHireOutcome` helper currently posts only `applicationId` +
-//     `outcome` + `finalCompensation`; the BE's `recordHireOutcomeSchema`
-//     additionally requires `jobId` and `candidateId`. T21 either updates the
-//     helper or extends it; this scenario uses the same helper unchanged so
-//     any fix lands in one place.
-//   - `process.env.E2E_COMPANY_TOKEN` must be seeded by the suite bootstrap;
-//     mirrored from T21.
-//   - `applyToGuildViaUI` reads the on-chain session id, which is unused for
-//     Suite B but harmless — we discard `sessionId` here.
-//
 // Assertions:
 //   - on-chain: top-3 endorsers recorded for (jobId, candidateId).
 //   - BE: `hire_outcomes.outcome === 'successful_retention'` and
 //     `retention_confirmed === true` (via GET /api/endorsements/hire-outcome).
 //   - BE: 3 `endorsement_rewards.status === 'locked_released'` and
 //     `locked_released === true` (via GET /api/endorsements/rewards/:expertId
-//     for each of the 3 bidders). The boolean stands in for the
-//     `locked_released_at` column the spec mentions — that column does not
-//     exist on `endorsement_rewards`; `locked_released` is the closest
-//     populated-on-release signal we have on the Row.
+//     for each of the 3 bidders).
 //   - on-chain (proxy): the second `drainBlockchainOps` resolves without
 //     throwing, which is sufficient evidence that the 3 queued
-//     `reward_distribution` ops were dispatched to RewardDistributor — the BE
-//     marks ops as failed when the chain call reverts. Counting transactions
-//     directly would require a `from`-block query against the public client;
-//     the BE drain semantics already gate on success.
+//     `reward_distribution` ops were dispatched to RewardDistributor.
 
 import { test, expect } from "../../fixtures";
 import {
   approveExpertsForBidding,
+  createJob,
   placeBid,
   recordHireOutcome,
   uuidToBytes32,
 } from "../../helpers/endorsement";
-import { applyToGuildViaUI } from "../../helpers/scenario";
 import { testApi, BACKEND_URL } from "../../helpers/backend";
 import type { Address } from "viem";
 
@@ -91,6 +74,8 @@ test("retention success: hire → wait past retention → processRetention → l
   experts,
   contracts,
   request,
+  jobCreator,
+  company,
   cleanState: _cleanState,
 }) => {
   // Hoisted bindings so later steps can read what step 1 produced. We resolve
@@ -98,8 +83,8 @@ test("retention success: hire → wait past retention → processRetention → l
   // attributed correctly in the trace viewer.
   let applicationId!: string;
   let jobId!: string;
-  let candidateId!: string;
 
+  const candidateId = candidate.candidateId;
   const bidders = experts.slice(0, 3);
   // Bid amounts in whole VETD strings (helper uses `parseEther`). >=1 VETD per
   // the contract's MIN_BID — see plan note 5.6.
@@ -109,52 +94,60 @@ test("retention success: hire → wait past retention → processRetention → l
     await approveExpertsForBidding(bidders, contracts);
   });
 
-  await test.step("apply to guild via UI", async () => {
-    const result = await applyToGuildViaUI(page, candidate, guild.id);
-    applicationId = result.applicationId;
-  });
+  await test.step("seed job + candidate applies to job; create on-chain job", async () => {
+    // Seed a real jobs row (hire_outcomes FK requires applications.job_id →
+    // jobs.id). The `company` fixture provides the company id + token.
+    const seededJob = await testApi.seedJob(request, {
+      companyId: company.id,
+      title: "E2E Retention Success Job",
+      guild: guild.name,
+    });
+    jobId = seededJob.jobId;
 
-  await test.step("read jobId + candidateId off the application row", async () => {
-    // The candidate-authenticated list endpoint is the only BE route that
-    // currently surfaces `job_id`/`candidate_id` for a candidate's own
-    // applications (no per-id GET exists). `page.request` carries the
-    // candidate session cookie set up by the `candidate` fixture.
-    const res = await page.request.get(
-      `/api/candidates/me/guild-applications`,
+    // Candidate applies to the seeded job — creates an `applications` row
+    // whose id we pass to `recordHireOutcome` as `applicationId`.
+    const applyRes = await page.request.post(
+      `${BACKEND_URL}/api/applications`,
+      {
+        headers: { Authorization: `Bearer ${candidate.token}` },
+        data: {
+          jobId,
+          coverLetter:
+            "E2E test application for endorsement scenario 07. This cover letter meets the minimum length requirement.",
+        },
+      },
     );
-    expect(res.ok()).toBeTruthy();
-    const body = (await res.json()) as {
-      data: Array<{
-        id: string;
-        job_id?: string | null;
-        candidate_id?: string | null;
-      }>;
-    };
-    const app = body.data.find((row) => row.id === applicationId);
-    expect(app).toBeDefined();
-    if (!app?.job_id || !app?.candidate_id) {
-      throw new Error(
-        `BE did not project job_id/candidate_id for application ${applicationId}`,
-      );
-    }
-    jobId = app.job_id;
-    candidateId = app.candidate_id;
+    expect(applyRes.ok()).toBeTruthy();
+    const applyBody = (await applyRes.json()) as { data: { id: string } };
+    applicationId = applyBody.data.id;
+
+    // Create the on-chain job entry so placeBid doesn't revert with
+    // InvalidJob. Creator must differ from bidders (CreatorCannotBid).
+    await createJob(jobCreator, contracts, jobId);
   });
 
-  await test.step("3 experts place bids (1, 2, 3 VETD)", async () => {
+  await test.step("3 experts place bids (1, 2, 3 VETD) + sync each to BE", async () => {
     for (let i = 0; i < bidders.length; i++) {
       await placeBid(bidders[i], contracts, jobId, candidateId, bidAmounts[i]);
+
+      const syncRes = await page.request.post(
+        `${BACKEND_URL}/api/blockchain/endorsements/sync`,
+        {
+          headers: { "x-wallet-address": bidders[i].address },
+          data: {
+            applicationId,
+            jobId,
+            candidateId,
+            walletAddress: bidders[i].address,
+          },
+        },
+      );
+      expect(syncRes.ok()).toBeTruthy();
     }
   });
 
   await test.step("company records hire", async () => {
-    const companyToken = process.env.E2E_COMPANY_TOKEN ?? "";
-    if (!companyToken) {
-      throw new Error(
-        "E2E_COMPANY_TOKEN env var is required (mirror T21 — seeded by suite bootstrap)",
-      );
-    }
-    await recordHireOutcome(request, companyToken, {
+    await recordHireOutcome(request, company.token, {
       applicationId,
       candidateId,
       jobId,
@@ -169,19 +162,22 @@ test("retention success: hire → wait past retention → processRetention → l
 
   await test.step("assert top-3 endorsers recorded on-chain", async () => {
     // ABIs are loaded from non-`as const` JSON, so viem types this read as
-    // `unknown`. The Solidity signature is
-    // `(address[3] experts, uint256[3] amounts)` — named-return tuples come
-    // back from viem as `{ experts, amounts }`. Cast to that shape so the
-    // tuple is statically indexable; the contract guarantees 3 slots
-    // (`MAX_ENDORSEMENTS = 3`).
-    const top = (await contracts.endorsementBidding.read.getTopEndorsers([
+    // `unknown`. Non-`as const` ABI: viem may return the named tuple as an
+    // array `[experts, amounts]` rather than `{ experts, amounts }`.
+    // Support both shapes.
+    const rawTop = await contracts.endorsementBidding.read.getTopEndorsers([
       uuidToBytes32(jobId),
       uuidToBytes32(candidateId),
-    ])) as { experts: readonly Address[]; amounts: readonly bigint[] };
+    ]);
+    const topExperts: readonly Address[] =
+      Array.isArray(rawTop) ? (rawTop as unknown[])[0] as Address[]
+      : (rawTop as { experts: readonly Address[] }).experts;
+
     // 3 distinct non-zero bidder addresses — filters the always-3-slot
     // fixed-size array that the contract returns.
-    const nonZero = top.experts.filter(
-      (addr) => addr.toLowerCase() !== "0x0000000000000000000000000000000000000000",
+    const nonZero = topExperts.filter(
+      (addr) =>
+        addr.toLowerCase() !== "0x0000000000000000000000000000000000000000",
     );
     expect(nonZero).toHaveLength(3);
   });
@@ -200,6 +196,7 @@ test("retention success: hire → wait past retention → processRetention → l
   await test.step("assert hire_outcomes.outcome = successful_retention + retention_confirmed = true", async () => {
     const res = await page.request.get(
       `${BACKEND_URL}/api/endorsements/hire-outcome/${applicationId}`,
+      { headers: { Authorization: `Bearer ${company.token}` } },
     );
     expect(res.ok()).toBeTruthy();
     const body = (await res.json()) as { data: HireOutcomeResponse };
@@ -211,18 +208,19 @@ test("retention success: hire → wait past retention → processRetention → l
     for (const expert of bidders) {
       const res = await page.request.get(
         `${BACKEND_URL}/api/endorsements/rewards/${expert.id}`,
+        { headers: { Authorization: `Bearer ${company.token}` } },
       );
       expect(res.ok()).toBeTruthy();
       const body = (await res.json()) as { data: ExpertRewardRow[] };
       // One row per expert per hire outcome — narrow to this scenario's
       // outcome before asserting so an unrelated stale row doesn't mask a
       // regression.
-      const rewardsForThisHire = body.data.filter(
+      const rewardsForThisExpert = body.data.filter(
         (r) => r.expert_id === expert.id,
       );
-      expect(rewardsForThisHire.length).toBeGreaterThanOrEqual(1);
+      expect(rewardsForThisExpert.length).toBeGreaterThanOrEqual(1);
       // Latest reward per the BE ORDER BY created_at DESC.
-      const reward = rewardsForThisHire[0];
+      const reward = rewardsForThisExpert[0];
       expect(reward.status).toBe("locked_released");
       // The spec mentions a `locked_released_at` column as a fallback — that
       // column does not exist on `endorsement_rewards`; the boolean is the

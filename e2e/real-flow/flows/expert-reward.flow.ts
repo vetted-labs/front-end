@@ -8,7 +8,8 @@ export async function openExpertEarningsViaUI(
   expert: Expert,
 ): Promise<Page> {
   const browser = basePage.context().browser();
-  if (!browser) throw new Error("openExpertEarningsViaUI: browser handle unavailable");
+  if (!browser)
+    throw new Error("openExpertEarningsViaUI: browser handle unavailable");
 
   const context = await browser.newContext({
     baseURL: new URL(basePage.url()).origin,
@@ -39,7 +40,9 @@ export async function claimAllRewardsViaUI(page: Page): Promise<void> {
       .first(),
   ).toBeVisible({ timeout: 30_000 });
 
-  await expect(page.getByText(/rewards claimed successfully/i).first()).toBeVisible({
+  await expect(
+    page.getByText(/rewards claimed successfully/i).first(),
+  ).toBeVisible({
     timeout: 60_000,
   });
 }

@@ -128,6 +128,25 @@ async function clickScoreButtonsInContainer(
 }
 
 /**
+ * Dismiss any open Sonner toasts. The expert "Reviews" page surfaces a
+ * non-fatal "Could not load expert apps from: …" warning toast at bottom-right
+ * that overlaps the review modal's footer Next/Submit buttons and intercepts
+ * pointer events — blocking the footer clicks. Closing the toasts (or waiting
+ * for them to auto-dismiss) clears the overlay so the footer is clickable.
+ */
+async function dismissToasts(page: Page): Promise<void> {
+  const closeButtons = page.getByRole("button", { name: /close toast/i });
+  const count = await closeButtons.count().catch(() => 0);
+  for (let i = 0; i < count; i++) {
+    // Always target the first — closing one re-indexes the list.
+    await closeButtons
+      .first()
+      .click({ timeout: 1_000 })
+      .catch(() => {});
+  }
+}
+
+/**
  * Navigate to the expert voting queue, click the first "Review" button in the
  * Candidate Reviews tab, and wait for the modal to open.
  */
@@ -207,6 +226,7 @@ export async function submitRubricReviewViaUI(
     // No data entry required — just advance.
     const nextBtn = page.getByRole("button", { name: /^next$/i }).first();
     await expect(nextBtn).toBeEnabled({ timeout: modalTimeoutMs });
+    await dismissToasts(page);
     await nextBtn.click();
     // Wait for step 2 to render — a general rubric field anchor should appear.
     await expect(
@@ -259,6 +279,7 @@ export async function submitRubricReviewViaUI(
       // Advance: click the last (primary) Next button in the footer.
       const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
       await expect(nextBtn).toBeEnabled({ timeout: 10_000 });
+      await dismissToasts(page);
       await nextBtn.click();
 
       // Small pause so React state settles before the next iteration's
@@ -312,6 +333,7 @@ export async function submitRubricReviewViaUI(
         // Advance from summary to step 4 (confirm).
         const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
         await expect(nextBtn).toBeEnabled({ timeout: 10_000 });
+        await dismissToasts(page);
         await nextBtn.click();
         break;
       }
@@ -364,6 +386,7 @@ export async function submitRubricReviewViaUI(
       // Advance to next topic or to the summary.
       const nextBtn = page.getByRole("button", { name: /^next$/i }).last();
       await expect(nextBtn).toBeEnabled({ timeout: 10_000 });
+      await dismissToasts(page);
       await nextBtn.click();
       await page.waitForTimeout(200);
     }
@@ -414,6 +437,8 @@ export async function submitRubricReviewViaUI(
       .getByRole("button", { name: /submit review|submit commitment/i })
       .first();
     await expect(submitBtn).toBeEnabled({ timeout: 10_000 });
+    // Clear any overlapping warning toast so the footer Submit is clickable.
+    await dismissToasts(page);
 
     // ── Commit-reveal confirmation gate ──────────────────────────────────
     // In commit-reveal phase (expert membership reviews AND, since DIV-001,

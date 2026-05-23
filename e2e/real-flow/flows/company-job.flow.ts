@@ -15,7 +15,9 @@ export type PublishedJob = {
 
 const COMPANY_PASSWORD = "TestPass123!";
 
-export async function signupCompanyViaUI(page: Page): Promise<CompanyCredentials> {
+export async function signupCompanyViaUI(
+  page: Page,
+): Promise<CompanyCredentials> {
   const timestamp = Date.now();
   const email = `e2e-company-${timestamp}@vetted-test.com`;
   const companyName = `E2E Hiring Co ${timestamp}`;
@@ -24,7 +26,9 @@ export async function signupCompanyViaUI(page: Page): Promise<CompanyCredentials
     waitUntil: "domcontentloaded",
   });
   await page.getByPlaceholder("Acme Inc.").fill(companyName);
-  await page.getByPlaceholder("https://example.com").fill("https://e2e-test.com");
+  await page
+    .getByPlaceholder("https://example.com")
+    .fill("https://e2e-test.com");
   await page.getByPlaceholder("you@example.com").fill(email);
   await page.getByPlaceholder("Min. 6 characters").fill(COMPANY_PASSWORD);
   await page.getByPlaceholder("Repeat password").fill(COMPANY_PASSWORD);
@@ -36,10 +40,15 @@ export async function signupCompanyViaUI(page: Page): Promise<CompanyCredentials
     timeout: 30_000,
   });
 
-  const token = await page.evaluate(() => localStorage.getItem("authToken") ?? "");
+  const token = await page.evaluate(
+    () => localStorage.getItem("authToken") ?? "",
+  );
   if (!token) throw new Error("signupCompanyViaUI: auth token was not written");
-  const companyId = await page.evaluate(() => localStorage.getItem("companyId") ?? "");
-  if (!companyId) throw new Error("signupCompanyViaUI: company id was not written");
+  const companyId = await page.evaluate(
+    () => localStorage.getItem("companyId") ?? "",
+  );
+  if (!companyId)
+    throw new Error("signupCompanyViaUI: company id was not written");
 
   return { email, password: COMPANY_PASSWORD, companyName, token, companyId };
 }
@@ -67,7 +76,8 @@ export async function publishJobViaUI(
   await clickContinue(page);
 
   const createResponse = page.waitForResponse(
-    (resp) => resp.url().includes("/api/jobs") && resp.request().method() === "POST",
+    (resp) =>
+      resp.url().includes("/api/jobs") && resp.request().method() === "POST",
     { timeout: 30_000 },
   );
   await page.getByRole("button", { name: "Publish job" }).last().click();
@@ -101,9 +111,11 @@ async function fillLocationStep(page: Page): Promise<void> {
 }
 
 async function fillDescriptionStep(page: Page): Promise<void> {
-  await page.locator("textarea").fill(
-    "This is a full-stack E2E role description with enough detail to satisfy validation and appear on the public job detail page.",
-  );
+  await page
+    .locator("textarea")
+    .fill(
+      "This is a full-stack E2E role description with enough detail to satisfy validation and appear on the public job detail page.",
+    );
   await page.getByPlaceholder(/Add a requirement/i).fill("Playwright");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Playwright").first()).toBeVisible();
@@ -118,7 +130,11 @@ async function chooseGuild(page: Page, guildName: string): Promise<void> {
     .first()
     .click();
   await page.getByRole("button", { name: "Assign guild" }).click();
-  await expect(page.getByText(new RegExp(`Assigned guild[\\s\\S]*${guildName}`, "i")).first()).toBeVisible({
+  await expect(
+    page
+      .getByText(new RegExp(`Assigned guild[\\s\\S]*${guildName}`, "i"))
+      .first(),
+  ).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -147,7 +163,9 @@ function extractJobId(body: unknown): string {
     envelope.jobId;
 
   if (typeof rawId !== "string" || rawId.length === 0) {
-    throw new Error(`publishJobViaUI: missing job id in response ${JSON.stringify(body)}`);
+    throw new Error(
+      `publishJobViaUI: missing job id in response ${JSON.stringify(body)}`,
+    );
   }
 
   return rawId;

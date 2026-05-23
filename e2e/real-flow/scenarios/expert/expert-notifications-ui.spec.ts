@@ -24,20 +24,32 @@ test("expert dismisses a notification and the count drops", async ({
   await loginAsExpertViaUI(page, expert.address);
   await page.goto("/expert/notifications", { waitUntil: "domcontentloaded" });
 
-  // Find notification buttons (they have the left stripe and contain a dismiss button).
-  const notifications = page.locator('button').filter({
-    has: page.locator('div.absolute.left-0'),
-  });
-  await expect(notifications).toHaveCount(2);
+  // Each notification row is a `<button class="group ...">` in the shared
+  // NotificationsShell. Both seeded notifications start unread.
+  const notifications = page.locator("button.group");
+  await expect(notifications).toHaveCount(2, { timeout: 15_000 });
 
-  // Hover over the first notification to reveal the dismiss button.
+  // The "Unread" filter tab carries a count badge; it should read "2" before
+  // any are dismissed.
+  const unreadTab = page.getByRole("button", { name: /^Unread/ });
+  await expect(unreadTab.locator("span").first()).toHaveText("2", {
+    timeout: 15_000,
+  });
+
+  // Hover the first row to reveal its inline "Mark as read" affordance, then
+  // dismiss it (marks read without navigating).
   const firstNotification = notifications.first();
   await firstNotification.hover();
+  await firstNotification
+    .locator('div[role="button"][aria-label="Mark as read"]')
+    .click();
 
-  // Click the dismiss button (div with role="button" containing X icon).
-  const dismissButton = firstNotification.locator('div[role="button"][aria-label="Mark as read"]');
-  await dismissButton.click();
+  // The dismissed notification is now read, so the Unread count drops to "1".
+  await expect(unreadTab.locator("span").first()).toHaveText("1", {
+    timeout: 15_000,
+  });
 
-  // Wait for the notification to be dismissed and recount.
-  await expect(notifications).toHaveCount(1);
+  // And under the Unread filter, only the one remaining unread row is shown.
+  await unreadTab.click();
+  await expect(notifications).toHaveCount(1, { timeout: 15_000 });
 });

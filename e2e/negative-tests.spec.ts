@@ -55,11 +55,15 @@ test.describe("Negative tests — error paths and validation", () => {
       await page.getByPlaceholder("John Doe").waitFor({ state: "visible", timeout: 30000 });
       await page.getByPlaceholder("John Doe").fill(`E2E Neg ${timestamp}`);
       await page.getByPlaceholder("Senior Software Engineer").fill("Tester");
+      // LinkedIn is now a required candidate field in the redesigned signup form.
+      await page.getByPlaceholder("https://linkedin.com/in/yourname").fill(`https://linkedin.com/in/e2e-neg-${timestamp}`);
       await page.getByPlaceholder("you@example.com").fill(email);
       await page.getByPlaceholder("Min. 6 characters").fill(password);
       await page.getByPlaceholder("Repeat password").fill(password);
+      // The Create Account button is gated on the Terms of Service consent checkbox.
+      await page.getByRole("checkbox").check();
       await page.getByRole("button", { name: "Create Account" }).click();
-      await page.waitForURL("**/candidate/profile", { timeout: 15000 });
+      await page.waitForURL(/\/candidate\/(dashboard|profile)/, { timeout: 15000 });
     });
 
     await test.step("guild membership mock is configured to show the candidate as already a member", async () => {
@@ -88,11 +92,15 @@ test.describe("Negative tests — error paths and validation", () => {
       await page.getByPlaceholder("John Doe").waitFor({ state: "visible", timeout: 30000 });
       await page.getByPlaceholder("John Doe").fill(`E2E Pend ${timestamp}`);
       await page.getByPlaceholder("Senior Software Engineer").fill("Tester");
+      // LinkedIn is now a required candidate field in the redesigned signup form.
+      await page.getByPlaceholder("https://linkedin.com/in/yourname").fill(`https://linkedin.com/in/e2e-pend-${timestamp}`);
       await page.getByPlaceholder("you@example.com").fill(email);
       await page.getByPlaceholder("Min. 6 characters").fill(password);
       await page.getByPlaceholder("Repeat password").fill(password);
+      // The Create Account button is gated on the Terms of Service consent checkbox.
+      await page.getByRole("checkbox").check();
       await page.getByRole("button", { name: "Create Account" }).click();
-      await page.waitForURL("**/candidate/profile", { timeout: 15000 });
+      await page.waitForURL(/\/candidate\/(dashboard|profile)/, { timeout: 15000 });
     });
 
     await test.step("guild mock is configured to show a pending application in progress", async () => {
@@ -173,11 +181,15 @@ test.describe("Negative tests — error paths and validation", () => {
       await page.getByPlaceholder("John Doe").waitFor({ state: "visible", timeout: 30000 });
       await page.getByPlaceholder("John Doe").fill(`E2E File ${timestamp}`);
       await page.getByPlaceholder("Senior Software Engineer").fill("Tester");
+      // LinkedIn is now a required candidate field in the redesigned signup form.
+      await page.getByPlaceholder("https://linkedin.com/in/yourname").fill(`https://linkedin.com/in/e2e-file-${timestamp}`);
       await page.getByPlaceholder("you@example.com").fill(email);
       await page.getByPlaceholder("Min. 6 characters").fill(password);
       await page.getByPlaceholder("Repeat password").fill(password);
+      // The Create Account button is gated on the Terms of Service consent checkbox.
+      await page.getByRole("checkbox").check();
       await page.getByRole("button", { name: "Create Account" }).click();
-      await page.waitForURL("**/candidate/profile", { timeout: 15000 });
+      await page.waitForURL(/\/candidate\/(dashboard|profile)/, { timeout: 15000 });
     });
 
     await test.step("guild application mock is configured with no prior resume", async () => {
@@ -188,7 +200,8 @@ test.describe("Negative tests — error paths and validation", () => {
 
     await test.step("candidate opens the application form", async () => {
       await page.goto(`/guilds/${ENGINEERING_GUILD_ID}/apply`, { waitUntil: "networkidle" });
-      await expect(page.getByText("Apply to Join Engineering").first()).toBeVisible({ timeout: 15000 });
+      // Redesigned guild apply header changed "Apply to Join {Guild}" → "Join {Guild}".
+      await expect(page.getByRole("heading", { name: /Join Engineering/i }).first()).toBeVisible({ timeout: 15000 });
     });
 
     await test.step("candidate uploads a .txt file and sees an accepted-format error", async () => {

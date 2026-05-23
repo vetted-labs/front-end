@@ -60,12 +60,12 @@ test.describe("Expert profile page", () => {
       ).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the Member since label is visible on the profile", async () => {
-      await expect(page.getByText(/Member since/i).first()).toBeVisible({ timeout: 10000 });
+    await test.step("the Joined date label is visible on the profile", async () => {
+      await expect(page.getByText(/Joined/i).first()).toBeVisible({ timeout: 10000 });
     });
   });
 
-  test("shows stat cards for Reputation Score and Total Earnings", async ({ page }) => {
+  test("shows stat cards for Reputation and Earnings", async ({ page }) => {
     await test.step("expert opens their profile page", async () => {
       await page.goto("/expert/profile", { waitUntil: "networkidle" });
       await expect(
@@ -73,13 +73,13 @@ test.describe("Expert profile page", () => {
       ).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("Reputation Score and Total Earnings stat cards are rendered", async () => {
-      await expect(page.getByText("Reputation Score").first()).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Total Earnings").first()).toBeVisible();
+    await test.step("Reputation and Earnings stat cards are rendered", async () => {
+      await expect(page.getByText("Reputation").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Earnings").first()).toBeVisible();
     });
   });
 
-  test("shows Guild Memberships section", async ({ page }) => {
+  test("shows Guild positions section", async ({ page }) => {
     await test.step("expert opens their profile page", async () => {
       await page.goto("/expert/profile", { waitUntil: "networkidle" });
       await expect(
@@ -87,8 +87,8 @@ test.describe("Expert profile page", () => {
       ).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the Guild Memberships section is visible on the profile", async () => {
-      await expect(page.getByText("Guild Memberships").first()).toBeVisible({ timeout: 10000 });
+    await test.step("the Guild positions section is visible on the profile", async () => {
+      await expect(page.getByText("Guild positions").first()).toBeVisible({ timeout: 10000 });
     });
   });
 

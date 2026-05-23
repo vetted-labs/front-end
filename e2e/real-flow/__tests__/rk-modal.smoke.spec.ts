@@ -16,20 +16,25 @@ const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
 test("RK modal: click Headless E2E Wallet → wagmi connects through shim", async ({
   page,
 }) => {
-  await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
+  await test.step("Verify: RK modal: click Headless E2E Wallet → wagmi connects through shim", async () => {
+    await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
 
-  await page.getByRole("button", { name: /connect wallet/i }).first().click();
+    await page
+      .getByRole("button", { name: /connect wallet/i })
+      .first()
+      .click();
 
-  // The "Testing" group exposes our headless wallet entry.
-  await page
-    .getByRole("button", { name: /headless e2e wallet/i })
-    .first()
-    .click();
+    // The "Testing" group exposes our headless wallet entry.
+    await page
+      .getByRole("button", { name: /headless e2e wallet/i })
+      .first()
+      .click();
 
-  await expect
-    .poll(async () => (await readWagmiAddress(page))?.toLowerCase() ?? null, {
-      timeout: 15_000,
-    })
-    .toBe(ACCOUNT_1_ADDR.toLowerCase());
+    await expect
+      .poll(async () => (await readWagmiAddress(page))?.toLowerCase() ?? null, {
+        timeout: 15_000,
+      })
+      .toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });

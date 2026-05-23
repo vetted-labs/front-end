@@ -28,94 +28,117 @@ const RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
 test("connect to Vetted homepage via RainbowKit, signed in as headless wallet", async ({
   page,
 }) => {
-  await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
+  await test.step("Verify: connect to Vetted homepage via RainbowKit, signed in as headless wallet", async () => {
+    await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
 
-  // Find and click the in-app "Connect Wallet" button. There may be multiple
-  // (mobile + desktop nav); first visible wins.
-  const connect = page.getByRole("button", { name: /connect wallet/i }).first();
-  await expect(connect).toBeVisible({ timeout: 15_000 });
-  await connect.click();
+    // Find and click the in-app "Connect Wallet" button. There may be multiple
+    // (mobile + desktop nav); first visible wins.
+    const connect = page
+      .getByRole("button", { name: /connect wallet/i })
+      .first();
+    await expect(connect).toBeVisible({ timeout: 15_000 });
+    await connect.click();
 
-  // RainbowKit modal: pick the MetaMask entry (shim sets isMetaMask: true).
-  // RainbowKit's testid format is `rk-wallet-option-<id>`; try both common ids.
-  const mm = page
-    .getByTestId("rk-wallet-option-metaMask")
-    .or(page.getByTestId("rk-wallet-option-io.metamask"));
-  await expect(mm.first()).toBeVisible({ timeout: 10_000 });
-  await mm.first().click();
+    // RainbowKit modal: pick the MetaMask entry (shim sets isMetaMask: true).
+    // RainbowKit's testid format is `rk-wallet-option-<id>`; try both common ids.
+    const mm = page
+      .getByTestId("rk-wallet-option-metaMask")
+      .or(page.getByTestId("rk-wallet-option-io.metamask"));
+    await expect(mm.first()).toBeVisible({ timeout: 10_000 });
+    await mm.first().click();
 
-  // After connect, the account chip surfaces a truncated address. Wait for
-  // the lowercase truncated form (e.g. "0x7099...79c8").
-  const short = `${ACCOUNT_1_ADDR.slice(0, 6)}…${ACCOUNT_1_ADDR.slice(-4)}`.toLowerCase();
-  const lower = ACCOUNT_1_ADDR.toLowerCase();
-  await expect(
-    page.getByText(
-      new RegExp(`${lower.slice(0, 6)}.{0,5}${lower.slice(-4)}`, "i"),
-    ).first(),
-  ).toBeVisible({ timeout: 15_000 });
+    // After connect, the account chip surfaces a truncated address. Wait for
+    // the lowercase truncated form (e.g. "0x7099...79c8").
+    const short =
+      `${ACCOUNT_1_ADDR.slice(0, 6)}…${ACCOUNT_1_ADDR.slice(-4)}`.toLowerCase();
+    const lower = ACCOUNT_1_ADDR.toLowerCase();
+    await expect(
+      page
+        .getByText(
+          new RegExp(`${lower.slice(0, 6)}.{0,5}${lower.slice(-4)}`, "i"),
+        )
+        .first(),
+    ).toBeVisible({ timeout: 15_000 });
 
-  // Confirm we can see *some* address representation
-  expect(short.length).toBeGreaterThan(0);
+    // Confirm we can see *some* address representation
+    expect(short.length).toBeGreaterThan(0);
+  });
 });
 
 test("page-side wagmi sees account after connect; switch propagates", async ({
   page,
 }) => {
-  const handle = await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
+  await test.step("Verify: page-side wagmi sees account after connect; switch propagates", async () => {
+    const handle = await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
 
-  await page.getByRole("button", { name: /connect wallet/i }).first().click();
-  await page
-    .getByTestId("rk-wallet-option-metaMask")
-    .or(page.getByTestId("rk-wallet-option-io.metamask"))
-    .first()
-    .click();
+    await page
+      .getByRole("button", { name: /connect wallet/i })
+      .first()
+      .click();
+    await page
+      .getByTestId("rk-wallet-option-metaMask")
+      .or(page.getByTestId("rk-wallet-option-io.metamask"))
+      .first()
+      .click();
 
-  // Wait for connection to settle (account chip visible)
-  await expect(
-    page.getByText(
-      new RegExp(
-        `${ACCOUNT_1_ADDR.toLowerCase().slice(0, 6)}.{0,5}${ACCOUNT_1_ADDR.slice(-4).toLowerCase()}`,
-        "i",
-      ),
-    ).first(),
-  ).toBeVisible({ timeout: 15_000 });
+    // Wait for connection to settle (account chip visible)
+    await expect(
+      page
+        .getByText(
+          new RegExp(
+            `${ACCOUNT_1_ADDR.toLowerCase().slice(0, 6)}.{0,5}${ACCOUNT_1_ADDR.slice(-4).toLowerCase()}`,
+            "i",
+          ),
+        )
+        .first(),
+    ).toBeVisible({ timeout: 15_000 });
 
-  // Switch to account 2 via the shim; expect the chip to update
-  await handle.switchAccount(ACCOUNT_2_KEY);
+    // Switch to account 2 via the shim; expect the chip to update
+    await handle.switchAccount(ACCOUNT_2_KEY);
 
-  await expect(
-    page.getByText(
-      new RegExp(
-        `${ACCOUNT_2_ADDR.toLowerCase().slice(0, 6)}.{0,5}${ACCOUNT_2_ADDR.slice(-4).toLowerCase()}`,
-        "i",
-      ),
-    ).first(),
-  ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page
+        .getByText(
+          new RegExp(
+            `${ACCOUNT_2_ADDR.toLowerCase().slice(0, 6)}.{0,5}${ACCOUNT_2_ADDR.slice(-4).toLowerCase()}`,
+            "i",
+          ),
+        )
+        .first(),
+    ).toBeVisible({ timeout: 15_000 });
+  });
 });
 
 test("page-side personal_sign through window.ethereum recovers to account 1", async ({
   page,
 }) => {
-  await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
-  await page.goto("/auth/login?type=expert");
+  await test.step("Verify: page-side personal_sign through window.ethereum recovers to account 1", async () => {
+    await attachWallet(page, ACCOUNT_1_KEY, { rpcUrl: RPC });
+    await page.goto("/auth/login?type=expert");
 
-  // Sign a message via window.ethereum directly (simulates what wagmi's
-  // useSignMessage hook does under the hood when called from app code).
-  const message = "Vetted UI smoke test — please sign";
-  const sig = (await page.evaluate(async (msg) => {
-    const hex =
-      "0x" +
-      Array.from(new TextEncoder().encode(msg))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-    return await (window.ethereum as {
-      request: (a: { method: string; params: unknown[] }) => Promise<string>;
-    }).request({ method: "personal_sign", params: [hex, "0x0"] });
-  }, message)) as Hex;
+    // Sign a message via window.ethereum directly (simulates what wagmi's
+    // useSignMessage hook does under the hood when called from app code).
+    const message = "Vetted UI smoke test — please sign";
+    const sig = (await page.evaluate(async (msg) => {
+      const hex =
+        "0x" +
+        Array.from(new TextEncoder().encode(msg))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      return await (
+        window.ethereum as {
+          request: (a: {
+            method: string;
+            params: unknown[];
+          }) => Promise<string>;
+        }
+      ).request({ method: "personal_sign", params: [hex, "0x0"] });
+    }, message)) as Hex;
 
-  expect(sig).toMatch(/^0x[0-9a-f]+$/i);
-  const recovered = await recoverMessageAddress({ message, signature: sig });
-  expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+    expect(sig).toMatch(/^0x[0-9a-f]+$/i);
+    const recovered = await recoverMessageAddress({ message, signature: sig });
+    expect(recovered.toLowerCase()).toBe(ACCOUNT_1_ADDR.toLowerCase());
+  });
 });

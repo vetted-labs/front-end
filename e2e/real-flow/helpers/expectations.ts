@@ -12,7 +12,8 @@ export const REVIEW_OUTCOMES = {
   REJECTED: "rejected",
 } as const;
 
-export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[keyof typeof REVIEW_OUTCOMES];
+export type ReviewOutcome =
+  (typeof REVIEW_OUTCOMES)[keyof typeof REVIEW_OUTCOMES];
 
 /**
  * Numeric values mirror `IVettingManager.SessionPhase`

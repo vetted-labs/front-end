@@ -103,11 +103,51 @@ test(
       await wallet.attach(pageA, expertA.privateKey);
       await wallet.attach(pageB, expertB.privateKey);
 
-      await test.step("both experts log in via the real UI simultaneously", async () => {
-        await Promise.all([
-          loginAsExpertViaUI(pageA, expertA.address),
-          loginAsExpertViaUI(pageB, expertB.address),
-        ]);
+      // Log the two experts in SERIALLY. Login (SIWE nonce → signature →
+      // verify) is NOT the race this spec is probing — the DB commit path is
+      // (Phase 2 below). Logging in concurrently doubles the backend auth +
+      // guild-details fetch contention on the single-runner stack, which can
+      // make `useApplicationsData`'s per-guild `getGuildDetails` /
+      // `getCandidateApplications` calls transiently fail. When that happens
+      // the candidate-reviews queue renders empty and the helper's "Review"
+      // button never appears (the reported failure). Serial login removes that
+      // contention without affecting the concurrency we actually want to test.
+      await test.step("both experts log in via the real UI", async () => {
+        await loginAsExpertViaUI(pageA, expertA.address);
+        await loginAsExpertViaUI(pageB, expertB.address);
+      });
+
+      // Pre-flight: confirm the freshly-applied candidate is visible in each
+      // expert's candidate-reviews queue via the SAME backend endpoint the
+      // `ApplicationsPage` (`/expert/voting`) Candidate Reviews tab consumes
+      // (`GET /api/guilds/:guildId/candidate-applications?wallet=<expert>`).
+      // This (a) deterministically fails fast with a clear message if the
+      // panel assignment / commit-reveal promotion hasn't propagated, instead
+      // of a vague 30s "Review button not visible" timeout inside the helper,
+      // and (b) primes the BE so the subsequent UI fetch returns the row.
+      await test.step("the candidate appears in both panel experts' review queues", async () => {
+        for (const expert of [expertA, expertB]) {
+          await expect
+            .poll(
+              async () => {
+                const res = await page.request.get(
+                  `${BACKEND_URL}/api/guilds/${encodeURIComponent(guild.id)}/candidate-applications?wallet=${encodeURIComponent(expert.address)}`,
+                );
+                if (!res.ok()) return false;
+                const body = (await res.json()) as {
+                  data?: Array<{ id: string }>;
+                };
+                const rows = body.data ?? [];
+                return rows.some((r) => r.id === applicationId);
+              },
+              {
+                timeout: 30_000,
+                intervals: [500, 1_000, 2_000],
+                message: `candidate application ${applicationId} must surface in expert ${expert.address}'s candidate-review queue before the concurrent vote`,
+              },
+            )
+            .toBe(true);
+        }
       });
 
       await test.step("both experts walk the 4-step rubric wizard and submit their votes concurrently", async () => {

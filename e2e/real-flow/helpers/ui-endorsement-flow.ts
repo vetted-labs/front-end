@@ -5,6 +5,25 @@ import { recordHireOutcome, reportPerformanceIssue } from "./endorsement";
 import { loginAsExpertViaUI } from "./ui-auth";
 import { attachWallet } from "./wallet-injection";
 
+/**
+ * Dismiss any open Sonner toasts. The endorsements marketplace surfaces
+ * non-fatal "Failed to load applications" / "Couldn't load earnings" error
+ * toasts at bottom-right (Sonner default position + closeButton). The endorse
+ * modal's full-width submit button sits at the bottom of the centered modal, so
+ * a bottom-right toast can overlap the button and intercept the pointer event,
+ * blocking the click. Closing toasts clears the overlay before we click.
+ */
+async function dismissToasts(page: Page): Promise<void> {
+  const closeButtons = page.getByRole("button", { name: /close toast/i });
+  const count = await closeButtons.count().catch(() => 0);
+  for (let i = 0; i < count; i++) {
+    await closeButtons
+      .first()
+      .click({ timeout: 1_000 })
+      .catch(() => {});
+  }
+}
+
 export type CompanyFixture = {
   id: string;
   token: string;
@@ -50,11 +69,16 @@ export async function fetchEndorsementTarget(
   candidateToken: string,
   guildApplicationId: string,
 ): Promise<EndorsementTarget> {
-  const res = await request.get(`${BACKEND_URL}/api/candidates/me/guild-applications`, {
-    headers: { Authorization: `Bearer ${candidateToken}` },
-  });
+  const res = await request.get(
+    `${BACKEND_URL}/api/candidates/me/guild-applications`,
+    {
+      headers: { Authorization: `Bearer ${candidateToken}` },
+    },
+  );
   if (!res.ok()) {
-    throw new Error(`fetchEndorsementTarget failed: ${res.status()} ${await res.text()}`);
+    throw new Error(
+      `fetchEndorsementTarget failed: ${res.status()} ${await res.text()}`,
+    );
   }
 
   const body = (await res.json()) as {
@@ -67,8 +91,13 @@ export async function fetchEndorsementTarget(
     }>;
   };
   const row = body.data.find((app) => app.id === guildApplicationId);
-  if (!row) throw new Error(`Guild application ${guildApplicationId} was not returned`);
-  if (!row.jobId || !row.jobApplicationId || !(row.candidateId ?? row.candidate_id)) {
+  if (!row)
+    throw new Error(`Guild application ${guildApplicationId} was not returned`);
+  if (
+    !row.jobId ||
+    !row.jobApplicationId ||
+    !(row.candidateId ?? row.candidate_id)
+  ) {
     throw new Error(
       `Guild application ${guildApplicationId} is not fully linked to a job application: ${JSON.stringify(row)}`,
     );
@@ -102,18 +131,27 @@ export async function createCandidateJobApplication(
     },
   });
   if (!res.ok()) {
-    throw new Error(`createCandidateJobApplication failed: ${res.status()} ${await res.text()}`);
+    throw new Error(
+      `createCandidateJobApplication failed: ${res.status()} ${await res.text()}`,
+    );
   }
 
   const body = (await res.json()) as {
-    data: { id: string; jobId?: string; job_id?: string; candidateId?: string; candidate_id?: string };
+    data: {
+      id: string;
+      jobId?: string;
+      job_id?: string;
+      candidateId?: string;
+      candidate_id?: string;
+    };
   };
 
   return {
     guildApplicationId: "",
     jobApplicationId: body.data.id,
     jobId: body.data.jobId ?? body.data.job_id ?? args.jobId,
-    candidateId: body.data.candidateId ?? body.data.candidate_id ?? args.candidateId,
+    candidateId:
+      body.data.candidateId ?? body.data.candidate_id ?? args.candidateId,
   };
 }
 
@@ -128,10 +166,14 @@ export async function placeEndorsementViaUI(
   },
 ): Promise<void> {
   const browser = basePage.context().browser();
-  if (!browser) throw new Error("placeEndorsementViaUI: browser handle unavailable");
+  if (!browser)
+    throw new Error("placeEndorsementViaUI: browser handle unavailable");
 
   const origin = new URL(basePage.url()).origin;
-  const context = await browser.newContext({ baseURL: origin, bypassCSP: true });
+  const context = await browser.newContext({
+    baseURL: origin,
+    bypassCSP: true,
+  });
   const page = await context.newPage();
 
   try {
@@ -151,7 +193,9 @@ export async function placeEndorsementViaUI(
       return "unknown";
     });
     if (providerSource !== "playwright") {
-      throw new Error(`Expected Playwright wallet provider, got ${providerSource}`);
+      throw new Error(
+        `Expected Playwright wallet provider, got ${providerSource}`,
+      );
     }
     await page.goto(
       `/expert/endorsements?guildId=${encodeURIComponent(args.guildId)}&applicationId=${encodeURIComponent(args.applicationId)}`,
@@ -159,12 +203,16 @@ export async function placeEndorsementViaUI(
     );
 
     if (args.candidateNamePattern) {
-      await expect(page.getByText(args.candidateNamePattern).first()).toBeVisible({
+      await expect(
+        page.getByText(args.candidateNamePattern).first(),
+      ).toBeVisible({
         timeout: 30_000,
       });
     }
 
-    const modal = page.locator('[data-tour-target="expert-endorse-modal"]').first();
+    const modal = page
+      .locator('[data-tour-target="expert-endorse-modal"]')
+      .first();
     if (!(await modal.isVisible({ timeout: 30_000 }).catch(() => false))) {
       await page
         .locator('[data-tour-target="expert-endorsement-candidate-bid-cta"]')
@@ -176,22 +224,37 @@ export async function placeEndorsementViaUI(
     await openStakeStep(page);
 
     const amountInput = page
-      .locator('[data-tour-target="expert-endorse-amount-input"] input[type="number"]')
+      .locator(
+        '[data-tour-target="expert-endorse-amount-input"] input[type="number"]',
+      )
       .first();
     await expect(amountInput).toBeVisible({ timeout: 15_000 });
     await amountInput.fill(args.amountVetd);
 
-    const submit = page.locator('[data-tour-target="expert-endorse-submit-button"]').first();
+    const submit = page
+      .locator('[data-tour-target="expert-endorse-submit-button"]')
+      .first();
     await expect(submit).toBeEnabled({ timeout: 10_000 });
+    // Clear any bottom-right error toasts that can overlap the modal's
+    // full-width submit button and intercept the click (same class of bug as
+    // the review-modal footer; see dismissToasts docstring).
+    await dismissToasts(page);
     await submit.click();
 
-    await expect(
-      page
-        .getByText(/endorsement confirmed/i)
-        .or(page.getByText(/waiting for confirmation/i))
-        .or(page.getByText(/placing endorsement/i))
-        .first(),
-    ).toBeVisible({ timeout: 30_000 });
+    const progressMessage = page
+      .getByText(/endorsement confirmed/i)
+      .or(page.getByText(/waiting for confirmation/i))
+      .or(page.getByText(/placing endorsement/i))
+      .first();
+    try {
+      await expect(progressMessage).toBeVisible({ timeout: 30_000 });
+    } catch (error) {
+      const modalText = await modal.innerText().catch(() => "<modal missing>");
+      throw new Error(
+        `Endorsement did not progress after clicking submit. Modal text:\n${modalText}`,
+        { cause: error },
+      );
+    }
     await expect(page.getByText(/endorsement confirmed/i).first()).toBeVisible({
       timeout: 60_000,
     });
@@ -220,7 +283,9 @@ export async function waitForSyncedEndorsement(
           }>;
         };
         return body.data.some(
-          (row) => (row.application_id ?? row.applicationId ?? row.application?.id) === applicationId,
+          (row) =>
+            (row.application_id ?? row.applicationId ?? row.application?.id) ===
+            applicationId,
         );
       },
       { timeout: 30_000, intervals: [1000, 2000, 3000] },
@@ -235,10 +300,14 @@ export async function expectExpertEarningsShowsEndorsement(
 ): Promise<void> {
   const page = await openExpertPage(basePage, expert, "/expert/earnings");
   try {
-    await expect(page.getByRole("heading", { name: /^earnings$/i })).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /^earnings$/i }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.locator('[data-tour-target="expert-earnings-summary"]').first()).toBeVisible({
+    await expect(
+      page.locator('[data-tour-target="expert-earnings-summary"]').first(),
+    ).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByText(/endorsement reward/i).first()).toBeVisible({
@@ -248,7 +317,10 @@ export async function expectExpertEarningsShowsEndorsement(
       timeout: 30_000,
     });
   } finally {
-    await page.context().close().catch(() => undefined);
+    await page
+      .context()
+      .close()
+      .catch(() => undefined);
   }
 }
 
@@ -257,22 +329,35 @@ export async function expectExpertHistoryShowsSlashedEndorsement(
   expert: Expert,
   candidateNamePattern: RegExp,
 ): Promise<void> {
-  const page = await openExpertPage(basePage, expert, "/expert/endorsements/history");
+  const page = await openExpertPage(
+    basePage,
+    expert,
+    "/expert/endorsements/history",
+  );
   try {
-    await expect(page.getByRole("heading", { name: /endorsement history/i })).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /endorsement history/i }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    );
     await expect(page.getByText(candidateNamePattern).first()).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText(/not hired.*10% slashed/i).first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByText(/not hired.*10% slashed/i).first()).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    );
   } finally {
-    await page.context().close().catch(() => undefined);
+    await page
+      .context()
+      .close()
+      .catch(() => undefined);
   }
 }
 
@@ -281,14 +366,22 @@ export async function expectExpertHistoryShowsHiredEndorsement(
   expert: Expert,
   candidateNamePattern: RegExp,
 ): Promise<void> {
-  const page = await openExpertPage(basePage, expert, "/expert/endorsements/history");
+  const page = await openExpertPage(
+    basePage,
+    expert,
+    "/expert/endorsements/history",
+  );
   try {
-    await expect(page.getByRole("heading", { name: /endorsement history/i })).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /endorsement history/i }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    );
     await expect(page.getByText(candidateNamePattern).first()).toBeVisible({
       timeout: 30_000,
     });
@@ -296,7 +389,10 @@ export async function expectExpertHistoryShowsHiredEndorsement(
       timeout: 30_000,
     });
   } finally {
-    await page.context().close().catch(() => undefined);
+    await page
+      .context()
+      .close()
+      .catch(() => undefined);
   }
 }
 
@@ -305,10 +401,16 @@ export async function fetchExpertRewards(
   expertId: string,
   authToken: string,
 ): Promise<ExpertRewardRow[]> {
-  const res = await request.get(`${BACKEND_URL}/api/endorsements/rewards/${expertId}`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
-  if (!res.ok()) throw new Error(`fetchExpertRewards failed: ${res.status()} ${await res.text()}`);
+  const res = await request.get(
+    `${BACKEND_URL}/api/endorsements/rewards/${expertId}`,
+    {
+      headers: { Authorization: `Bearer ${authToken}` },
+    },
+  );
+  if (!res.ok())
+    throw new Error(
+      `fetchExpertRewards failed: ${res.status()} ${await res.text()}`,
+    );
   const body = (await res.json()) as { data: ExpertRewardRow[] };
   return body.data;
 }
@@ -366,7 +468,11 @@ export async function recordNotHiredOutcome(
 }
 
 async function openStakeStep(page: Page): Promise<void> {
-  const amountInput = page.locator('[data-tour-target="expert-endorse-amount-input"] input[type="number"]').first();
+  const amountInput = page
+    .locator(
+      '[data-tour-target="expert-endorse-amount-input"] input[type="number"]',
+    )
+    .first();
   if (await amountInput.isVisible().catch(() => false)) return;
 
   for (let i = 0; i < 4; i++) {
@@ -377,15 +483,24 @@ async function openStakeStep(page: Page): Promise<void> {
     if (await amountInput.isVisible().catch(() => false)) return;
   }
 
-  throw new Error("openStakeStep: endorsement amount input never became visible");
+  throw new Error(
+    "openStakeStep: endorsement amount input never became visible",
+  );
 }
 
-async function openExpertPage(basePage: Page, expert: Expert, path: string): Promise<Page> {
+async function openExpertPage(
+  basePage: Page,
+  expert: Expert,
+  path: string,
+): Promise<Page> {
   const browser = basePage.context().browser();
   if (!browser) throw new Error("openExpertPage: browser handle unavailable");
 
   const origin = new URL(basePage.url()).origin;
-  const context = await browser.newContext({ baseURL: origin, bypassCSP: true });
+  const context = await browser.newContext({
+    baseURL: origin,
+    bypassCSP: true,
+  });
   const page = await context.newPage();
   await attachWallet(page, expert.privateKey, {
     rpcUrl: process.env.ANVIL_RPC_URL,

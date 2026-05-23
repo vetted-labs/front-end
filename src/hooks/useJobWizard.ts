@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { jobsApi, guildsApi, ApiError } from "@/lib/api";
@@ -120,6 +120,13 @@ export function useJobWizard(jobId?: string): JobWizardState & JobWizardActions 
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Tracks whether the user has typed into the form yet. The persistence
+  // storageKey depends on auth.userId, which is null on first mount and changes
+  // once auth hydrates — re-triggering the draft-restore effect. Without this
+  // guard that late restore overwrites in-progress input (observed: the title
+  // field clearing mid-entry). We only restore a draft into a pristine form.
+  const hasUserEditedRef = useRef(false);
+
   // Drafts only apply to brand-new jobs. Bumped namespace so legacy
   // `job-post` drafts don't collide with the new shape.
   const variantKey = isEditing ? `edit-${jobId}` : "new";
@@ -130,7 +137,7 @@ export function useJobWizard(jobId?: string): JobWizardState & JobWizardActions 
       variant: variantKey,
       version: 1,
       onRestore: (draft) => {
-        if (isEditing) return;
+        if (isEditing || hasUserEditedRef.current) return;
         setFormData(draft);
         toast.info("Draft restored from previous session");
       },
@@ -307,6 +314,7 @@ export function useJobWizard(jobId?: string): JobWizardState & JobWizardActions 
 
   const updateField = useCallback(
     <K extends keyof JobFormData>(field: K, value: JobFormData[K]) => {
+      hasUserEditedRef.current = true;
       setFormData((p) => ({ ...p, [field]: value }));
       setGlobalError(null);
       setFieldErrors((prev) => {

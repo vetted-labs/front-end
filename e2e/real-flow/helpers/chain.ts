@@ -62,7 +62,10 @@ export function createAnvilHandle(): AnvilHandle {
       })) as Hex;
     },
     async revert(id) {
-      await publicClient.request({ method: "evm_revert" as never, params: [id] as never });
+      await publicClient.request({
+        method: "evm_revert" as never,
+        params: [id] as never,
+      });
     },
     async increaseTime(seconds) {
       await publicClient.request({
