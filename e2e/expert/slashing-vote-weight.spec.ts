@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
-import { setupDashboardWithVoteWeight } from "./helpers/guild-mocks";
+import { setExpertSession } from "../helpers/expert-auth";
+import { setupDashboardWithVoteWeight } from "../helpers/guild-mocks";
 
 test.describe("Dashboard vote weight with high reputation", () => {
   test.beforeEach(async ({ page }) => {

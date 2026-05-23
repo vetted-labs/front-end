@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   APPLICATION_ID,
   FINALIZED_APPLICATION_ID,
@@ -9,7 +9,7 @@ import {
   MOCK_VOTE_HISTORY,
   MOCK_STAKING_NOT_MET,
   setupVotingDetailMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // The redesigned detail page derives "can I vote?" from per-guild stake info
 // (blockchainApi.getExpertGuildStakes) rather than the old staking-balance

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   ENGINEERING_GUILD_ID,
   APPLICATION_ID,
@@ -7,7 +7,7 @@ import {
   MOCK_STAKING_NOT_MET,
   setupVotingDetailMocks,
   setupGuildApplicationMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 test.describe("Negative tests — error paths and validation", () => {
   test("auth guard redirects from /candidate/guilds when not authenticated", async ({ page }) => {

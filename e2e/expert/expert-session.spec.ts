@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate, loginCandidate, logoutCandidate } from "./helpers/auth";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCandidate, loginCandidate, logoutCandidate } from "../helpers/auth";
+import { signupCompany } from "../helpers/company-auth";
 import {
   MOCK_EXPERT,
   setExpertSession,
   clearExpertSession,
   expectExpertSession,
   expectNoExpertSession,
-} from "./helpers/expert-auth";
+} from "../helpers/expert-auth";
 
 test.describe("Expert session management via localStorage", () => {
   test("setExpertSession correctly sets all 3 localStorage keys", async ({

@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   APPLICATION_ID,
   ENGINEERING_GUILD_ID,
@@ -8,7 +8,7 @@ import {
   MOCK_CR_COMMIT,
   MOCK_CR_FINALIZED,
   setupVotingDetailMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // NOTE ON THE REDESIGN:
 // The commit-reveal flow was collapsed from a four-phase (direct → commit →

@@ -57,7 +57,7 @@ export default defineConfig({
     {
       name: "platform",
       testMatch:
-        /scenarios\/(candidate|company|cross-role|expert|protocol)\/.*\.spec\.ts/,
+        /scenarios\/(candidate|hiring|company|cross-role|expert|protocol)\/.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
   ],

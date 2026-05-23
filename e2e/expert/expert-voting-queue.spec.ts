@@ -1,9 +1,9 @@
 import { test, expect, Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   MOCK_STAKING_NOT_MET,
   setupVotingQueueMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // The expert voting queue was restructured into the "Reviews" page
 // (ApplicationsPage). Proposal cards — the ones carrying a candidate name,

@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   setupCommonExpertMocks,
   setupEarningsMocks,
   setupReputationMocks,
   setupVotingQueueMocks,
   MOCK_EXPERT_PROFILE,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 /**
  * Sets up mocks for the expert dashboard page.

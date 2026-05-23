@@ -22,11 +22,81 @@ npm run dev        # Dev server with Turbopack (default port 3000)
 npm run build      # Production build (no Turbopack)
 npm start          # Start production server
 npm run lint       # ESLint
+npm run typecheck  # TypeScript check
 ```
 
 - `dotenv-cli` loads `.env.local` automatically in dev/start scripts
 - Backend API: `NEXT_PUBLIC_API_URL` env var (defaults to `http://localhost:4000`)
 - Path alias: `@/` → `./src/`
+
+## Auto Mate + Playwright
+
+Use [`e2e/PLAYWRIGHT_TEMPLATE.md`](e2e/PLAYWRIGHT_TEMPLATE.md) before writing
+or refactoring Playwright tests. Auto Mate reads Playwright test names and
+`test.step(...)` labels directly, so tests should look like product workflows,
+not implementation scripts.
+
+### Test Lanes
+
+- `e2e/{candidate,hiring,expert,shared}/*.spec.ts`: fast UI checks, grouped by
+  persona. These may use mocked API routes and direct API signup helpers. Run
+  with `npm run test:e2e` (or `:candidate` / `:hiring` / `:expert`).
+- `e2e/real-flow/**/*.spec.ts`: full-stack scenarios (also persona-grouped under
+  `real-flow/scenarios/{candidate,hiring,expert,cross-role}/`). These use backend
+  seed APIs, Anvil, contracts, and headless wallet helpers.
+- See `e2e/README.md` for the full navigation map.
+
+### Authoring Rules
+
+- Use one readable `test(...)` name per user outcome.
+- Wrap every meaningful phase in `await test.step("human-readable action or outcome", async () => { ... })`.
+- Prefer product-stage labels such as `candidate applies to the engineering guild via UI`, not generic labels like `Verify: test name`.
+- Keep setup, navigation, interaction, and assertion phases separate for flows that Auto Mate users will watch.
+- Seed through helpers and fixtures. Do not duplicate inline `page.request` setup across specs.
+- Do not hand-write localStorage in specs unless the test is specifically about auth storage; add a helper instead.
+- For multi-role tests, prefer separate browser contexts/pages for separate people. Auto Mate follows the newest active page, so do not force one page if that makes wallet or auth state fragile.
+- Always create secondary contexts with the current origin as `baseURL`:
+
+```ts
+const context = await page
+  .context()
+  .browser()!
+  .newContext({
+    baseURL: new URL(page.url()).origin,
+    bypassCSP: true,
+  });
+```
+
+- Prefer `domcontentloaded` plus visible assertions over broad `networkidle`
+  waits. Use `waitForTimeout` only for deliberate watch-mode pacing.
+- For critical real-flow tests, assert both a user-visible outcome and a
+  backend/chain/data invariant.
+
+### Standard Commands
+
+Run the frontend for Auto Mate on a non-default port:
+
+```bash
+NEXT_PUBLIC_E2E_MODE=true npm run dev -- -p 3001
+```
+
+Run one focused spec against an already-running frontend:
+
+```bash
+PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/path/to/file.spec.ts --reporter=line --retries=0
+```
+
+Make sure Auto Mate can discover the tests:
+
+```bash
+PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --list
+```
+
+Slow a run down for visual debugging:
+
+```bash
+PLAYWRIGHT_SLOW_MO=500 PLAYWRIGHT_WATCH_PAUSE_MS=1000 PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test e2e/path/to/file.spec.ts --headed
+```
 
 ## Architecture
 

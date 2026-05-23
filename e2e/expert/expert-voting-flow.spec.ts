@@ -1,11 +1,11 @@
 import { test, expect, Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   APPLICATION_ID,
   ENGINEERING_GUILD_ID,
   MOCK_APPLICATION_VOTED,
   setupVotingDetailMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // The redesigned detail page gates the "Cast Your Vote" action on per-guild
 // stake info (blockchainApi.getExpertGuildStakes). The shared mock defaults to

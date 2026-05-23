@@ -1,9 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   MOCK_EXPERT_PROFILE,
   setupDashboardWithVoteWeight,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 async function setupExpertDashboard(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" });

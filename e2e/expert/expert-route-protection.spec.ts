@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
-import { setExpertSession } from "./helpers/expert-auth";
+import { signupCandidate } from "../helpers/auth";
+import { setExpertSession } from "../helpers/expert-auth";
 
 test.describe("Expert route protection", () => {
   test("unauthenticated user accessing /expert/dashboard gets redirected", async ({

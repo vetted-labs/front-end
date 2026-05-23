@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
+import { signupCandidate } from "../helpers/auth";
 
 test.describe("Candidate applications page", () => {
   test("shows My Applications heading", async ({ page }) => {

@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
+import { signupCandidate } from "../helpers/auth";
 import {
   MOCK_GUILD_APPLICATION_SUMMARIES,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // Post-IA-restructure, /candidate/guilds ("My guilds") groups applications into
 // "My guilds" (approved), "Pending applications", and "Closed applications"

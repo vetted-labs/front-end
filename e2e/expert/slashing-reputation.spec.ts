@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
-import { setupSlashingReputationMocks } from "./helpers/guild-mocks";
+import { setExpertSession } from "../helpers/expert-auth";
+import { setupSlashingReputationMocks } from "../helpers/guild-mocks";
 
 test.describe("Slashing reputation page", () => {
   test.beforeEach(async ({ page }) => {

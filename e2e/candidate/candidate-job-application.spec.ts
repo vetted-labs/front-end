@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCandidate } from "../helpers/auth";
+import { signupCompany } from "../helpers/company-auth";
 
 test.describe("Candidate job application flow", () => {
   test("candidate can browse jobs from their dashboard", async ({ page }) => {

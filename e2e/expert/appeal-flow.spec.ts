@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 
 const ENGINEERING_GUILD_ID = "f5e2c769-2069-4594-8c23-4825a935f405";
 const REJECTED_PROPOSAL_ID = "eb270885-af3d-43bd-bdaf-56bae48a59ff";

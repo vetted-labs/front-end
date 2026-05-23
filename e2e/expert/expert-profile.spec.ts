@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   MOCK_EXPERT_PROFILE,
   MOCK_REPUTATION_TIMELINE,
   setupCommonExpertMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 test.describe("Expert profile page", () => {
   test.beforeEach(async ({ page }) => {

@@ -1,12 +1,12 @@
 import { test, expect, Page } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
+import { signupCandidate } from "../helpers/auth";
 import {
   ENGINEERING_GUILD_ID,
   JOB_ID,
   MOCK_JOB,
   MOCK_CANDIDATE_PROFILE,
   setupGuildApplicationMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 // ---------------------------------------------------------------------------
 // Post-redesign guild application flow.

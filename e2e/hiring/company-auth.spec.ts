@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupCompany, loginCompany, logoutCompany } from "./helpers/company-auth";
+import { signupCompany, loginCompany, logoutCompany } from "../helpers/company-auth";
 
 test.describe("Company authentication", () => {
   test("signs up a new company and lands on dashboard", async ({ page }) => {

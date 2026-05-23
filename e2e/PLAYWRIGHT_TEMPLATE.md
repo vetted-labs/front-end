@@ -2,7 +2,7 @@
 
 This repo has two Playwright lanes:
 
-- `e2e/*.spec.ts`: fast UI checks that may use mocked API routes and direct API signup helpers.
+- `e2e/{candidate,hiring,expert,shared}/*.spec.ts`: fast UI checks (persona-grouped), may use mocked API routes + direct API signup helpers.
 - `e2e/real-flow/**/*.spec.ts`: full-stack scenarios that use backend seed APIs, Anvil, contracts, and the headless wallet.
 
 Auto Mate reads test names and `test.step(...)` labels directly. Write tests as product workflows, not as implementation scripts.

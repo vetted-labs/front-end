@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   MOCK_APPLICATION_SLASHED,
   MOCK_APPLICATION_MILD_SLASH,
   MOCK_APPLICATION_FINALIZED,
   setupVotingDetailMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 const SLASHED_ID = MOCK_APPLICATION_SLASHED.id;
 const MILD_ID = MOCK_APPLICATION_MILD_SLASH.id;

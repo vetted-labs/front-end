@@ -3,11 +3,11 @@ import {
   signupCandidate,
   loginCandidate,
   logoutCandidate,
-} from "./helpers/auth";
+} from "../helpers/auth";
 import {
   setExpertSession,
   expectNoExpertSession,
-} from "./helpers/expert-auth";
+} from "../helpers/expert-auth";
 
 /**
  * Bug regression tests for specific reported issues.

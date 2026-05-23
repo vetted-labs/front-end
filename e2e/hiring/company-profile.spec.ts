@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCompany } from "../helpers/company-auth";
 
 /**
  * The company profile lives at /dashboard/company-profile in the redesigned IA

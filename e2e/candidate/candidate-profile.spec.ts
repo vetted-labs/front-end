@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
+import { signupCandidate } from "../helpers/auth";
 
 // NOTE: post-IA-restructure, the candidate "home" (welcome message, stat strip,
 // applications/guild sections) lives at /candidate/dashboard. /candidate/profile

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MOCK_EXPERT } from "./helpers/expert-auth";
+import { MOCK_EXPERT } from "../helpers/expert-auth";
 import { TOUR_TARGETS } from "@/components/expert/onboarding/tourTargets";
 import {
   APPLICATION_ID,
@@ -14,7 +14,7 @@ import {
   setupDashboardWithVoteWeight,
   setupVotingDetailMocks,
   setupVotingQueueMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 async function setupStoryLabMocks(
   page: Page,

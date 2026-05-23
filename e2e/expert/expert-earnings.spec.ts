@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   MOCK_EARNINGS_BREAKDOWN,
   setupEarningsMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 test.describe("Expert earnings page", () => {
   test("shows wallet not connected state when no expert session", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCompany } from "../helpers/company-auth";
 
 test.describe("Company dashboard", () => {
   test("displays stats grid with four stat cards", async ({ page }) => {

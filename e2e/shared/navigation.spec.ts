@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { signupCandidate } from "./helpers/auth";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCandidate } from "../helpers/auth";
+import { signupCompany } from "../helpers/company-auth";
 
 test.describe("Navigation and route protection", () => {
   test("unauthenticated user accessing /candidate/profile gets redirected to login", async ({

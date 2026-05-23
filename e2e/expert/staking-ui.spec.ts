@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setExpertSession } from "./helpers/expert-auth";
+import { setExpertSession } from "../helpers/expert-auth";
 import {
   APPLICATION_ID,
   MOCK_APPLICATION_ACTIVE,
@@ -7,7 +7,7 @@ import {
   MOCK_STAKING_NOT_MET,
   setupVotingQueueMocks,
   setupVotingDetailMocks,
-} from "./helpers/guild-mocks";
+} from "../helpers/guild-mocks";
 
 test.describe("Staking requirement UI", () => {
   test.beforeEach(async ({ page }) => {

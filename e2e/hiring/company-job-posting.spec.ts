@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signupCompany } from "./helpers/company-auth";
+import { signupCompany } from "../helpers/company-auth";
 
 /**
  * The "post a job" flow is now a 7-step wizard (src/components/JobForm.tsx +
