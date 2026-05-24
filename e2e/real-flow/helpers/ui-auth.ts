@@ -168,14 +168,38 @@ export async function loginAsExpertViaUI(
   const timeoutMs = opts.timeoutMs ?? 30_000;
   await markOnboardingComplete(page, expertAddress);
   await page.goto("/auth/login?type=expert");
-  await page
-    .getByRole("button", { name: /connect wallet/i })
-    .first()
-    .click();
-  await page
-    .getByRole("button", { name: /headless e2e wallet/i })
-    .first()
-    .click();
+
+  const alreadyLoggedIn = () => /\/expert\/dashboard/.test(page.url());
+  const clickUnlessRedirected = async (
+    buttonName: RegExp,
+    stepTimeoutMs: number,
+  ): Promise<void> => {
+    const deadline = Date.now() + stepTimeoutMs;
+    let lastError: unknown;
+
+    while (Date.now() < deadline) {
+      if (alreadyLoggedIn()) return;
+
+      try {
+        await page
+          .getByRole("button", { name: buttonName })
+          .first()
+          .click({ timeout: Math.min(5_000, Math.max(1_000, deadline - Date.now())) });
+        return;
+      } catch (err) {
+        if (alreadyLoggedIn()) return;
+        lastError = err;
+        await page.waitForTimeout(250);
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(`Timed out clicking ${buttonName}`);
+  };
+
+  await clickUnlessRedirected(/connect wallet/i, timeoutMs);
+  await clickUnlessRedirected(/headless e2e wallet/i, timeoutMs);
   await page.waitForURL(/\/expert\/dashboard/, { timeout: timeoutMs });
 }
 

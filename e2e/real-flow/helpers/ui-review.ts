@@ -68,6 +68,13 @@ export interface SubmitRubricReviewOptions {
    * page. Defaults to 30 000.
    */
   modalTimeoutMs?: number;
+  /**
+   * Optional exact candidate/expert application id to open via the Applications
+   * page deep link. Prefer this when a spec already knows the application id;
+   * it avoids relying on whichever review card is first in the queue.
+   */
+  reviewAppId?: string;
+  reviewType?: "candidate" | "expert";
 }
 
 export interface SubmitRubricReviewResult {
@@ -153,17 +160,30 @@ async function dismissToasts(page: Page): Promise<void> {
 async function openFirstReviewModal(
   page: Page,
   timeoutMs: number,
+  opts: { reviewAppId?: string; reviewType?: "candidate" | "expert" } = {},
 ): Promise<void> {
+  if (opts.reviewAppId) {
+    const reviewType = opts.reviewType ?? "candidate";
+    await page.goto(
+      `/expert/voting?reviewAppId=${encodeURIComponent(opts.reviewAppId)}&reviewType=${reviewType}`,
+      { waitUntil: "domcontentloaded" },
+    );
+    await expect(
+      page.getByLabel("Close review modal").first(),
+    ).toBeVisible({ timeout: timeoutMs });
+    return;
+  }
+
   await page.goto("/expert/voting", { waitUntil: "domcontentloaded" });
 
   // Switch to Candidate Reviews tab (may be labelled "Candidate Reviews" or
   // similar — use a role matcher so we're not sensitive to exact copy).
-  const candidateTab = page
-    .getByRole("button", { name: /candidate reviews/i })
-    .or(page.getByRole("tab", { name: /candidate reviews/i }))
-    .first();
+  const candidateTab = page.getByRole("tab", { name: /candidate reviews/i }).first();
   if (await candidateTab.isVisible({ timeout: 5_000 }).catch(() => false)) {
     await candidateTab.click();
+    await expect(candidateTab).toHaveAttribute("aria-selected", "true", {
+      timeout: 5_000,
+    });
   }
 
   // Click the first visible "Review" button to open the modal.
@@ -203,6 +223,8 @@ export async function submitRubricReviewViaUI(
     redFlags: flagLabels = [],
     overallFeedback,
     modalTimeoutMs = 30_000,
+    reviewAppId,
+    reviewType,
   } = opts;
 
   // Ensure justification is long enough for the required minimum (30 chars).
@@ -215,7 +237,10 @@ export async function submitRubricReviewViaUI(
   // Step 0: Open the review modal from the expert voting queue.
   // ─────────────────────────────────────────────────────────────────────────
   await test.step("expert opens the candidate review modal from the voting queue", async () => {
-    await openFirstReviewModal(page, modalTimeoutMs);
+    await openFirstReviewModal(page, modalTimeoutMs, {
+      reviewAppId,
+      reviewType,
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────

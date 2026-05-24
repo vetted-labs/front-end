@@ -21,7 +21,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { encodePacked, keccak256, toHex, type Hex } from "viem";
-import type { APIRequestContext, Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import type { Expert, Candidate } from "../fixtures";
 import type { ContractHandles } from "./contracts";
 import type { AnvilHandle } from "./chain";
@@ -156,6 +156,8 @@ export async function applyToGuildViaUI(
         on_chain_session_id?: string | null;
         blockchain_session_id?: string | null;
         blockchainSessionId?: string | null;
+        blockchain_session_created?: boolean | null;
+        blockchainSessionCreated?: boolean | null;
       }>;
     };
   };
@@ -166,14 +168,32 @@ export async function applyToGuildViaUI(
   await cronApi.enableCommitReveal(page.request, proposalId);
   await cronApi.drainBlockchainOps(page.request);
 
-  // Re-fetch — blockchain_session_id should now be populated.
-  const after = await fetchApplications();
-  const refreshed =
-    after.data.find((row) => row.id === applicationId) ?? after.data[0];
+  // Re-fetch until the BE has observed the on-chain createSession tx. A
+  // populated session id only means the outbox op was queued; reviewers still
+  // cannot commit until blockchain_session_created flips true.
+  let refreshed: Awaited<ReturnType<typeof fetchApplications>>["data"][number] | undefined;
+  await expect
+    .poll(
+      async () => {
+        await cronApi.drainBlockchainOps(page.request).catch(() => undefined);
+        const after = await fetchApplications();
+        refreshed =
+          after.data.find((row) => row.id === applicationId) ?? after.data[0];
+        return Boolean(
+          refreshed &&
+            (refreshed.blockchain_session_created ??
+              refreshed.blockchainSessionCreated),
+        );
+      },
+      {
+        timeout: 30_000,
+        intervals: [500, 1_000, 2_000],
+        message: `applyToGuildViaUI: blockchain session should be created for application ${applicationId}`,
+      },
+    )
+    .toBe(true);
   if (!refreshed) {
-    throw new Error(
-      "applyToGuildViaUI: no applications returned after submit",
-    );
+    throw new Error("applyToGuildViaUI: no applications returned after submit");
   }
   const rawSessionId =
     refreshed.on_chain_session_id ??

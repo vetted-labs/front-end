@@ -114,6 +114,13 @@ test(
     // snapshot the baseline now to assert exact deltas afterwards.
     const reputationBefore = new Map<string, number>();
     await test.step("record every panel reviewer's reputation baseline", async () => {
+      // Full-lane runs execute many reputation-mutating scenarios before this
+      // one. Drain any queued async work before taking the baseline so the
+      // delta below measures this proposal's finalization only.
+      await testApi.drain(page.request);
+      await cronApi.drainBlockchainOps(page.request);
+      await page.waitForTimeout(500);
+
       for (const expert of panel) {
         reputationBefore.set(
           expert.id,

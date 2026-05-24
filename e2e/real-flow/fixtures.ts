@@ -25,6 +25,7 @@
 
 import {
   test as base,
+  type BrowserContext,
   type Page,
 } from "@playwright/test";
 import fs from "node:fs";
@@ -77,6 +78,11 @@ export type Guild = {
 
 export type RealFlowFixtures = WorkerFixtures & TestFixtures;
 
+export type TestContextRegistry = {
+  register: (context: BrowserContext) => BrowserContext;
+  closeAll: () => Promise<void>;
+};
+
 type WorkerFixtures = {
   anvil: AnvilHandle;
   contracts: ContractHandles;
@@ -91,6 +97,7 @@ type WorkerFixtures = {
 
 type TestFixtures = {
   cleanState: void;
+  testContexts: TestContextRegistry;
   candidate: Candidate;
   /** Pre-funded job creator wallet (reads JOB_CREATOR_WALLET_PRIVATE_KEY from
    *  backend/.env, falling back to ANVIL_KEYS[5]). The `cleanState` fixture
@@ -308,6 +315,37 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { scope: "worker" },
   ],
 
+  // Test-scoped: register every extra browser context opened for multi-actor
+  // flows. Helpers still close contexts in their own finally blocks, but this
+  // fixture is the backstop that prevents leaked reviewer/endorser contexts
+  // from surviving into anvil/DB teardown and later tests.
+  testContexts: [
+    async ({}, use) => {
+      const contexts = new Set<BrowserContext>();
+      const closeAll = async (): Promise<void> => {
+        const openContexts = Array.from(contexts);
+        contexts.clear();
+        await Promise.all(
+          openContexts.map((context) =>
+            context.close().catch(() => undefined),
+          ),
+        );
+      };
+
+      await use({
+        register: (context) => {
+          contexts.add(context);
+          context.on("close", () => contexts.delete(context));
+          return context;
+        },
+        closeAll,
+      });
+
+      await closeAll();
+    },
+    { scope: "test" },
+  ],
+
   // Test-scoped: snapshot anvil before the test, revert after. Anvil's
   // snapshot id is consumed by revert, so we take a fresh one per test
   // rather than reusing a worker-scoped id. After revert we reset the BE
@@ -318,7 +356,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   // only READ the manifest and do not mutate the chain, the snapshot reliably
   // captures the clean post-bootstrap baseline every time. See DETERMINISM_FINDING.md.
   cleanState: [
-    async ({ anvil, contracts, request, manifest }, use) => {
+    async ({ anvil, contracts, request, manifest, testContexts }, use) => {
       const snapshotId = await anvil.snapshot();
       const jobCreatorAddress = resolveJobCreatorAddress();
       const backendWalletAddress = resolveBackendWalletAddress();
@@ -376,6 +414,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         tickerActive = false;
         await tickerDone;
       }
+      await testContexts.closeAll();
       // Order matters: revert chain first, then reset DB, then drain BE
       // queues so any in-flight ops referencing the now-reverted chain
       // state are dropped.
@@ -387,7 +426,12 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       await testApi
         .pruneExperts(
           request,
-          manifest.experts.map((e) => ({ wallet: e.address, guildId: e.guildId })),
+          manifest.experts.map((e) => ({
+            wallet: e.address,
+            guildId: e.guildId,
+            reputationScore: 100,
+            reputationInGuild: 0,
+          })),
         )
         .catch(() => {
           /* prune is best-effort cleanup; never fail teardown on it */

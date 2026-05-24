@@ -22,18 +22,57 @@ export async function signupCompanyViaUI(
   const email = `e2e-company-${timestamp}@vetted-test.com`;
   const companyName = `E2E Hiring Co ${timestamp}`;
 
+  await page.addInitScript(() => {
+    try {
+      for (const key of Object.keys(window.localStorage)) {
+        if (key.startsWith("vetted:draft:signup:")) {
+          window.localStorage.removeItem(key);
+        }
+      }
+      window.sessionStorage.removeItem("vetted:anon-tab-id");
+    } catch {
+      // Some intermediate documents have an opaque origin. The script runs
+      // again on the app origin during the navigation below.
+    }
+  });
   await page.goto("/auth/signup?type=company", {
     waitUntil: "domcontentloaded",
   });
-  await page.getByPlaceholder("Acme Inc.").fill(companyName);
-  await page
-    .getByPlaceholder("https://example.com")
-    .fill("https://e2e-test.com");
-  await page.getByPlaceholder("you@example.com").fill(email);
-  await page.getByPlaceholder("Min. 6 characters").fill(COMPANY_PASSWORD);
-  await page.getByPlaceholder("Repeat password").fill(COMPANY_PASSWORD);
+
+  await expect(page.getByText(/hire vetted talent/i)).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.waitForTimeout(750);
+  await fillAndExpect(page, "Acme Inc.", companyName);
+  await fillAndExpect(page, "https://example.com", "https://e2e-test.com");
+  await fillAndExpect(page, "you@example.com", email);
+  await fillAndExpect(page, "Min. 6 characters", COMPANY_PASSWORD);
+  await fillAndExpect(page, "Repeat password", COMPANY_PASSWORD);
   await page.getByRole("checkbox").check();
+  await fillAndExpect(page, "Acme Inc.", companyName);
+
+  const signupResponsePromise = page.waitForResponse(
+    (resp) =>
+      resp.url().includes("/api/companies") &&
+      resp.request().method() === "POST",
+    { timeout: 30_000 },
+  ).catch(() => null);
   await page.getByRole("button", { name: "Create Account" }).click();
+  const signupResponse = await signupResponsePromise;
+  if (signupResponse && !signupResponse.ok()) {
+    throw new Error(
+      `signupCompanyViaUI: company signup failed ${signupResponse.status()} ${await signupResponse.text()}`,
+    );
+  }
+  if (!signupResponse && !/\/dashboard(?:$|[/?#])/.test(page.url())) {
+    const currentCompanyName = await page
+      .getByPlaceholder("Acme Inc.")
+      .inputValue()
+      .catch(() => "");
+    throw new Error(
+      `signupCompanyViaUI: company signup request was not sent; companyName="${currentCompanyName}"`,
+    );
+  }
 
   await page.waitForURL(/\/dashboard$/, { timeout: 30_000 });
   await expect(page.locator("body")).toContainText(/dashboard/i, {
@@ -51,6 +90,17 @@ export async function signupCompanyViaUI(
     throw new Error("signupCompanyViaUI: company id was not written");
 
   return { email, password: COMPANY_PASSWORD, companyName, token, companyId };
+}
+
+async function fillAndExpect(
+  page: Page,
+  placeholder: string,
+  value: string,
+): Promise<void> {
+  const field = page.getByPlaceholder(placeholder);
+  await expect(field).toBeVisible({ timeout: 15_000 });
+  await field.fill(value);
+  await expect(field).toHaveValue(value, { timeout: 15_000 });
 }
 
 export async function publishJobViaUI(

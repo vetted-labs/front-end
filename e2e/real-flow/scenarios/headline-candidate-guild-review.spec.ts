@@ -139,6 +139,8 @@ test(
           // submitRubricReviewViaUI navigates to /expert/voting and clicks the
           // first queued Candidate Review automatically.
           const result = await submitRubricReviewViaUI(reviewerPage, {
+            reviewAppId: applicationId,
+            reviewType: "candidate",
             generalScore: "high",
             domainScore: "high",
             justification: `Panel review by ${reviewer.address}: strong, well-evidenced application across all rubric dimensions.`,

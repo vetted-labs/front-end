@@ -33,6 +33,7 @@ test(
     guild,
     panelFor,
     wallet,
+    testContexts,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructured to activate cleanState fixture for DB/chain reset side-effect
     cleanState: _cleanState,
   }) => {
@@ -92,8 +93,12 @@ test(
     const browser = page.context().browser()!;
     const origin = new URL(page.url()).origin;
 
-    const ctxA = await browser.newContext({ baseURL: origin, bypassCSP: true });
-    const ctxB = await browser.newContext({ baseURL: origin, bypassCSP: true });
+    const ctxA = testContexts.register(
+      await browser.newContext({ baseURL: origin, bypassCSP: true }),
+    );
+    const ctxB = testContexts.register(
+      await browser.newContext({ baseURL: origin, bypassCSP: true }),
+    );
 
     try {
       const pageA = await ctxA.newPage();
@@ -153,11 +158,15 @@ test(
       await test.step("both experts walk the 4-step rubric wizard and submit their votes concurrently", async () => {
         const [resultA, resultB] = await Promise.all([
           submitRubricReviewViaUI(pageA, {
+            reviewAppId: applicationId,
+            reviewType: "candidate",
             generalScore: "high",
             domainScore: "high",
             justification: "Concurrent reviewer A: strong candidate with excellent domain depth and communication skills.",
           }),
           submitRubricReviewViaUI(pageB, {
+            reviewAppId: applicationId,
+            reviewType: "candidate",
             generalScore: "high",
             domainScore: "high",
             justification: "Concurrent reviewer B: excellent candidate with strong technical background and clear motivation.",

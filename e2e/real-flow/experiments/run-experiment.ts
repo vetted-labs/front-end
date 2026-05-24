@@ -244,7 +244,7 @@ async function submitPipelineCReview(
   applicationId: string,
   expertAddress: string,
   score0to100: number,
-): Promise<void> {
+): Promise<"submitted" | "already_finalized"> {
   const vote = score0to100 >= APPROVAL_THRESHOLD_PCT ? "approve" : "reject";
   // criteriaScores is required by the validation schema. We provide a minimal
   // rubric entry with the harness score so the backend can accept the review.
@@ -256,19 +256,28 @@ async function submitPipelineCReview(
   const criteriaJustifications = {
     general: "Volume harness automated review: score based on seeded distribution.",
   };
-  await backendPost<unknown>(
-    `/api/candidate-proposals/${applicationId}/review`,
-    {
-      vote,
-      overallScore: score0to100,
-      confidenceLevel: 3,
-      feedback: "Volume harness automated review.",
-      criteriaScores,
-      criteriaJustifications,
-      walletAddress: expertAddress,
-    },
-    { "x-wallet-address": expertAddress },
-  );
+  try {
+    await backendPost<unknown>(
+      `/api/candidate-proposals/${applicationId}/review`,
+      {
+        vote,
+        overallScore: score0to100,
+        confidenceLevel: 3,
+        feedback: "Volume harness automated review.",
+        criteriaScores,
+        criteriaJustifications,
+        walletAddress: expertAddress,
+      },
+      { "x-wallet-address": expertAddress },
+    );
+    return "submitted";
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("Application is no longer pending review")) {
+      return "already_finalized";
+    }
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -363,9 +372,18 @@ async function runOneApplication(
       score: scoresForPanel[i % scoresForPanel.length],
     }));
 
-    // 4. Submit expert reviews (one per assigned reviewer).
+    // 4. Submit expert reviews. In the current Pipeline-C test mode, the first
+    // accepted review can finalize the application immediately; stop submitting
+    // additional panel votes once the backend reports the app is no longer
+    // pending instead of treating the already-finalized app as skipped.
+    const submittedScores: number[] = [];
     for (const { address, score } of reviewerScores) {
-      await submitPipelineCReview(applicationId, address, score);
+      const status = await submitPipelineCReview(applicationId, address, score);
+      if (status === "already_finalized") break;
+      submittedScores.push(score);
+    }
+    if (submittedScores.length === 0) {
+      throw new Error(`No reviews were accepted before application ${applicationId} finalized`);
     }
 
     // 5. Expire and finalize.
@@ -376,8 +394,8 @@ async function runOneApplication(
     const platformConsensus = platformStatus === "approved" ? 1 : 0;
 
     // 7. Oracle prediction — use the ACTUAL scores we submitted.
-    const actualScores = reviewerScores.map((r) => r.score);
-    const totalAssigned = finalizeResult.assignments.length || reviewerScores.length;
+    const actualScores = submittedScores;
+    const totalAssigned = submittedScores.length;
     const { oracleConsensus } = pipelineCOracle(actualScores, totalAssigned);
 
     const consensusMatch = platformConsensus === oracleConsensus;

@@ -149,6 +149,8 @@ test("candidate applies → expert logs in → expert submits review via rubric 
   // ──────────────────────────────────────────────────────────────────────────
   await test.step("expert submits their review through the rubric wizard", async () => {
     const result = await submitRubricReviewViaUI(page, {
+      reviewAppId: applicationId,
+      reviewType: "candidate",
       generalScore: "high",
       domainScore: "high",
       justification:

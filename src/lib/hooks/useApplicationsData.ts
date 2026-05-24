@@ -5,6 +5,7 @@ import { expertApi, guildsApi, guildApplicationsApi, blockchainApi } from "@/lib
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { resolveApplicationTargetGuilds } from "@/lib/application-target-guilds";
 import { isProposalVoteable, VOTEABLE_PROPOSAL_STATUS } from "@/lib/proposal-review";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import {
@@ -33,6 +34,7 @@ export type HistoryItem =
 export function useApplicationsData() {
   const { address } = useExpertAccount();
   const searchParams = useSearchParams();
+  const deepLinkGuildId = searchParams.get("guildId");
   const { guilds: guildRecords } = useGuilds();
   const { isActive: isStoryLabPreview } = useStoryLabContext();
   const storyGuild = useMemo(
@@ -51,6 +53,15 @@ export function useApplicationsData() {
   const [reviewedExpertIds, setReviewedExpertIds] = useState<Set<string>>(new Set());
 
   const isAllGuilds = selectedGuild.id === "all";
+  const targetGuilds = useMemo(
+    () =>
+      resolveApplicationTargetGuilds({
+        guildRecords,
+        selectedGuild,
+        deepLinkGuildId,
+      }),
+    [guildRecords, selectedGuild, deepLinkGuildId],
+  );
 
   // Expert profile
   const { data: expertData } = useFetch<ExpertProfile>(
@@ -95,8 +106,7 @@ export function useApplicationsData() {
   }>(
     async () => {
       const empty = { active: [], history: [] };
-      if (!address || guildRecords.length === 0) return empty;
-      const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      if (!address || targetGuilds.length === 0) return empty;
       const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
@@ -131,7 +141,7 @@ export function useApplicationsData() {
   const { data: candidateAppsRaw, isLoading: candidateAppsLoading, refetch: refetchCandidateApps } = useFetch<CandidateGuildApplication[]>(
     async () => {
       if (!address || guildRecords.length === 0) return [];
-      const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      if (targetGuilds.length === 0) return [];
       const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
@@ -149,7 +159,7 @@ export function useApplicationsData() {
       }
       return results.flat();
     },
-    { skip: !address || guildRecords.length === 0, onError: (err) => toast.error(err) },
+    { skip: !address || targetGuilds.length === 0, onError: (err) => toast.error(err) },
   );
 
   // Proposals (Schelling voting)
@@ -177,7 +187,7 @@ export function useApplicationsData() {
   const { data: historyCandidateAppsRaw, isLoading: historyCandidateAppsLoading, refetch: refetchHistoryCandidateApps } = useFetch<CandidateGuildApplication[]>(
     async () => {
       if (!address || guildRecords.length === 0) return [];
-      const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      if (targetGuilds.length === 0) return [];
       const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {

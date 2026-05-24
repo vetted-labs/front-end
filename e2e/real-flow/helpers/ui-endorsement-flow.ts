@@ -1,5 +1,5 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import { BACKEND_URL, testApi } from "./backend";
 import { recordHireOutcome, reportPerformanceIssue } from "./endorsement";
 import { loginAsExpertViaUI } from "./ui-auth";
@@ -163,6 +163,7 @@ export async function placeEndorsementViaUI(
     applicationId: string;
     amountVetd: string;
     candidateNamePattern?: RegExp;
+    testContexts?: TestContextRegistry;
   },
 ): Promise<void> {
   const browser = basePage.context().browser();
@@ -170,10 +171,17 @@ export async function placeEndorsementViaUI(
     throw new Error("placeEndorsementViaUI: browser handle unavailable");
 
   const origin = new URL(basePage.url()).origin;
-  const context = await browser.newContext({
-    baseURL: origin,
-    bypassCSP: true,
-  });
+  const context =
+    args.testContexts?.register(
+      await browser.newContext({
+        baseURL: origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: origin,
+      bypassCSP: true,
+    }));
   const page = await context.newPage();
 
   try {
@@ -297,8 +305,14 @@ export async function expectExpertEarningsShowsEndorsement(
   basePage: Page,
   expert: Expert,
   candidateNamePattern: RegExp,
+  testContexts?: TestContextRegistry,
 ): Promise<void> {
-  const page = await openExpertPage(basePage, expert, "/expert/earnings");
+  const page = await openExpertPage(
+    basePage,
+    expert,
+    "/expert/earnings",
+    testContexts,
+  );
   try {
     await expect(
       page.getByRole("heading", { name: /^earnings$/i }),
@@ -328,11 +342,13 @@ export async function expectExpertHistoryShowsSlashedEndorsement(
   basePage: Page,
   expert: Expert,
   candidateNamePattern: RegExp,
+  testContexts?: TestContextRegistry,
 ): Promise<void> {
   const page = await openExpertPage(
     basePage,
     expert,
     "/expert/endorsements/history",
+    testContexts,
   );
   try {
     await expect(
@@ -365,11 +381,13 @@ export async function expectExpertHistoryShowsHiredEndorsement(
   basePage: Page,
   expert: Expert,
   candidateNamePattern: RegExp,
+  testContexts?: TestContextRegistry,
 ): Promise<void> {
   const page = await openExpertPage(
     basePage,
     expert,
     "/expert/endorsements/history",
+    testContexts,
   );
   try {
     await expect(
@@ -492,15 +510,23 @@ async function openExpertPage(
   basePage: Page,
   expert: Expert,
   path: string,
+  testContexts?: TestContextRegistry,
 ): Promise<Page> {
   const browser = basePage.context().browser();
   if (!browser) throw new Error("openExpertPage: browser handle unavailable");
 
   const origin = new URL(basePage.url()).origin;
-  const context = await browser.newContext({
-    baseURL: origin,
-    bypassCSP: true,
-  });
+  const context =
+    testContexts?.register(
+      await browser.newContext({
+        baseURL: origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: origin,
+      bypassCSP: true,
+    }));
   const page = await context.newPage();
   await attachWallet(page, expert.privateKey, {
     rpcUrl: process.env.ANVIL_RPC_URL,

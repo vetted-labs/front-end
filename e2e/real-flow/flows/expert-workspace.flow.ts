@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import { attachWallet } from "../helpers/wallet-injection";
 import { loginAsExpertViaUI } from "../helpers/ui-auth";
 
@@ -18,6 +18,7 @@ export async function openExpertGuildWorkspaceViaUI(
   args: {
     expert: Expert;
     guildId: string;
+    testContexts?: TestContextRegistry;
   },
 ): Promise<Page> {
   const browser = basePage.context().browser();
@@ -26,10 +27,17 @@ export async function openExpertGuildWorkspaceViaUI(
       "openExpertGuildWorkspaceViaUI: browser handle unavailable",
     );
 
-  const context = await browser.newContext({
-    baseURL: new URL(basePage.url()).origin,
-    bypassCSP: true,
-  });
+  const context =
+    args.testContexts?.register(
+      await browser.newContext({
+        baseURL: new URL(basePage.url()).origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: new URL(basePage.url()).origin,
+      bypassCSP: true,
+    }));
   const page = await context.newPage();
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {

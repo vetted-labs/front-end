@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import { testApi } from "../helpers/backend";
 import { attachWallet } from "../helpers/wallet-injection";
 import { loginAsExpertViaUI } from "../helpers/ui-auth";
@@ -11,6 +11,7 @@ export async function approveCandidateGuildApplicationViaUI(
     reviewers: Expert[];
     guildId: string;
     applicationId: string;
+    testContexts?: TestContextRegistry;
   },
 ): Promise<void> {
   const majorityThreshold = Math.floor(args.reviewers.length / 2) + 1;
@@ -19,6 +20,7 @@ export async function approveCandidateGuildApplicationViaUI(
       guildId: args.guildId,
       applicationId: args.applicationId,
       score: 5,
+      testContexts: args.testContexts,
     });
   }
 
@@ -31,13 +33,23 @@ export async function approveCandidateGuildApplicationViaUI(
 async function reviewApplicationAsExpert(
   basePage: Page,
   reviewer: Expert,
-  args: { guildId: string; applicationId: string; score: number },
+  args: {
+    guildId: string;
+    applicationId: string;
+    score: number;
+    testContexts?: TestContextRegistry;
+  },
 ): Promise<void> {
   const browser = basePage.context().browser();
   if (!browser)
     throw new Error("reviewApplicationAsExpert: browser handle unavailable");
 
-  const reviewContext = await browser.newContext({
+  const reviewContext = args.testContexts?.register(
+    await browser.newContext({
+      baseURL: new URL(basePage.url()).origin,
+      bypassCSP: true,
+    }),
+  ) ?? await browser.newContext({
     baseURL: new URL(basePage.url()).origin,
     bypassCSP: true,
   });

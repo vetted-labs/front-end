@@ -7,6 +7,7 @@ import { Settings, ExternalLink, Star, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Alert } from "@/components/ui/alert";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { canLoadGuildWorkspaceData } from "@/lib/guild-workspace-readiness";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -262,11 +263,16 @@ const ROLE_LABEL: Record<string, string> = {
  * landed.
  */
 export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
-  const { address, isConnected } = useExpertAccount();
+  const { address } = useExpertAccount();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isActive: isStoryLabPreview } = useStoryLabContext();
   const isStoryLabSyntheticGuild = isStoryLabPreview && guildId === STORY_LAB_GUILD.id;
+  const hasExpertWallet = Boolean(address);
+  const shouldLoadWorkspaceData = canLoadGuildWorkspaceData({
+    address,
+    isStoryLabSyntheticGuild,
+  });
   const [hasHydrated, setHasHydrated] = useState(false);
   const initialTab: GuildWorkspaceTab = (() => {
     const t = searchParams?.get("tab");
@@ -300,7 +306,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
       return normalized;
     },
     {
-      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      skip: !shouldLoadWorkspaceData,
       onError: (msg) => {
         logger.warn("Workspace guild fetch failed", msg);
         toast.error(msg);
@@ -314,7 +320,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const { data: queueData } = useFetch(
     () => guildsApi.getMemberQueue(guildId, address),
     {
-      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      skip: !shouldLoadWorkspaceData,
       // Endpoint is still rolling out — soft-fail so KPIs can fall back to
       // the per-source numbers below.
       onError: () => {},
@@ -432,7 +438,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const { data: internalChatterPosts } = useFetch(
     () => guildFeedApi.getPosts(guildId, { visibility: "public", limit: 3, sort: "new" }),
     {
-      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      skip: !shouldLoadWorkspaceData,
       onError: () => {},
     },
   );
@@ -446,7 +452,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const { data: leaderboardRaw } = useFetch(
     () => expertApi.getLeaderboard({ guildId, limit: 50 }),
     {
-      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      skip: !shouldLoadWorkspaceData,
       onError: () => {},
     },
   );
@@ -494,7 +500,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     );
   }
 
-  if (!isConnected && !isStoryLabSyntheticGuild) {
+  if (!hasExpertWallet && !isStoryLabSyntheticGuild) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Alert variant="info">Connect your wallet to open your guild workspace.</Alert>
