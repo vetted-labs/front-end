@@ -59,7 +59,12 @@ export const testApi = {
    *  reset() so panel assignment deterministically draws from the manifest. */
   pruneExperts: (
     req: APIRequestContext,
-    keep: Array<{ wallet: string; guildId: string }>,
+    keep: Array<{
+      wallet: string;
+      guildId: string;
+      reputationScore?: number;
+      reputationInGuild?: number;
+    }>,
   ) =>
     postJson<{ pruned: number; membershipsPruned: number }>(
       req,

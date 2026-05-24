@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import type { Expert } from "../fixtures";
-import { BACKEND_URL } from "./backend";
+import { BACKEND_URL, testApi } from "./backend";
 import { setAuthToken } from "../../helpers/auth-utils";
 
 const CANDIDATE_ANSWER =
@@ -41,6 +41,94 @@ type SubmitReviewArgs = {
   applicationId: string;
   score?: number;
 };
+
+async function expectCandidateReviewModalOpen(
+  page: Page,
+  timeoutMs: number,
+  args: { guildId: string; applicationId: string },
+): Promise<void> {
+  const modalClose = page.getByLabel("Close review modal").first();
+  try {
+    await expect(modalClose).toBeVisible({ timeout: timeoutMs });
+    await expect(
+      page.getByText(/review candidate application/i).first(),
+    ).toBeVisible();
+    return;
+  } catch {
+    // Fall through to targeted diagnostics below.
+  }
+
+  const diagnostics = await page.evaluate(() => ({
+    url: window.location.href,
+    userType: window.localStorage.getItem("userType"),
+    expertId: window.localStorage.getItem("expertId"),
+    walletAddress: window.localStorage.getItem("walletAddress"),
+    bodyText: document.body.innerText.slice(0, 2_000),
+  }));
+  const walletAddress = diagnostics.walletAddress;
+  const browserQueue = walletAddress
+    ? await page.evaluate(
+        async ({ guildId, wallet }) => {
+          const read = async (baseUrl: string) => {
+            try {
+              const res = await fetch(
+                `${baseUrl}/api/guilds/${encodeURIComponent(guildId)}/candidate-applications?wallet=${encodeURIComponent(wallet)}`,
+              );
+              const text = await res.text();
+              return {
+                baseUrl,
+                ok: res.ok,
+                status: res.status,
+                text: text.slice(0, 500),
+              };
+            } catch (error) {
+              return {
+                baseUrl,
+                ok: false,
+                status: 0,
+                text: error instanceof Error ? error.message : String(error),
+              };
+            }
+          };
+          return {
+            port4100: await read("http://localhost:4100"),
+            port4000: await read("http://localhost:4000"),
+          };
+        },
+        { guildId: args.guildId, wallet: walletAddress },
+      )
+    : undefined;
+  let backendQueue:
+    | { ok: boolean; status: number; applicationIds?: string[]; text?: string }
+    | undefined;
+  if (walletAddress) {
+    const res = await page.request.get(
+      `${BACKEND_URL}/api/guilds/${encodeURIComponent(args.guildId)}/candidate-applications?wallet=${encodeURIComponent(walletAddress)}`,
+    );
+    backendQueue = {
+      ok: res.ok(),
+      status: res.status(),
+      ...(res.ok()
+        ? {
+            applicationIds: ((await res.json()) as { data?: Array<{ id: string }> })
+              .data?.map((row) => row.id),
+          }
+        : { text: await res.text() }),
+    };
+  }
+  throw new Error(
+    `Candidate review modal did not open: ${JSON.stringify(
+      {
+        ...diagnostics,
+        expectedApplicationId: args.applicationId,
+        backendQueue,
+        browserQueue,
+      },
+      null,
+      2,
+    )}`,
+  );
+}
 
 export async function applyToGuildApplicationViaUI(
   page: Page,
@@ -103,6 +191,17 @@ export async function findAssignedExperts(
   request: APIRequestContext,
   args: AssignedExpertArgs,
 ): Promise<Expert[]> {
+  const deterministicPanel = args.experts
+    .filter((expert): expert is Expert & { id: string } => Boolean(expert.id))
+    .slice(0, 5);
+  if (deterministicPanel.length > 0) {
+    await testApi.candidateReviews.assignPanel(
+      request,
+      args.applicationId,
+      deterministicPanel.map((expert) => expert.id),
+    );
+  }
+
   const assigned: Expert[] = [];
   for (const expert of args.experts) {
     const res = await request.get(
@@ -130,12 +229,7 @@ export async function submitCandidateReviewViaUI(
     { waitUntil: "domcontentloaded" },
   );
 
-  await expect(page.getByLabel("Close review modal").first()).toBeVisible({
-    timeout: 45_000,
-  });
-  await expect(
-    page.getByText(/review candidate application/i).first(),
-  ).toBeVisible();
+  await expectCandidateReviewModalOpen(page, 45_000, args);
 
   await completeCandidateReviewModalViaUI(page, args.score ?? 5);
 }
@@ -174,12 +268,7 @@ export async function openCandidateReviewFromGuildQueueViaUI(
   await expect(page).toHaveURL(
     new RegExp(`/expert/voting\\?[^#]*reviewAppId=${args.applicationId}`),
   );
-  await expect(page.getByLabel("Close review modal").first()).toBeVisible({
-    timeout: 30_000,
-  });
-  await expect(
-    page.getByText(/review candidate application/i).first(),
-  ).toBeVisible();
+  await expectCandidateReviewModalOpen(page, 30_000, args);
 }
 
 export async function expectSubmittedReviewInMyReviewsViaUI(

@@ -22,6 +22,7 @@ test("company job -> candidate guild-backed application -> expert approval -> en
   candidate,
   experts,
   guild,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   void _cleanState;
@@ -54,6 +55,7 @@ test("company job -> candidate guild-backed application -> expert approval -> en
     reviewers: assignedExperts,
     guildId: guild.id,
     applicationId: guildApplicationId,
+    testContexts,
   });
 
   const target = await fetchEndorsementTarget(
@@ -70,6 +72,7 @@ test("company job -> candidate guild-backed application -> expert approval -> en
     applicationId: target.jobApplicationId,
     amountVetd: "1.5",
     candidateNamePattern: /E2E User/i,
+    testContexts,
   });
   await waitForSyncedEndorsement(page.request, endorser, target.jobApplicationId);
 
@@ -85,5 +88,10 @@ test("company job -> candidate guild-backed application -> expert approval -> en
   expect(reward).toBeDefined();
   expect(Number(reward!.total_reward)).toBeGreaterThan(0);
 
-  await expectExpertEarningsShowsEndorsement(page, endorser, /E2E User/i);
+  await expectExpertEarningsShowsEndorsement(
+    page,
+    endorser,
+    /E2E User/i,
+    testContexts,
+  );
 });

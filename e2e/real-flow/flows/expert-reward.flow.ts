@@ -1,20 +1,28 @@
 import { expect, type Page } from "@playwright/test";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import { attachWallet } from "../helpers/wallet-injection";
 import { loginAsExpertViaUI } from "../helpers/ui-auth";
 
 export async function openExpertEarningsViaUI(
   basePage: Page,
   expert: Expert,
+  testContexts?: TestContextRegistry,
 ): Promise<Page> {
   const browser = basePage.context().browser();
   if (!browser)
     throw new Error("openExpertEarningsViaUI: browser handle unavailable");
 
-  const context = await browser.newContext({
-    baseURL: new URL(basePage.url()).origin,
-    bypassCSP: true,
-  });
+  const context =
+    testContexts?.register(
+      await browser.newContext({
+        baseURL: new URL(basePage.url()).origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: new URL(basePage.url()).origin,
+      bypassCSP: true,
+    }));
   const page = await context.newPage();
   await attachWallet(page, expert.privateKey, {
     rpcUrl: process.env.ANVIL_RPC_URL,

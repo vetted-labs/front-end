@@ -1,5 +1,5 @@
 import { test, expect } from "../fixtures";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import type { Page } from "@playwright/test";
 import { parseEther } from "viem";
 import { ANVIL_KEYS, makeWallet } from "../helpers/chain";
@@ -44,6 +44,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
   candidate,
   contracts,
   experts,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   void _cleanState;
@@ -62,7 +63,6 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       name: `E2E Hiring Co ${Date.now()}`,
     });
     primaryJobId = await createActiveJob(page.request, company, "Engineering");
-    endorser = reviewFixture.experts[reviewFixture.experts.length - 1];
     await watchPause(page);
   });
 
@@ -89,6 +89,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       assignedExperts.length,
       "candidate application should assign reviewers",
     ).toBeGreaterThan(0);
+    endorser = assignedExperts[0];
 
     const majorityThreshold = Math.floor(assignedExperts.length / 2) + 1;
     for (const reviewer of assignedExperts.slice(0, majorityThreshold)) {
@@ -97,6 +98,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
         reviewer,
         reviewFixture.guild.id,
         guildApplicationId,
+        testContexts,
       );
     }
     await watchPause(page);
@@ -135,6 +137,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       applicationId: approvedTarget.jobApplicationId,
       amountVetd: "1.5",
       candidateNamePattern: /E2E User/i,
+      testContexts,
     });
     await waitForSyncedEndorsement(
       page.request,
@@ -164,7 +167,12 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       status: "locked_forfeited",
       locked_forfeited: true,
     });
-    await expectExpertEarningsShowsEndorsement(page, endorser, /E2E User/i);
+    await expectExpertEarningsShowsEndorsement(
+      page,
+      endorser,
+      /E2E User/i,
+      testContexts,
+    );
     await watchPause(page);
   });
 
@@ -188,6 +196,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       applicationId: slashTarget.jobApplicationId,
       amountVetd: "2",
       candidateNamePattern: /E2E User/i,
+      testContexts,
     });
     await waitForSyncedEndorsement(
       page.request,
@@ -214,6 +223,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       page,
       endorser,
       /E2E User/i,
+      testContexts,
     );
     await watchPause(page);
   });
@@ -238,6 +248,7 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       applicationId: retentionTarget.jobApplicationId,
       amountVetd: "2.5",
       candidateNamePattern: /E2E User/i,
+      testContexts,
     });
     await waitForSyncedEndorsement(
       page.request,
@@ -268,8 +279,18 @@ test("candidate approval -> endorsement UI bid -> rewards, forfeiture, and slash
       locked_released: true,
       locked_forfeited: false,
     });
-    await expectExpertEarningsShowsEndorsement(page, endorser, /E2E User/i);
-    await expectExpertHistoryShowsHiredEndorsement(page, endorser, /E2E User/i);
+    await expectExpertEarningsShowsEndorsement(
+      page,
+      endorser,
+      /E2E User/i,
+      testContexts,
+    );
+    await expectExpertHistoryShowsHiredEndorsement(
+      page,
+      endorser,
+      /E2E User/i,
+      testContexts,
+    );
     await watchPause(page);
   });
 });
@@ -306,15 +327,23 @@ async function reviewApplicationAsExpert(
   reviewer: Expert,
   guildId: string,
   applicationId: string,
+  testContexts?: TestContextRegistry,
 ): Promise<void> {
   const browser = basePage.context().browser();
   if (!browser)
     throw new Error("reviewApplicationAsExpert: browser handle unavailable");
 
-  const reviewContext = await browser.newContext({
-    baseURL: new URL(basePage.url()).origin,
-    bypassCSP: true,
-  });
+  const reviewContext =
+    testContexts?.register(
+      await browser.newContext({
+        baseURL: new URL(basePage.url()).origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: new URL(basePage.url()).origin,
+      bypassCSP: true,
+    }));
   const reviewPage = await reviewContext.newPage();
   try {
     await reviewPage.goto("/", { waitUntil: "domcontentloaded" });

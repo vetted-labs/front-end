@@ -28,6 +28,7 @@ test("expert claims distributed endorsement rewards through the earnings UI", as
   experts,
   contracts,
   anvil,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   test.fixme(
@@ -64,6 +65,7 @@ test("expert claims distributed endorsement rewards through the earnings UI", as
     reviewers: assignedExperts,
     guildId: guild.id,
     applicationId: guildApplicationId,
+    testContexts,
   });
 
   const target = await fetchEndorsementTarget(
@@ -80,6 +82,7 @@ test("expert claims distributed endorsement rewards through the earnings UI", as
     applicationId: target.jobApplicationId,
     amountVetd: "2",
     candidateNamePattern: /E2E User/i,
+    testContexts,
   });
   await waitForSyncedEndorsement(page.request, endorser, target.jobApplicationId);
 
@@ -89,7 +92,11 @@ test("expert claims distributed endorsement rewards through the earnings UI", as
   const pendingBefore = await contracts.rewardDistributor.read.pendingRewards([endorser.address]);
   expect(pendingBefore, "endorsement reward should be pending on-chain before claim").toBeGreaterThan(0n);
 
-  const earningsPage = await openExpertEarningsViaUI(page, endorser);
+  const earningsPage = await openExpertEarningsViaUI(
+    page,
+    endorser,
+    testContexts,
+  );
   try {
     await claimAllRewardsViaUI(earningsPage);
   } finally {

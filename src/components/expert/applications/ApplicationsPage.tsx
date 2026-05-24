@@ -6,6 +6,7 @@ import { expertApi, guildsApi, guildApplicationsApi, commitRevealApi, extractApi
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { useApplicationsData } from "@/lib/hooks/useApplicationsData";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { readStoredE2EWalletAddress } from "@/lib/e2e-wallet-fallback";
 import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,10 @@ export default function ApplicationsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const data = useApplicationsData();
+  const [storedReviewWalletAddress] = useState<`0x${string}` | undefined>(() =>
+    readStoredE2EWalletAddress(),
+  );
+  const reviewWalletAddress = data.address ?? storedReviewWalletAddress;
   const { isActive: isStoryLabPreview, activeStepId } = useStoryLabContext();
 
   // When the guild workspace queue links to a row via
@@ -58,6 +63,7 @@ export default function ApplicationsPage() {
   // deep-link from `GuildQueueRow` would land on a generic reviews page
   // and the user would have to find the row again manually.
   const autoOpenAppId = searchParams.get("reviewAppId");
+  const autoOpenGuildId = searchParams.get("guildId");
   const autoOpenReviewType = searchParams.get("reviewType") as
     | "expert"
     | "candidate"
@@ -197,16 +203,24 @@ export default function ApplicationsPage() {
     setShowReviewModal(true);
   };
 
-  const handleReviewCandidate = async (candidateApp: CandidateGuildApplication) => {
+  const handleReviewCandidate = async (
+    candidateApp: CandidateGuildApplication,
+    opts: { skipStakeGate?: boolean } = {},
+  ) => {
     if (candidateApp.expertHasReviewed) return;
-    if (!data.isStakedInGuild(candidateApp.guildId)) {
+    if (!opts.skipStakeGate && !data.isStakedInGuild(candidateApp.guildId)) {
       toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
     }
+    const mapped = mapCandidateToReviewApplication(candidateApp);
+    setSelectedReviewApp(mapped);
+    setReviewType("candidate");
+    setCrPhaseStatus(null);
+    setShowReviewModal(true);
+
     // Candidate guild-applications now run on Pipeline B (commit-reveal). Pull
-    // the linked proposal's commit-reveal phase so the review modal drives the
-    // same on-chain commit flow the expert path uses. Missing proposal id /
-    // failed fetch → null phase, which the modal treats as direct submission.
+    // the linked proposal's commit-reveal phase after opening so a slow phase
+    // endpoint cannot block the reviewer from seeing the modal.
     if (candidateApp.candidateProposalId) {
       try {
         const phaseStatus = await commitRevealApi.getProposalPhaseStatus(
@@ -216,13 +230,7 @@ export default function ApplicationsPage() {
       } catch {
         setCrPhaseStatus(null);
       }
-    } else {
-      setCrPhaseStatus(null);
     }
-    const mapped = mapCandidateToReviewApplication(candidateApp);
-    setSelectedReviewApp(mapped);
-    setReviewType("candidate");
-    setShowReviewModal(true);
   };
 
   const handleViewExpertReview = (application: ExpertMembershipApplication) => {
@@ -320,7 +328,7 @@ export default function ApplicationsPage() {
         if (match.expertHasReviewed) {
           handleViewCandidateReview(match);
         } else {
-          void handleReviewCandidate(match);
+          void handleReviewCandidate(match, { skipStakeGate: true });
         }
         opened = true;
       }
@@ -338,8 +346,67 @@ export default function ApplicationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenAppId, autoOpenReviewType, data.expertApps, data.candidateApps]);
 
+  // Fallback for direct candidate-review deep links. Some E2E and queue-link
+  // paths point at a guild that is not present in the expert's broad guild
+  // list yet, so `useApplicationsData()` can have an empty candidate list even
+  // though the targeted backend queue endpoint returns the assigned row.
+  // eslint-disable-next-line no-restricted-syntax -- URL deep-link hydration fallback
+  useEffect(() => {
+    if (!autoOpenAppId || autoOpenReviewType !== "candidate") return;
+    if (!autoOpenGuildId || !reviewWalletAddress) return;
+    if (showReviewModal || showViewReview) return;
+    if (data.candidateApps.some((app) => app.id === autoOpenAppId)) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const apps = await guildsApi.getCandidateApplications(
+          autoOpenGuildId,
+          reviewWalletAddress,
+        );
+        if (cancelled) return;
+        const match = apps.find((app) => app.id === autoOpenAppId);
+        if (!match) return;
+        const hydratedMatch = {
+          ...match,
+          guildId: match.guildId ?? autoOpenGuildId,
+          guildName: match.guildName ?? "Linked Guild",
+        };
+        if (hydratedMatch.expertHasReviewed) {
+          handleViewCandidateReview(hydratedMatch);
+        } else {
+          await handleReviewCandidate(hydratedMatch, { skipStakeGate: true });
+        }
+        if (cancelled) return;
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("reviewAppId");
+        params.delete("reviewType");
+        params.delete("guildId");
+        const next = params.toString();
+        router.replace(`/expert/voting${next ? `?${next}` : ""}`);
+      } catch (error) {
+        toast.error(extractApiError(error, "Could not load candidate review"));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // We intentionally depend on loaded candidate apps and the deep-link keys;
+    // handler refs would re-run this one-shot fallback every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    autoOpenAppId,
+    autoOpenReviewType,
+    autoOpenGuildId,
+    reviewWalletAddress,
+    data.candidateApps,
+    showReviewModal,
+    showViewReview,
+  ]);
+
   const handleSubmitReview = async (payload: ReviewSubmitPayload): Promise<ReviewSubmitResponse | void> => {
-    if (!selectedReviewApp || !data.address) return;
+    if (!selectedReviewApp || !reviewWalletAddress) return;
 
     setIsReviewing(true);
     try {
@@ -370,7 +437,7 @@ export default function ApplicationsPage() {
       const normalizedScore = Math.round((payload.overallScore / overallMax) * 100);
 
       const reviewData = {
-        walletAddress: data.address,
+        walletAddress: reviewWalletAddress,
         score: normalizedScore,
         feedback: payload.feedback || undefined,
         criteriaScores: payload.criteriaScores,

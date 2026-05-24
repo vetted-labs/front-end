@@ -16,6 +16,7 @@ test("expert guild workspace tabs render wired data for an assigned candidate re
   candidate,
   guild,
   experts,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   test.fixme(
@@ -43,6 +44,7 @@ test("expert guild workspace tabs render wired data for an assigned candidate re
   const workspacePage = await openExpertGuildWorkspaceViaUI(page, {
     expert: assignedExperts[0],
     guildId: guild.id,
+    testContexts,
   });
 
   try {

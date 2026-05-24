@@ -10,9 +10,11 @@
 //      Postgres's `CURRENT_TIMESTAMP` and therefore does NOT expire the BE
 //      deadline gate (`proposals.service.ts:718`).
 //
-//   2. Once a proposal is finalised, the `ReviewQueue` widget on
-//      `/expert/dashboard` renders the row with a disabled "Deadline passed"
-//      badge instead of a clickable "Review →" button (DIV-011 fixed).
+//   2. Once a proposal's commit deadline expires, non-committers are marked
+//      forfeited and removed from active assignment queries. The
+//      `/expert/dashboard` ReviewQueue must not render a clickable "Review →"
+//      button for that reviewer; it shows no pending review work and the
+//      forfeiture appears in Recent Activity.
 //
 //   3. The "Cast Vote" button in `ProposalCard` and `VotingApplicationPage`
 //      is only disabled when `!meetsStakingRequirement || hasVoted`. A past
@@ -46,7 +48,8 @@
 //      ~600 ms from now (already in the past by the time we act).
 //   3. Call processProposalTransitions to auto-expire + finalise.
 //   4. Expert logs in via the real UI and visits the dashboard.
-//   5. Assert: dashboard ReviewQueue shows "Deadline passed" disabled state.
+//   5. Assert: dashboard ReviewQueue shows no pending review work for the
+//      forfeited reviewer and no clickable Review action.
 //   6. Navigate to /expert/applications (ProposalCard list).
 //   7. Assert: "Cast Vote" is absent / outcome badge appears.
 //   8. Navigate to the individual voting page.
@@ -180,33 +183,26 @@ test(
       await loginAsExpertViaUI(page, expert.address);
     });
 
-    // ─── Phase 4b: Dashboard ReviewQueue — disabled state (DIV-011) ───────
+    // ─── Phase 4b: Dashboard ReviewQueue — forfeited assignment hidden ────
     await test.step(
-      "the expert dashboard ReviewQueue renders the past-deadline proposal as a disabled row, not a clickable button",
+      "the expert dashboard ReviewQueue removes the forfeited past-deadline assignment from active work",
       async () => {
         await page.goto("/expert/dashboard", { waitUntil: "domcontentloaded" });
 
-        // Wait for the ReviewQueue widget to render — it appears once the
-        // assigned-applications data resolves. The widget header is always
-        // present when the expert has at least one assignment.
+        // Wait for the ReviewQueue widget to render.
         await expect(
           page.getByText("Review Queue", { exact: true }),
         ).toBeVisible({ timeout: 30_000 });
 
-        // A disabled (expired) row is rendered as a <div aria-disabled="true">
-        // rather than a <button>. Once the proposal is finalised, the
-        // ReviewQueue computes isPastDeadline=true and renders the greyed-out
-        // "Deadline passed" badge.
         await expect(
-          page.getByTestId("review-queue-item-expired"),
+          page.getByText("No pending reviews"),
         ).toBeVisible({ timeout: 20_000 });
 
-        // The "Deadline passed" badge must be present.
         await expect(
-          page.getByText("Deadline passed"),
+          page.getByText("Failed to submit vote by commit deadline"),
         ).toBeVisible({ timeout: 10_000 });
 
-        // No clickable "Review →" button should exist for this expired item.
+        // No clickable "Review →" button should exist for this forfeited item.
         await expect(
           page.getByRole("button", { name: /review/i }),
         ).toHaveCount(0, { timeout: 5_000 });
@@ -217,11 +213,11 @@ test(
     await test.step(
       "the expert applications list shows the finalised proposal without an active Cast Vote button",
       async () => {
-        await page.goto("/expert/applications", { waitUntil: "domcontentloaded" });
+        await page.goto("/expert/voting", { waitUntil: "domcontentloaded" });
 
         // Wait for the page to resolve the expert's identity and load proposals.
         await expect(
-          page.getByRole("heading", { name: /applications/i }).first(),
+          page.getByRole("heading", { name: /reviews/i }).first(),
         ).toBeVisible({ timeout: 30_000 });
 
         // The ProposalCard renders a "Cast Vote" primary button ONLY when the
@@ -237,22 +233,19 @@ test(
 
     // ─── Phase 6: Voting detail page — FinalizedView ──────────────────────
     await test.step(
-      "the individual voting page renders the finalised view; no vote submission form is present",
+      "the individual voting page is not accessible for the forfeited reviewer; no vote submission form is present",
       async () => {
         await page.goto(
           `/expert/voting/applications/${encodeURIComponent(applicationId)}`,
           { waitUntil: "domcontentloaded" },
         );
 
-        // VotingApplicationPage switches to FinalizedView when finalized=true.
-        // The finalized layout contains either an outcome heading or finalized_at.
-        // We look for either the "Finalized" text in CommitRevealStatusCard or
-        // the absence of the vote submission form (VotingScoreSlider + submit button).
         await expect(
-          page.getByText(/finalized|ended|expired/i).first(),
+          page.getByText(/application not found|not assigned|not authorized|forbidden/i).first(),
         ).toBeVisible({ timeout: 30_000 });
 
-        // No submit/cast-vote control should be visible once finalized.
+        // No submit/cast-vote control should be visible once the reviewer has
+        // forfeited their assignment.
         await expect(
           page.getByRole("button", { name: /cast your vote|submit vote|cast vote/i }),
         ).toHaveCount(0, { timeout: 10_000 });
@@ -286,8 +279,8 @@ test(
         const errorText = (body.error ?? body.message ?? "").toLowerCase();
         expect(
           errorText,
-          "BE rejection message should reference proposal state or deadline",
-        ).toMatch(/deadline|not open|finali[zs]/i);
+          "BE rejection message should reference proposal state, deadline, or commit-reveal gating",
+        ).toMatch(/deadline|not open|finali[zs]|commit-reveal|commit phase/i);
       },
     );
   },

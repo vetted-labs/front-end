@@ -1,7 +1,7 @@
 import { test, expect } from "../fixtures";
 import { BACKEND_URL, testApi } from "../helpers/backend";
 import { loginAsExpertViaUI } from "../helpers/ui-auth";
-import type { Expert } from "../fixtures";
+import type { Expert, TestContextRegistry } from "../fixtures";
 import type { Page } from "@playwright/test";
 import { attachWallet } from "../helpers/wallet-injection";
 import {
@@ -17,6 +17,7 @@ test("candidate applies through UI -> assigned experts review through UI -> rewa
   page,
   candidate,
   experts,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   await test.step("Verify: candidate applies through UI -> assigned experts review through UI -> rewards and reputation update", async () => {
@@ -67,7 +68,7 @@ test("candidate applies through UI -> assigned experts review through UI -> rewa
           reviewer,
           reviewFixture.guild.id,
           applicationId,
-          { viaWorkspaceQueue: false, verifyMyReviews: true },
+          { viaWorkspaceQueue: false, verifyMyReviews: true, testContexts },
         );
       } else {
         await testApi.candidateReviews.submitReview(page.request, applicationId, {
@@ -127,6 +128,7 @@ test("candidate review deadline finalization penalizes missed reviewers", async 
   page,
   candidate,
   experts,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   await test.step("Verify: candidate review deadline finalization penalizes missed reviewers", async () => {
@@ -158,6 +160,7 @@ test("candidate review deadline finalization penalizes missed reviewers", async 
       reviewer,
       reviewFixture.guild.id,
       applicationId,
+      { testContexts },
     );
 
     const state = await testApi.candidateReviews.expireAndFinalize(
@@ -210,6 +213,7 @@ test("candidate review deadline outcome rewards aligned reviewers and penalizes 
   page,
   candidate,
   experts,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   await test.step("Verify: candidate review deadline outcome rewards aligned reviewers and penalizes dissenting reviewers", async () => {
@@ -243,14 +247,14 @@ test("candidate review deadline outcome rewards aligned reviewers and penalizes 
       dissenting,
       reviewFixture.guild.id,
       applicationId,
-      { score: 5 },
+      { score: 5, testContexts },
     );
     await reviewApplicationAsExpert(
       page,
       aligned,
       reviewFixture.guild.id,
       applicationId,
-      { score: 1 },
+      { score: 1, testContexts },
     );
 
     const state = await testApi.candidateReviews.expireAndFinalize(
@@ -339,16 +343,24 @@ async function reviewApplicationAsExpert(
     viaWorkspaceQueue?: boolean;
     verifyMyReviews?: boolean;
     score?: number;
+    testContexts?: TestContextRegistry;
   } = {},
 ): Promise<void> {
   const browser = basePage.context().browser();
   if (!browser)
     throw new Error("reviewApplicationAsExpert: browser handle unavailable");
 
-  const reviewContext = await browser.newContext({
-    baseURL: new URL(basePage.url()).origin,
-    bypassCSP: true,
-  });
+  const reviewContext =
+    opts.testContexts?.register(
+      await browser.newContext({
+        baseURL: new URL(basePage.url()).origin,
+        bypassCSP: true,
+      }),
+    ) ??
+    (await browser.newContext({
+      baseURL: new URL(basePage.url()).origin,
+      bypassCSP: true,
+    }));
   const reviewPage = await reviewContext.newPage();
   try {
     await reviewPage.goto("/", { waitUntil: "domcontentloaded" });

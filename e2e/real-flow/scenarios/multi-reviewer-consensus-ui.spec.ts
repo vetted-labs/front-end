@@ -105,6 +105,8 @@ test(
 
           // Walk the 4-step rubric wizard.
           const result = await submitRubricReviewViaUI(reviewerPage, {
+            reviewAppId: applicationId,
+            reviewType: "candidate",
             generalScore: "high",
             domainScore: "high",
             justification: `Panel review by ${reviewer.address}: strong, well-evidenced application across all rubric dimensions.`,

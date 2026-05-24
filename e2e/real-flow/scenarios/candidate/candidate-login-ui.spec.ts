@@ -8,6 +8,17 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "../../fixtures";
 import { signupCandidate } from "../../../helpers/auth";
 
+async function fillAndExpect(
+  page: Page,
+  placeholder: string,
+  value: string,
+): Promise<void> {
+  const field = page.getByPlaceholder(placeholder);
+  await field.waitFor({ state: "visible", timeout: 15_000 });
+  await field.fill(value);
+  await expect(field).toHaveValue(value, { timeout: 15_000 });
+}
+
 /** Clear all token-based auth keys from localStorage. */
 async function clearCandidateAuth(page: Page) {
   await page.evaluate(() => {
@@ -45,10 +56,29 @@ test("candidate logs in via the form and reaches the dashboard", async ({
     });
 
     // Wait for the form inputs to be interactive before filling.
-    await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 15_000 });
-    await page.getByPlaceholder("you@example.com").fill(creds.email);
-    await page.getByPlaceholder("Enter your password").fill(creds.password);
+    await fillAndExpect(page, "you@example.com", creds.email);
+    await fillAndExpect(page, "Enter your password", creds.password);
+    await fillAndExpect(page, "you@example.com", creds.email);
+    await fillAndExpect(page, "Enter your password", creds.password);
+    const loginResponsePromise = page
+      .waitForResponse(
+        (response) => response.url().includes("/api/candidates/login"),
+        { timeout: 15_000 },
+      )
+      .catch(() => null);
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
+    let loginResponse = await loginResponsePromise;
+    if (!loginResponse) {
+      await page.getByPlaceholder("Enter your password").press("Enter");
+      loginResponse = await page.waitForResponse(
+        (response) => response.url().includes("/api/candidates/login"),
+        { timeout: 15_000 },
+      );
+    }
+    expect(
+      loginResponse.ok(),
+      `candidate login API should succeed: ${loginResponse.status()} ${await loginResponse.text().catch(() => "")}`,
+    ).toBeTruthy();
   });
 
   await test.step("dashboard renders the candidate name", async () => {
@@ -71,9 +101,10 @@ test("candidate logs in via the form and reaches the dashboard", async ({
       waitUntil: "domcontentloaded",
     });
 
-    await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 15_000 });
-    await page.getByPlaceholder("you@example.com").fill(creds.email);
-    await page.getByPlaceholder("Enter your password").fill("nope");
+    await fillAndExpect(page, "you@example.com", creds.email);
+    await fillAndExpect(page, "Enter your password", "nope");
+    await fillAndExpect(page, "you@example.com", creds.email);
+    await fillAndExpect(page, "Enter your password", "nope");
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
 
     // The LoginPage renders errors inside a styled <div class="text-destructive">

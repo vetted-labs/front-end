@@ -112,8 +112,10 @@ test(
     cleanState: _cleanState,
   }) => {
     // Multi-phase flow: UI login + UI-driven requestUnstake tx + 7-day time
-    // skip + UI assertions. Budget comparable headroom to the headline scenario.
-    test.setTimeout(180_000);
+    // skip + UI assertions. Wallet confirmations and chain reads can be slow
+    // on local dev servers, so give it enough headroom to avoid teardown
+    // racing an in-flight completeUnstake call.
+    test.setTimeout(360_000);
     void _cleanState;
 
     // Pick a deterministic expert that's bootstrapped into the headline
@@ -245,6 +247,9 @@ test(
       await expect(
         page.getByRole("heading", { name: /manage staking/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
+      const stakingModal = page
+        .locator("div.fixed.inset-0.z-50")
+        .filter({ has: page.getByRole("heading", { name: /manage staking/i }) });
 
       // IMPORTANT ordering: the modal already opens in "withdraw" mode
       // (defaultMode="withdraw" sets actionMode="withdraw" on mount), so we do
@@ -259,14 +264,17 @@ test(
       // Open the guild selector dropdown. In withdraw mode with no guild yet,
       // the guild card button shows "Select guild" / "Choose a guild to stake
       // for" (StakingModal.tsx:464-468) → accessible name matches the regex.
-      await page
+      await stakingModal
         .getByRole("button", { name: /select guild|choose a guild/i })
         .first()
         .click();
 
-      // Pick the guild that matches our expert's staked guild.
-      await page
-        .getByRole("button", { name: new RegExp(guild.name, "i") })
+      // Pick the guild inside the modal dropdown. Scope this to the modal so
+      // the same guild name in the background allocation chart cannot intercept
+      // the click while the overlay is open.
+      await stakingModal
+        .locator("button", { hasText: guild.name })
+        .filter({ hasNot: page.getByText(/choose a guild/i) })
         .first()
         .click();
 
@@ -328,7 +336,10 @@ test(
 
       // Dismiss the transaction modal if it's still open (success screen).
       const closeBtn = page.getByRole("button", { name: /close|done/i }).first();
-      if (await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      if (
+        (await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false)) &&
+        (await closeBtn.isEnabled().catch(() => false))
+      ) {
         await closeBtn.click();
       }
     });
@@ -455,14 +466,16 @@ test(
     // anvil-only time skip), fall back to a contract-direct completeUnstake so
     // Phase 8's on-chain invariant is still genuinely exercised end-to-end.
     //
-    // Set DIV_013_FORCE_DIRECT=true to skip the UI attempt entirely (useful
-    // when iterating on other phases). Default attempts the UI first.
+    // Set DIV_013_ATTEMPT_UI=true to probe the wall-clock-gated UI completion
+    // path. Default skips that impossible-on-anvil path and completes directly
+    // after the chain cooldown skip so timeout teardown cannot race the
+    // completeUnstake invariant.
     await test.step("expert finalizes the withdrawal — UI completeUnstake when wall-clock cooldown allows, else contract-direct (DIV-013)", async () => {
-      const forceDirect = process.env.DIV_013_FORCE_DIRECT === "true";
+      const attemptUi = process.env.DIV_013_ATTEMPT_UI === "true";
 
       let completedViaUI = false;
 
-      if (!forceDirect) {
+      if (attemptUi) {
         // Navigate to /expert/withdrawals — the position is still listed
         // (partial unstake left MIN_STAKE active).
         await page.goto("/expert/withdrawals", { waitUntil: "domcontentloaded" });
@@ -524,6 +537,20 @@ test(
       }
 
       if (!completedViaUI) {
+        const reqBeforeComplete = (await contracts.expertStaking.read.getUnstakeRequest([
+          expertAddress,
+          guildIdBytes32,
+        ])) as UnstakeRequestTuple;
+        expect(
+          reqBeforeComplete[0],
+          "unstake request must still exist before contract-direct completeUnstake",
+        ).toBe(unstakeAmount);
+        const blockBeforeComplete = await anvil.publicClient.getBlock();
+        expect(
+          blockBeforeComplete.timestamp,
+          "contract-direct completeUnstake requires chain time at or past unlockTime",
+        ).toBeGreaterThanOrEqual(reqBeforeComplete[1]);
+
         // Contract-direct completion. The on-chain require(block.timestamp >=
         // unlockTime) is satisfied (Phase 6 advanced chain time), so this
         // succeeds and Phase 8 verifies the real token return + cleared request.

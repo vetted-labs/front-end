@@ -21,6 +21,7 @@ test("company rejection records not-hired outcome and slashes endorsed expert", 
   candidate,
   experts,
   guild,
+  testContexts,
   cleanState: _cleanState,
 }) => {
   void _cleanState;
@@ -53,6 +54,7 @@ test("company rejection records not-hired outcome and slashes endorsed expert", 
     reviewers: assignedExperts,
     guildId: guild.id,
     applicationId: guildApplicationId,
+    testContexts,
   });
 
   const target = await fetchEndorsementTarget(
@@ -69,6 +71,7 @@ test("company rejection records not-hired outcome and slashes endorsed expert", 
     applicationId: target.jobApplicationId,
     amountVetd: "2",
     candidateNamePattern: /E2E User/i,
+    testContexts,
   });
   await waitForSyncedEndorsement(page.request, endorser, target.jobApplicationId);
 
@@ -89,5 +92,10 @@ test("company rejection records not-hired outcome and slashes endorsed expert", 
     related_type: "hire_outcome",
   });
 
-  await expectExpertHistoryShowsSlashedEndorsement(page, endorser, /E2E User/i);
+  await expectExpertHistoryShowsSlashedEndorsement(
+    page,
+    endorser,
+    /E2E User/i,
+    testContexts,
+  );
 });
