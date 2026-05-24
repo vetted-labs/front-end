@@ -111,6 +111,7 @@ export function JobPreviewPanel({
 
   const detailHref = `/browse/jobs/${job.id}`;
   const applyHref = detailHref;
+  const previewModeLabel = showApplyState && !hasApplied ? "Preview ready" : null;
 
   return (
     <article className="rounded-xl border border-border bg-card overflow-hidden">
@@ -183,6 +184,12 @@ export function JobPreviewPanel({
             >
               <VettedIcon name={guildIconName} className="w-3 h-3" />
               {guildLabel} Guild
+            </span>
+          )}
+          {previewModeLabel && (
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium border border-primary/20 bg-primary/5 text-primary">
+              <CheckCircle2 className="w-3 h-3" />
+              {previewModeLabel}
             </span>
           )}
           {questions.length > 0 && (
