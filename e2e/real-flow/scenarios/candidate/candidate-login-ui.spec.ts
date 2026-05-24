@@ -15,8 +15,13 @@ async function fillAndExpect(
 ): Promise<void> {
   const field = page.getByPlaceholder(placeholder);
   await field.waitFor({ state: "visible", timeout: 15_000 });
-  await field.fill(value);
-  await expect(field).toHaveValue(value, { timeout: 15_000 });
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    await field.fill(value);
+    await page.waitForTimeout(150);
+    if ((await field.inputValue()) === value) return;
+  }
+  await expect(field).toHaveValue(value, { timeout: 1_000 });
 }
 
 /** Clear all token-based auth keys from localStorage. */
