@@ -13,6 +13,16 @@ interface AuthState {
   email: string | null;
   token: string | null;
   walletAddress?: string;
+  /**
+   * True when this session was hydrated from the legacy wallet-only
+   * (token === null) branch. Mutation gates read this to decide whether to
+   * trigger a SIWE re-handshake via `useExpertSession.ensureSession()`. The
+   * flag is cleared automatically once `ensureSession()` writes a real
+   * `authToken` and AuthContext re-syncs. Stays during the soft-rollout
+   * window per the M1 plan; the legacy branch is removed once telemetry
+   * shows zero legacy sessions.
+   */
+  isLegacyExpert?: boolean;
 }
 
 interface AuthContextValue extends AuthState {
@@ -33,6 +43,14 @@ let recentExplicitLogout = false;
 export function isRecentExplicitLogout() {
   return recentExplicitLogout;
 }
+
+/**
+ * One-shot telemetry guard for the legacy-expert hydration log. We only want
+ * to log once per page load — not on every hydration re-sync or token refresh
+ * event — so the counts in our analytics dashboard reflect distinct sessions,
+ * not chatter from the refresh handler.
+ */
+let telemetrySent = false;
 
 /**
  * 🔐 SECURITY: Synchronous auth state initialization from localStorage
@@ -84,6 +102,7 @@ function getInitialAuthState(): AuthState {
         email: null,
         token: null,
         walletAddress,
+        isLegacyExpert: true,
       };
     }
   } catch {
@@ -100,8 +119,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // render picks up the stored session without waiting for an external event.
   // eslint-disable-next-line no-restricted-syntax -- hydration re-sync from localStorage
   useEffect(() => {
+    const hydrated = getInitialAuthState();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- post-SSR hydration of localStorage-backed auth
-    setAuthState(getInitialAuthState());
+    setAuthState(hydrated);
+
+    // Telemetry: count active experts still on the legacy (token === null)
+    // branch. Drives the M1 rollout decision per the plan. Fires at most
+    // once per page load to avoid skewing counts on refresh-event re-syncs.
+    if (!telemetrySent && hydrated.isLegacyExpert) {
+      telemetrySent = true;
+      try {
+        const walletAddress = localStorage.getItem('walletAddress');
+        const token = localStorage.getItem('authToken');
+        const expertId = localStorage.getItem('expertId');
+        logger.info('[auth_legacy_expert]', {
+          hasWallet: !!walletAddress,
+          hasToken: !!token,
+          expertId,
+        });
+      } catch {
+        // localStorage may throw in restricted environments; the telemetry
+        // is best-effort and must not break hydration.
+      }
+    }
 
     // Also re-sync when tokens are refreshed by the API layer
     const handler = () => setAuthState(getInitialAuthState());

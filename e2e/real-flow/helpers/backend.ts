@@ -105,7 +105,7 @@ export const testApi = {
       status?: string;
       guildId?: string;
       stakeAmount?: string;
-      role?: "craftsman" | "officer" | "master";
+      role?: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
     },
   ) => postJson<{ id: string }>(req, "/api/test/seed/expert", body),
   seedExpertToken: (req: APIRequestContext, body: { expertId: string }) =>
@@ -320,6 +320,178 @@ export const testApi = {
     postJson<SeededApprovedCandidate>(
       req,
       "/api/test/seed/approved-candidate",
+      opts,
+    ),
+
+  // ── Guild feed seed fixtures (M1.4) ───────────────────────────────────────
+  //
+  // These mirror the seed endpoints in backend/src/routes/test/seed-fixtures.ts.
+  // Exactly one of `author*ExpertId` / `author*CandidateId` (and the voter/user
+  // variants below) must be set; the backend's Zod schema enforces this via a
+  // `.refine` and will 400 otherwise.
+
+  /** Seed a guild feed post authored by an expert OR a candidate. */
+  seedGuildPost: (
+    req: APIRequestContext,
+    opts: {
+      guildId: string;
+      authorExpertId?: string;
+      authorCandidateId?: string;
+      title: string;
+      body: string;
+      tag?: "discussion" | "question" | "insight" | "job_related";
+      isPrivate?: boolean;
+      isPinned?: boolean;
+    },
+  ): Promise<{ id: string; guildId: string; createdAt: string }> =>
+    postJson<{ id: string; guildId: string; createdAt: string }>(
+      req,
+      "/api/test/seed/guild-post",
+      opts,
+    ),
+
+  /** Seed a guild feed reply. Pass `parentReplyId` for nested replies. */
+  seedGuildReply: (
+    req: APIRequestContext,
+    opts: {
+      postId: string;
+      authorExpertId?: string;
+      authorCandidateId?: string;
+      parentReplyId?: string;
+      body: string;
+    },
+  ): Promise<{ id: string; postId: string; depth: number }> =>
+    postJson<{ id: string; postId: string; depth: number }>(
+      req,
+      "/api/test/seed/guild-reply",
+      opts,
+    ),
+
+  /** Seed an upvote on a post or reply. */
+  seedGuildVote: (
+    req: APIRequestContext,
+    opts: {
+      targetId: string;
+      targetType: "post" | "reply";
+      voterExpertId?: string;
+      voterCandidateId?: string;
+    },
+  ): Promise<{ id: string }> =>
+    postJson<{ id: string }>(req, "/api/test/seed/guild-vote", opts),
+
+  /** Seed a bookmark on a post. */
+  seedGuildBookmark: (
+    req: APIRequestContext,
+    opts: {
+      postId: string;
+      userExpertId?: string;
+      userCandidateId?: string;
+    },
+  ): Promise<{ id: string }> =>
+    postJson<{ id: string }>(req, "/api/test/seed/guild-bookmark", opts),
+
+  /**
+   * List in-app notifications matching the (recipient_type, recipient_id, type)
+   * tuple. Drives the assertions for M2.3 storm dedup and award/reply fan-out.
+   */
+  listNotifications: async (
+    req: APIRequestContext,
+    opts: {
+      recipientType: "expert" | "candidate";
+      recipientId: string;
+      type?: string;
+    },
+  ): Promise<
+    Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      link: string | null;
+      related_id: string | null;
+      is_read: boolean;
+      created_at: string;
+    }>
+  > => {
+    const q = new URLSearchParams();
+    q.set("recipientType", opts.recipientType);
+    q.set("recipientId", opts.recipientId);
+    if (opts.type) q.set("type", opts.type);
+    const res = await req.get(
+      `${BACKEND_URL}/api/test/notifications?${q.toString()}`,
+    );
+    if (!res.ok()) {
+      throw new Error(
+        `GET /api/test/notifications failed: ${res.status()} ${await res.text()}`,
+      );
+    }
+    const body = (await res.json()) as {
+      data: Array<{
+        id: string;
+        type: string;
+        title: string;
+        message: string;
+        link: string | null;
+        related_id: string | null;
+        is_read: boolean;
+        created_at: string;
+      }>;
+    };
+    return body.data;
+  },
+
+  /**
+   * Convenience wrapper for `listNotifications`: returns `{ found, row? }` where
+   * `row` is the first notification matching the (recipientType, recipientId,
+   * type, relatedId) tuple. Spec assertions read `result.row` for fields like
+   * `link`, `title`, `is_read`. The function never throws on "not found"; it
+   * just returns `{ found: false }`.
+   */
+  assertNotificationFor: async (
+    req: APIRequestContext,
+    opts: {
+      recipientType: "expert" | "candidate";
+      recipientId: string;
+      type: string;
+      relatedId?: string;
+    },
+  ): Promise<{
+    found: boolean;
+    row?: {
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      link: string | null;
+      related_id: string | null;
+      is_read: boolean;
+      created_at: string;
+    };
+  }> => {
+    const rows = await testApi.listNotifications(req, {
+      recipientType: opts.recipientType,
+      recipientId: opts.recipientId,
+      type: opts.type,
+    });
+    const row = opts.relatedId
+      ? rows.find((r) => r.related_id === opts.relatedId)
+      : rows[0];
+    return row ? { found: true, row } : { found: false };
+  },
+
+  /**
+   * Revoke an expert's refresh tokens to simulate a stale session. The current
+   * access JWT is unaffected (JWT expiry is forced via page.evaluate in the
+   * spec); this just ensures `attemptTokenRefresh` returns 401 and the
+   * re-handshake path fires. Returns the number of refresh-token rows revoked.
+   */
+  expireExpertSession: (
+    req: APIRequestContext,
+    opts: { expertId: string },
+  ): Promise<{ revoked: number }> =>
+    postJson<{ revoked: number }>(
+      req,
+      "/api/test/expire-expert-session",
       opts,
     ),
 

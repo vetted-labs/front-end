@@ -91,6 +91,13 @@ export interface NotificationsShellProps {
    * Expert mode reads readiness from `useExpertAccount()` internally.
    */
   ready?: boolean;
+  /**
+   * Optional initial filter key (must match one of the filter tabs for the
+   * given `userType`). Used by deep-link URLs like
+   * `/expert/notifications?type=guild_feed` to preselect a tab on first render.
+   * Unknown keys are ignored and the default ("all") is used.
+   */
+  initialFilter?: string;
 }
 
 interface FilterDef {
@@ -144,6 +151,11 @@ const EXPERT_FILTERS: FilterDef[] = [
   },
   { key: "rewards", label: "Rewards", types: ["reward_earned"] },
   { key: "guild", label: "Guild", types: ["guild_application"] },
+  {
+    key: "guild_feed",
+    label: "Guild feed",
+    types: ["guild_post_reply", "guild_post_mention"],
+  },
 ];
 
 const FILTER_DEFS: Record<NotificationsUserType, FilterDef[]> = {
@@ -277,6 +289,7 @@ export function NotificationsShell({
   userType,
   eyebrow,
   ready: readyProp,
+  initialFilter,
 }: NotificationsShellProps) {
   // Expert auth is wallet-based and resolved internally; company/candidate
   // pages must pass `ready` from `useRequireAuth(...)`.
@@ -293,7 +306,14 @@ export function NotificationsShell({
   const copy = COPY[userType];
   const readEventName = READ_EVENT_BY_TYPE[userType];
 
-  const [activeFilter, setActiveFilter] = useState<string>(filters[0]?.key ?? "all");
+  const defaultFilterKey = filters[0]?.key ?? "all";
+  const resolvedInitialFilter = useMemo(() => {
+    if (!initialFilter) return defaultFilterKey;
+    return filters.some((f) => f.key === initialFilter)
+      ? initialFilter
+      : defaultFilterKey;
+  }, [initialFilter, filters, defaultFilterKey]);
+  const [activeFilter, setActiveFilter] = useState<string>(resolvedInitialFilter);
   const [allNotifications, setAllNotifications] = useState<
     Array<CompanyNotification | CandidateNotification | ExpertNotification>
   >([]);

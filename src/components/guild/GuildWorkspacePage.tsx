@@ -233,10 +233,10 @@ const TABS: Array<{
   countKey?: "queue" | "active" | "governance" | "feed";
   alert?: boolean;
 }> = [
+  { id: "feed", label: "Feed", countKey: "feed" },
   { id: "queue", label: "Queue", countKey: "queue", alert: true },
   { id: "reviews", label: "My Reviews", countKey: "active" },
   { id: "governance", label: "Governance", countKey: "governance", alert: true },
-  { id: "feed", label: "Feed", countKey: "feed" },
   { id: "members", label: "Members" },
   { id: "earnings", label: "Earnings" },
   { id: "leaderboard", label: "Leaderboard" },
@@ -279,7 +279,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     if (t && (GUILD_WORKSPACE_TABS as readonly string[]).includes(t)) {
       return t as GuildWorkspaceTab;
     }
-    return "queue";
+    return "feed";
   })();
   const [activeTab, setActiveTab] = useState<GuildWorkspaceTab>(initialTab);
   const [guild, setGuild] = useState<GuildDetailData | null>(null);

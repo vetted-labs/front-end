@@ -79,6 +79,7 @@ export function GuildPublicFeedTab({
 
   const [chip, setChip] = useState<PostTag | "all" | "hot">("all");
   const [sortMode, setSortMode] = useState<PostSortMode>("hot");
+  const [visibility, setVisibility] = useState<"public" | "internal">("public");
   const [showNewPost, setShowNewPost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<GuildPost | null>(null);
 
@@ -86,6 +87,9 @@ export function GuildPublicFeedTab({
   // other chips are tag filters. Translate chip → API params.
   const apiTag: PostTag | "all" = chip === "hot" || chip === "all" ? "all" : chip;
   const apiSort: PostSortMode = chip === "hot" ? "hot" : sortMode;
+  // Non-members can never request the internal feed (backend gates this), so
+  // always pin them to "public" regardless of local state.
+  const apiVisibility: "public" | "internal" = isMember ? visibility : "public";
 
   const {
     data: posts = [],
@@ -99,9 +103,15 @@ export function GuildPublicFeedTab({
     useCallback(
       (pg: number, limit: number) =>
         guildFeedApi
-          .getPosts(guildId, { sort: apiSort, tag: apiTag, page: pg, limit })
+          .getPosts(guildId, {
+            sort: apiSort,
+            tag: apiTag,
+            visibility: apiVisibility,
+            page: pg,
+            limit,
+          })
           .then((res) => ({ data: res.data, total: res.total })),
-      [guildId, apiSort, apiTag]
+      [guildId, apiSort, apiTag, apiVisibility]
     ),
     { limit: 20 }
   );
@@ -139,6 +149,7 @@ export function GuildPublicFeedTab({
               {(auth.email || "?").trim().slice(0, 1).toUpperCase()}
             </div>
             <button
+              data-testid="open-new-post"
               onClick={() => showNewPostButton && setShowNewPost(true)}
               className="flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
               disabled={!showNewPostButton}
@@ -182,6 +193,46 @@ export function GuildPublicFeedTab({
               )}
             </div>
           </div>
+
+          {/* Visibility toggle — members only. Non-members can't request the
+              internal feed (backend gate), so we don't render the control for
+              them at all. */}
+          {isMember && (
+            <div
+              className="flex items-center gap-1 mb-3 p-1 rounded-lg bg-surface-1 border border-surface-border inline-flex"
+              role="tablist"
+              aria-label="Feed visibility"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={visibility === "public"}
+                data-testid="feed-visibility-public"
+                onClick={() => setVisibility("public")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  visibility === "public"
+                    ? "bg-primary text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={visibility === "internal"}
+                data-testid="feed-visibility-internal"
+                onClick={() => setVisibility("internal")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  visibility === "internal"
+                    ? "bg-primary text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Internal
+              </button>
+            </div>
+          )}
 
           {/* Filter chips + sort */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">

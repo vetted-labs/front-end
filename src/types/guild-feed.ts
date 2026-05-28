@@ -42,6 +42,8 @@ export interface GuildPost {
   hasVoted: boolean;
   scoreHidden: boolean;
   acceptedReplyId?: string;
+  jobId?: string | null;
+  job?: { id: string; title: string } | null;
   reactions: ReactionSummary;
   poll?: PostPoll;
   createdAt: string;
@@ -69,7 +71,14 @@ export interface CreatePostPayload {
   title: string;
   body: string;
   tag: PostTag;
+  jobId?: string;
   poll?: CreatePollPayload;
+  /**
+   * When true, the post lands as `is_private = true` (members-only). Backend
+   * gate: only experts may create internal posts (candidates are rejected with
+   * 403). Default: false (public).
+   */
+  isPrivate?: boolean;
 }
 
 export interface CreateReplyPayload {

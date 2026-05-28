@@ -1,10 +1,19 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { MoreHorizontal, Pin, PinOff, Lock, Unlock, Trash2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Lock,
+  Unlock,
+  Trash2,
+  Copy,
+} from "lucide-react";
 import { guildFeedApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import { useExpertSession } from "@/lib/hooks/useExpertSession";
 import { toast } from "sonner";
 import type { FeedPrivileges, ModerationAction } from "@/types";
 
@@ -27,19 +36,37 @@ export function ModerationMenu({
 }: ModerationMenuProps) {
   const [open, setOpen] = useState(false);
   const { execute: moderate, isLoading: loading } = useApi();
+  const { ensureSession } = useExpertSession();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(menuRef, close, open);
 
   const hasAnyAction =
-    privileges.canPinUnpin || privileges.canCloseReopen || privileges.canDelete;
+    privileges.canPinUnpin ||
+    privileges.canCloseReopen ||
+    privileges.canDelete ||
+    privileges.canMarkDuplicate;
 
   if (!hasAnyAction) return null;
 
   const handleAction = async (e: React.MouseEvent, action: ModerationAction) => {
     e.stopPropagation();
     if (loading) return;
+
+    // Gate moderation actions behind a fresh expert-session JWT. The backend
+    // also enforces role permissions; this just ensures we always send a valid
+    // bearer token (the legacy wallet-header path is being retired).
+    const session = await ensureSession();
+    if (!session.ok && session.reason !== "flag-off") {
+      if (session.reason === "user-rejected") {
+        toast.error("Sign to participate");
+      } else {
+        toast.error(session.error ?? "Could not authenticate. Please try again.");
+      }
+      setOpen(false);
+      return;
+    }
 
     await moderate(
       () => guildFeedApi.moderatePost(guildId, postId, { action }),
@@ -57,6 +84,8 @@ export function ModerationMenu({
               ? "Post reopened"
               : action === "delete"
               ? "Post deleted"
+              : action === "mark_duplicate"
+              ? "Marked as duplicate (post closed)"
               : "Action completed"
           );
           setOpen(false);
@@ -118,6 +147,17 @@ export function ModerationMenu({
                   <Lock className="w-3.5 h-3.5" /> Close
                 </>
               )}
+            </button>
+          )}
+
+          {privileges.canMarkDuplicate && (
+            <button
+              data-testid="moderation-mark-duplicate"
+              onClick={(e) => handleAction(e, "mark_duplicate")}
+              disabled={loading}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+            >
+              <Copy className="w-3.5 h-3.5" /> Mark as duplicate
             </button>
           )}
 

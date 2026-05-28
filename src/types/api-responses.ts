@@ -184,7 +184,17 @@ export interface WalletVerification {
 
 export interface WalletVerifyResponse {
   verified: boolean;
+  /** Legacy alias for accessToken; kept for backward compatibility with older callers. */
   token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  status?: "approved" | "pending" | "rejected";
+  email?: string;
+  expert?: {
+    id: string;
+    walletAddress: string;
+  };
 }
 
 export interface TokenBalance {

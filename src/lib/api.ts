@@ -403,6 +403,21 @@ export const jobsApi = {
     });
   },
 
+  /**
+   * Lightweight autocomplete search for the JobPicker dropdown in the
+   * post composer. Defaults to active jobs and a small page size so the
+   * dropdown stays responsive.
+   */
+  search: (q: string, opts?: { limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (q) queryParams.append("search", q);
+    queryParams.append("status", "active");
+    queryParams.append("limit", String(opts?.limit ?? 10));
+    return apiRequest<import("@/types").Job[]>(`/api/jobs?${queryParams.toString()}`, {
+      requiresAuth: false,
+    });
+  },
+
   getById: (id: string) =>
     apiRequest<import("@/types").Job>(`/api/jobs/${id}`, {
       requiresAuth: false, // Public endpoint - anyone can view job details
@@ -713,6 +728,21 @@ export const expertApi = {
       requiresAuth: false,
     }),
 
+  /**
+   * Lightweight autocomplete search for the MentionAutocomplete popover.
+   * Returns experts matching the query (name or wallet prefix). Powers the
+   * `@<…>` mention typeahead in the post composer.
+   */
+  search: (q: string, opts?: { limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (q) queryParams.append("search", q);
+    queryParams.append("limit", String(opts?.limit ?? 10));
+    return apiRequest<Array<{ id: string; fullName: string; walletAddress: string }>>(
+      `/api/experts?${queryParams.toString()}`,
+      { requiresAuth: false }
+    );
+  },
+
   getOnboardingState: (walletAddress?: string | null) =>
     apiRequest<import("@/lib/expert-onboarding-tour").ExpertOnboardingState>(
       "/api/experts/me/onboarding-state",
@@ -932,11 +962,23 @@ export const notificationsApi = {
     });
   },
 
-  // Get unread notification count
-  getUnreadCount: (walletAddress: string) =>
-    apiRequest<import("@/types").NotificationUnreadCount>(`/api/experts/notifications/unread-count?wallet=${walletAddress}`, {
-      requiresAuth: false,
-    }),
+  // Get unread notification count. Pass `types` to filter the count to
+  // specific notification types (e.g. ["guild_post_reply", "guild_post_mention"]).
+  // The backend may ignore the `types` param today; in that case the full
+  // unread count is returned and the caller falls back gracefully.
+  getUnreadCount: (walletAddress: string, types?: string[]) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("wallet", walletAddress);
+    if (types && types.length > 0) {
+      // Pass as comma-separated list AND repeated `types[]` for backend flexibility.
+      queryParams.append("types", types.join(","));
+      for (const t of types) queryParams.append("types[]", t);
+    }
+    return apiRequest<import("@/types").NotificationUnreadCount>(
+      `/api/experts/notifications/unread-count?${queryParams.toString()}`,
+      { requiresAuth: false },
+    );
+  },
 
   // Mark a specific notification as read
   markAsRead: (notificationId: string, walletAddress: string) =>
@@ -1224,26 +1266,6 @@ export const guildsApi = {
   },
 };
 
-// Helper: build auth headers for feed endpoints.
-// Bearer auth is authoritative; wallet/expert headers remain for legacy feed
-// compatibility where handlers still inspect them.
-function getFeedAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {};
-  const token = typeof window !== "undefined"
-    ? localStorage.getItem("authToken") || localStorage.getItem("companyAuthToken")
-    : null;
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  if (typeof window !== "undefined") {
-    const walletAddress = localStorage.getItem("walletAddress");
-    const expertId = localStorage.getItem("expertId");
-    if (walletAddress) headers["X-Wallet-Address"] = walletAddress;
-    if (expertId) headers["X-Expert-Id"] = expertId;
-  }
-  return headers;
-}
-
 // Guild Feed API (discussion posts, replies, votes)
 export const guildFeedApi = {
   // Get posts for a guild (paginated, with sort/filter)
@@ -1270,7 +1292,7 @@ export const guildFeedApi = {
     // skip auto-unwrap so we can access `total` for server-side pagination.
     const endpoint = `/api/guilds/${encodeURIComponent(guildId)}/posts${query ? `?${query}` : ""}`;
     const json = await apiRequest<{ success?: boolean; data?: import("@/types").GuildPost[]; total?: number }>(endpoint, {
-      headers: getFeedAuthHeaders(),
+      requiresAuth: true,
       rawEnvelope: true,
     });
     const posts = json.data ?? [];
@@ -1282,28 +1304,28 @@ export const guildFeedApi = {
   getPost: (guildId: string, postId: string) =>
     apiRequest<import("@/types").GuildPost>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
-      { headers: getFeedAuthHeaders() }
+      { requiresAuth: true }
     ),
 
   // Create a new post (auth required, member only)
   createPost: (guildId: string, data: import("@/types").CreatePostPayload) =>
     apiRequest<import("@/types").GuildPost>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Update a post (author only)
   updatePost: (guildId: string, postId: string, data: Partial<import("@/types").CreatePostPayload>) =>
     apiRequest<import("@/types").GuildPost>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
-      { method: "PUT", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "PUT", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Delete a post (author or guild lead)
   deletePost: (guildId: string, postId: string) =>
     apiRequest<{ success: boolean }>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
-      { method: "DELETE", headers: getFeedAuthHeaders() }
+      { method: "DELETE", requiresAuth: true }
     ),
 
   // Get replies for a post
@@ -1320,7 +1342,7 @@ export const guildFeedApi = {
     const query = queryParams.toString();
     const endpoint = `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies${query ? `?${query}` : ""}`;
     const json = await apiRequest<{ success?: boolean; data?: import("@/types").GuildPostReply[]; total?: number }>(endpoint, {
-      headers: getFeedAuthHeaders(),
+      requiresAuth: true,
       rawEnvelope: true,
     });
     const replies = json.data ?? [];
@@ -1332,56 +1354,79 @@ export const guildFeedApi = {
   createReply: (guildId: string, postId: string, data: import("@/types").CreateReplyPayload) =>
     apiRequest<import("@/types").GuildPostReply>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Delete a reply (author or guild lead)
   deleteReply: (guildId: string, postId: string, replyId: string) =>
     apiRequest<{ success: boolean }>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies/${encodeURIComponent(replyId)}`,
-      { method: "DELETE", headers: getFeedAuthHeaders() }
+      { method: "DELETE", requiresAuth: true }
     ),
 
   // Toggle vote on a post or reply
   vote: (guildId: string, data: import("@/types").VotePayload) =>
     apiRequest<{ voted: boolean; newCount: number }>(
       `/api/guilds/${encodeURIComponent(guildId)}/votes`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Toggle reaction on a post or reply
   toggleReaction: (guildId: string, data: import("@/types").ToggleReactionPayload) =>
     apiRequest<import("@/types").ToggleReactionResponse>(
       `/api/guilds/${encodeURIComponent(guildId)}/reactions`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Accept a reply as the answer
   acceptAnswer: (guildId: string, postId: string, data: { replyId: string }) =>
     apiRequest<{ acceptedReplyId: string }>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/accept`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Remove accepted answer
   removeAcceptedAnswer: (guildId: string, postId: string) =>
     apiRequest<{ success: boolean }>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/accept`,
-      { method: "DELETE", headers: getFeedAuthHeaders() }
+      { method: "DELETE", requiresAuth: true }
     ),
 
   // Cast a vote on a poll
   castPollVote: (guildId: string, postId: string, data: import("@/types").CastPollVotePayload) =>
     apiRequest<import("@/types").CastPollVoteResponse>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/poll/vote`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
     ),
 
   // Moderate a post (pin, close, delete, etc.)
   moderatePost: (guildId: string, postId: string, data: import("@/types").ModerationPayload) =>
     apiRequest<{ success: boolean }>(
       `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/moderate`,
-      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+      { method: "POST", body: JSON.stringify(data), requiresAuth: true }
+    ),
+
+  // Upload an image for a post attachment (multipart). Returns a CDN URL +
+  // metadata the caller then attaches to a post via `addAttachment`.
+  uploadImage: (guildId: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiRequest<{ url: string; mimeType: string; sizeBytes: number }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/uploads/image`,
+      { method: "POST", body: form, requiresAuth: true }
+    );
+  },
+
+  // Attach a previously-uploaded image (or external URL) to a post. Called
+  // once per attachment after `createPost` returns the post id.
+  addAttachment: (
+    guildId: string,
+    postId: string,
+    payload: { url: string; mimeType: string; sizeBytes: number; width?: number; height?: number }
+  ) =>
+    apiRequest<{ id: string }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/attachments`,
+      { method: "POST", body: JSON.stringify(payload), requiresAuth: true }
     ),
 };
 

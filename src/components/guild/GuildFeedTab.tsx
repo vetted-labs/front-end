@@ -204,6 +204,7 @@ export function GuildFeedTab({
         {/* New Post Button */}
         {showNewPostButton && (
           <button
+            data-testid="open-new-post"
             onClick={() => setShowNewPost(true)}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >

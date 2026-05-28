@@ -1,12 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Send, CheckCircle2, MessageSquare, ChevronDown } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import {
+  Send,
+  CheckCircle2,
+  MessageSquare,
+  ChevronDown,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
 import { guildFeedApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
+import { useExpertSession } from "@/lib/hooks/useExpertSession";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { formatTimeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 import { STATUS_COLORS } from "@/config/colors";
+import { Modal } from "@/components/ui/modal";
 import { useFeedContext } from "./FeedContext";
 import { VoteButton } from "./VoteButton";
 import { AuthorBadge } from "./AuthorBadge";
@@ -46,7 +57,12 @@ export function ThreadedReplyList({
       {/* Accepted answer pinned to top */}
       {acceptedReply && (
         <div className={`rounded-lg border-2 ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-3`}>
-          <AcceptedAnswerBadge variant="reply" />
+          <AcceptedAnswerBadge
+            variant="reply"
+            postId={postId}
+            isPostAuthor={isPostAuthor}
+            onRemoved={() => onRepliesChanged()}
+          />
           <div className="mt-2">
             <ReplyNode
               reply={acceptedReply}
@@ -100,18 +116,42 @@ function ReplyNode({
   depth,
 }: ReplyNodeProps) {
   const { guildId, isAuthenticated, isMember, privileges } = useFeedContext();
+  const { userId, userType } = useAuthContext();
+  const { ensureSession, isSigning } = useExpertSession();
   const [showInlineReply, setShowInlineReply] = useState(false);
   const [inlineReplyText, setInlineReplyText] = useState("");
   const [showChildren, setShowChildren] = useState(true);
   const [loadedChildren, setLoadedChildren] = useState<GuildPostReply[]>(reply.children ?? []);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [moderationMenuOpen, setModerationMenuOpen] = useState(false);
+  const moderationMenuRef = useRef<HTMLDivElement>(null);
   const { execute: loadChildren, isLoading: loadingChildren } = useApi<{ data: GuildPostReply[] }>();
   const { execute: submitReply, isLoading: isSubmitting } = useApi<GuildPostReply>();
+  const { execute: runDeleteReply, isLoading: isDeleting } = useApi<{ success: boolean }>();
+
+  const closeModerationMenu = useCallback(() => setModerationMenuOpen(false), []);
+  useClickOutside(moderationMenuRef, closeModerationMenu, moderationMenuOpen);
 
   const childCount = reply.childCount ?? 0;
   const hasUnloadedChildren = childCount > 0 && loadedChildren.length === 0 && !reply.children;
   const canReplyInline = depth < MAX_DEPTH && isAuthenticated && isMember;
   const canAccept =
     !acceptedReplyId && (isPostAuthor || privileges.canAcceptOnBehalf);
+
+  // Author-self delete: visible to the user who authored this reply. The
+  // backend authorizes author-self OR officer/master moderation; we route them
+  // through different UI affordances so officers don't see two Delete buttons
+  // when looking at their own reply.
+  const isReplyAuthor =
+    !!userId && !!userType && reply.author.id === userId && reply.author.type === userType;
+
+  // Officer+ per-reply moderation menu: visible to guild officers/masters who
+  // are NOT the reply author (the author already has the direct Delete link).
+  // Mirrors the post-level ModerationMenu role-gate (officer-or-above via
+  // canPinUnpin) plus master via canDelete, matching the backend's
+  // guild-reply.service.ts:246 check.
+  const canModerateReply =
+    !isReplyAuthor && (privileges.canPinUnpin || privileges.canDelete);
 
   const handleLoadChildren = async () => {
     if (loadingChildren) return;
@@ -142,6 +182,18 @@ function ReplyNode({
       return;
     }
 
+    // Gate reply submission behind a fresh expert-session JWT. flag-off falls
+    // through to legacy behavior so we never make today's bug worse.
+    const session = await ensureSession();
+    if (!session.ok && session.reason !== "flag-off") {
+      if (session.reason === "user-rejected") {
+        toast.error("Sign to participate");
+      } else {
+        toast.error(session.error ?? "Could not authenticate. Please try again.");
+      }
+      return;
+    }
+
     await submitReply(
       () =>
         guildFeedApi.createReply(guildId, postId, {
@@ -155,6 +207,43 @@ function ReplyNode({
           onRepliesChanged();
         },
         onError: (err) => toast.error(err),
+      }
+    );
+  };
+
+  const handleDeleteRequest = () => {
+    setModerationMenuOpen(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteCancel = () => {
+    if (isDeleting) return;
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const session = await ensureSession();
+    if (!session.ok && session.reason !== "flag-off") {
+      if (session.reason === "user-rejected") {
+        toast.error("Sign to participate");
+      } else {
+        toast.error(session.error ?? "Could not authenticate. Please try again.");
+      }
+      return;
+    }
+
+    await runDeleteReply(
+      () => guildFeedApi.deleteReply(guildId, postId, reply.id),
+      {
+        onSuccess: () => {
+          toast.success("Reply deleted");
+          setShowDeleteConfirm(false);
+          onRepliesChanged();
+        },
+        onError: (err) => {
+          toast.error(err);
+          setShowDeleteConfirm(false);
+        },
       }
     );
   };
@@ -183,6 +272,45 @@ function ReplyNode({
                 Accepted
               </span>
             )}
+
+            {/* Per-reply moderation menu (officer+ on others' replies). The
+                trigger sits in the header row alongside the timestamp so it
+                doesn't compete with the action row below. */}
+            {canModerateReply && (
+              <div ref={moderationMenuRef} className="relative ml-auto">
+                <button
+                  type="button"
+                  data-testid="reply-moderation-actions"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModerationMenuOpen((prev) => !prev);
+                  }}
+                  disabled={isDeleting || isSigning}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+                  aria-label="Reply moderation actions"
+                  title="Reply moderation actions"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+
+                {moderationMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-border bg-card shadow-lg py-1">
+                    <button
+                      type="button"
+                      data-testid="reply-moderation-delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteRequest();
+                      }}
+                      disabled={isDeleting || isSigning}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <MarkdownBody content={reply.body} className="text-sm text-foreground/90 mb-2" />
 
@@ -207,6 +335,21 @@ function ReplyNode({
                 Accept
               </button>
             )}
+
+            {isReplyAuthor && (
+              <button
+                type="button"
+                data-testid="delete-reply"
+                onClick={handleDeleteRequest}
+                disabled={isDeleting || isSigning}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Delete reply"
+                title="Delete reply"
+              >
+                <Trash2 className="w-3 h-3" />
+                Delete
+              </button>
+            )}
           </div>
 
           {/* Inline reply composer */}
@@ -222,11 +365,11 @@ function ReplyNode({
               />
               <button
                 type="submit"
-                disabled={isSubmitting || !inlineReplyText.trim()}
+                disabled={isSubmitting || isSigning || !inlineReplyText.trim()}
                 className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-3 h-3" />
-                {isSubmitting ? "..." : "Reply"}
+                {isSigning ? "Signing..." : isSubmitting ? "..." : "Reply"}
               </button>
             </form>
           )}
@@ -275,6 +418,41 @@ function ReplyNode({
             </div>
           )}
         </>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <Modal
+          isOpen
+          onClose={handleDeleteCancel}
+          title="Delete this reply?"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This permanently removes the reply. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                disabled={isDeleting || isSigning}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="confirm-delete-reply"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting || isSigning}
+                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSigning ? "Signing..." : isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

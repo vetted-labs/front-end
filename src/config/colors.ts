@@ -196,6 +196,8 @@ export function getNotificationPriority(type: string): NotificationPriority {
     case "application_new":
     case "application_status":
     case "guild_application":
+    case "guild_post_reply":
+    case "guild_post_mention":
     case "application_received":
     case "application_status_change":
     case "new_message":

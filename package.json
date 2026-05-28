@@ -17,6 +17,8 @@
     "test:e2e:shared": "playwright test e2e/shared",
     "e2e:bootstrap": "tsx e2e/real-flow/bootstrap/setup-stack.ts",
     "e2e:real-flow": "npx dotenv -e .env.local -- npx playwright test --config=e2e/real-flow/playwright.real-flow.config.ts",
+    "test:e2e:guild-feed:real": "npx dotenv -e .env.local -- npx playwright test --config=e2e/real-flow/playwright.real-flow.config.ts e2e/real-flow/scenarios/guild-feed",
+    "test:verify-regression-specs": "node scripts/verify-regression-specs.mjs",
     "e2e:experiment": "tsx e2e/real-flow/experiments/run-experiment.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",

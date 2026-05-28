@@ -17,6 +17,7 @@ import { expect, type Page } from "@playwright/test";
 import type { Hex } from "viem";
 import type { InjectedWalletHandle } from "./wallet-injection";
 import { markOnboardingComplete } from "../../helpers/auth-utils";
+import { BACKEND_URL } from "./backend";
 
 /**
  * Connect the page-side wagmi store to the injected wallet (our shim).
@@ -284,4 +285,213 @@ export async function expectWagmiAddress(
       timeout: timeoutMs,
     })
     .toBe(expected.toLowerCase());
+}
+
+// ─── Expert SIWE session handshake (M1.4) ────────────────────────────────────
+
+export interface SiweHandshakeResult {
+  accessToken: string;
+  refreshToken: string;
+  expertId: string;
+  expiresIn: number;
+}
+
+/**
+ * Drives the SIWE handshake against the real backend, populating localStorage
+ * with a JWT pair so subsequent `Authorization: Bearer …` requests succeed.
+ *
+ * Preconditions (caller is responsible for both):
+ *   1. wagmi is already connected to the expert's wallet — call
+ *      `connectWalletViaUI(page)` first, or rely on `loginAsExpertViaUI` having
+ *      run.
+ *   2. The expert row exists in the DB and is approved with
+ *      `wallet_verified = true` — call `testApi.seedExpert(...)` (status
+ *      defaults to "approved") or `seedExpertToken` ahead of time.
+ *
+ * Side effects on success:
+ *   - localStorage keys written: `authToken`, `refreshToken`, `userType=expert`,
+ *     `expertId`, `walletAddress` (lowercased).
+ *   - `localStorage.removeItem("companyAuthToken")` clears the shadowing key
+ *     that `attemptTokenRefresh` (`src/lib/api.ts:139`) warns about.
+ *   - Fires `window.dispatchEvent(new Event("auth-token-refreshed"))` so
+ *     `AuthContext.tsx:107-109` re-hydrates its state.
+ *
+ * The function reaches the backend via `BACKEND_URL` (not relative `/api`) so
+ * it works both against a same-origin Next.js dev server and a separate
+ * frontend port (the more common real-flow setup). The signature itself comes
+ * from the headless wallet shim via `window.__wagmiTest.signMessage`.
+ */
+export async function ensureExpertSessionTokenViaUI(
+  page: Page,
+  opts: { walletAddress: string; timeoutMs?: number },
+): Promise<SiweHandshakeResult> {
+  const timeoutMs = opts.timeoutMs ?? 30_000;
+
+  // Make sure the harness has finished mounting before we drive it; same gate
+  // `connectWalletViaUI` uses.
+  await page.waitForFunction(
+    () =>
+      typeof (window as unknown as { __wagmiTest?: unknown }).__wagmiTest !==
+      "undefined",
+    null,
+    { timeout: timeoutMs },
+  );
+
+  const result = (await page.evaluate(
+    async ({ backendUrl, walletAddress }) => {
+      const harness = (
+        window as unknown as {
+          __wagmiTest?: {
+            config: unknown;
+            signMessage: (
+              config: unknown,
+              args: { message: string },
+            ) => Promise<`0x${string}`>;
+          };
+        }
+      ).__wagmiTest;
+      if (!harness) {
+        return {
+          ok: false as const,
+          error: "wagmi test harness missing (NEXT_PUBLIC_E2E_MODE not set?)",
+        };
+      }
+
+      // Step 1: fetch the SIWE challenge.
+      const challengeRes = await fetch(
+        `${backendUrl}/api/blockchain/wallet/challenge`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: walletAddress }),
+        },
+      );
+      if (!challengeRes.ok) {
+        const text = await challengeRes.text().catch(() => "");
+        return {
+          ok: false as const,
+          error: `challenge ${challengeRes.status}: ${text}`,
+        };
+      }
+      const challengeBody = (await challengeRes.json()) as
+        | { success?: boolean; data?: { message: string } }
+        | { message: string };
+      const message =
+        "data" in challengeBody && challengeBody.data
+          ? challengeBody.data.message
+          : (challengeBody as { message: string }).message;
+      if (!message) {
+        return { ok: false as const, error: "challenge missing message" };
+      }
+
+      // Step 2: sign the challenge through the wagmi shim. This is the same
+      // path useSignMessage() takes in the real app.
+      let signature: `0x${string}`;
+      try {
+        signature = await harness.signMessage(harness.config, { message });
+      } catch (err) {
+        return {
+          ok: false as const,
+          error: `signMessage failed: ${(err as Error).message}`,
+        };
+      }
+
+      // Step 3: verify and exchange for a JWT pair.
+      const verifyRes = await fetch(
+        `${backendUrl}/api/blockchain/wallet/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: walletAddress,
+            signature,
+            message,
+          }),
+        },
+      );
+      if (!verifyRes.ok) {
+        const text = await verifyRes.text().catch(() => "");
+        return {
+          ok: false as const,
+          error: `verify ${verifyRes.status}: ${text}`,
+        };
+      }
+      const verifyBody = (await verifyRes.json()) as {
+        success?: boolean;
+        data?: {
+          accessToken?: string;
+          refreshToken?: string;
+          expiresIn?: number;
+          token?: string;
+          expert?: { id: string; walletAddress: string };
+        };
+        // Some endpoints return un-enveloped payloads; tolerate both.
+        accessToken?: string;
+        refreshToken?: string;
+        expiresIn?: number;
+        token?: string;
+        expert?: { id: string; walletAddress: string };
+      };
+      const payload =
+        "data" in verifyBody && verifyBody.data
+          ? verifyBody.data
+          : (verifyBody as {
+              accessToken?: string;
+              refreshToken?: string;
+              expiresIn?: number;
+              token?: string;
+              expert?: { id: string; walletAddress: string };
+            });
+      const accessToken = payload.accessToken ?? payload.token;
+      const refreshToken = payload.refreshToken;
+      const expiresIn = payload.expiresIn ?? 0;
+      const expertId = payload.expert?.id;
+      if (!accessToken || !refreshToken || !expertId) {
+        return {
+          ok: false as const,
+          error: `verify response missing accessToken/refreshToken/expert.id: ${JSON.stringify(payload)}`,
+        };
+      }
+
+      // Step 4: write the tokens to localStorage and notify AuthContext.
+      // AuthContext listens for "auth-token-refreshed" and re-hydrates from
+      // these exact keys (`AuthContext.tsx:46-55` per the plan).
+      localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userType", "expert");
+      localStorage.setItem("expertId", expertId);
+      localStorage.setItem("walletAddress", walletAddress.toLowerCase());
+      // Avoid the shadowing bug `attemptTokenRefresh` warns about.
+      localStorage.removeItem("companyAuthToken");
+      window.dispatchEvent(new Event("auth-token-refreshed"));
+
+      return {
+        ok: true as const,
+        accessToken,
+        refreshToken,
+        expertId,
+        expiresIn,
+      };
+    },
+    { backendUrl: BACKEND_URL, walletAddress: opts.walletAddress },
+  )) as
+    | {
+        ok: true;
+        accessToken: string;
+        refreshToken: string;
+        expertId: string;
+        expiresIn: number;
+      }
+    | { ok: false; error: string };
+
+  if (!result.ok) {
+    throw new Error(`ensureExpertSessionTokenViaUI: ${result.error}`);
+  }
+
+  return {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    expertId: result.expertId,
+    expiresIn: result.expiresIn,
+  };
 }

@@ -4,6 +4,8 @@ import {
   Award,
   Coins,
   Users,
+  MessageCircle,
+  AtSign,
   type LucideIcon,
 } from "lucide-react";
 import type { Notification } from "@/types";
@@ -24,6 +26,10 @@ export function getNotificationIcon(type: string): LucideIcon {
       return Award;
     case "guild_application":
       return Users;
+    case "guild_post_reply":
+      return MessageCircle;
+    case "guild_post_mention":
+      return AtSign;
     case "reward_earned":
       return Coins;
     default:

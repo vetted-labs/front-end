@@ -4,9 +4,11 @@ import { MessageSquare } from "lucide-react";
 import { formatTimeAgo, stripMarkdown } from "@/lib/utils";
 import { VoteButton } from "./VoteButton";
 import { BookmarkButton } from "./BookmarkButton";
+import { ReactionBar } from "./ReactionBar";
 import { AuthorBadge } from "./AuthorBadge";
 import { PostTagBadge } from "./PostTag";
 import { AcceptedAnswerBadge } from "./AcceptedAnswerBadge";
+import { useFeedContext } from "./FeedContext";
 import type { GuildPost } from "@/types";
 
 interface PostCardProps {
@@ -30,6 +32,7 @@ export function PostCard({
   isBookmarked,
   onBookmarkToggle,
 }: PostCardProps) {
+  const { guildId } = useFeedContext();
   const isSolved = !!post.acceptedReplyId && post.tag === "question";
   const isClosed = post.isClosed ?? false;
   const accentColor = tagAccentColors[post.tag] || "bg-primary";
@@ -37,6 +40,7 @@ export function PostCard({
   return (
     <div
       onClick={onClick}
+      data-testid={`post-card-${post.id}`}
       className="group flex overflow-hidden rounded-xl border border-border bg-card hover:border-primary/30 transition-all cursor-pointer"
     >
       {/* Colored left accent border */}
@@ -86,6 +90,12 @@ export function PostCard({
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{post.replyCount} {post.replyCount === 1 ? "reply" : "replies"}</span>
           </div>
+          <ReactionBar
+            targetId={post.id}
+            targetType="post"
+            guildId={guildId}
+            summary={post.reactions}
+          />
           <BookmarkButton
             targetId={post.id}
             isBookmarked={isBookmarked}

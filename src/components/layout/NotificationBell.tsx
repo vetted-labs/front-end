@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Bell, Check } from "lucide-react";
@@ -19,12 +20,37 @@ import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { cn } from "@/lib/utils";
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  /**
+   * Optional filter on notification types — e.g.
+   * `["guild_post_reply", "guild_post_mention"]`. When provided, the badge
+   * count is scoped to only these types, and clicking the bell navigates
+   * straight to `href` instead of opening the recent-notifications dropdown.
+   */
+  types?: string[];
+  /**
+   * Override the destination when the user clicks through. Defaults to
+   * `/expert/notifications`. If `types` is also set, this bell renders as a
+   * simple `next/link` (no dropdown).
+   */
+  href?: string;
+}
+
+const DEFAULT_HREF = "/expert/notifications";
+
+// Real-time toast on new guild-feed activity is intentionally deferred —
+// polling cadence is set by useNotificationCount; a WebSocket pass will
+// pick this up in a future iteration.
+export function NotificationBell({ types, href }: NotificationBellProps = {}) {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { expertStatus } = useExpertStatus();
   const isApprovedExpert = expertStatus === "approved";
-  const unreadCount = useNotificationCount(address, isConnected && isApprovedExpert);
+  const unreadCount = useNotificationCount({
+    walletAddress: address,
+    enabled: isConnected && isApprovedExpert,
+    types,
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,6 +116,25 @@ export function NotificationBell() {
 
   if (!hasMounted) return null;
   if (!isConnected || !address || !isApprovedExpert) return null;
+
+  // Filtered/scoped bell renders as a simple Link with a badge — no dropdown.
+  if (types && types.length > 0) {
+    const targetHref = href ?? DEFAULT_HREF;
+    return (
+      <Link
+        href={targetHref}
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </Link>
+    );
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -198,7 +243,7 @@ export function NotificationBell() {
             <button
               onClick={() => {
                 setIsOpen(false);
-                router.push("/expert/notifications");
+                router.push(href ?? DEFAULT_HREF);
               }}
               className="flex w-full items-center justify-center px-4 py-3 text-sm font-medium text-primary hover:bg-muted transition-colors"
             >
