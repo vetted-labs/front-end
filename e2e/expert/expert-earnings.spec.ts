@@ -48,8 +48,9 @@ test.describe("Expert earnings page", () => {
       await expect(page.getByText("Earnings").first()).toBeVisible({ timeout: 15000 });
       await expect(page.getByText("Total Earned").first()).toBeVisible();
       await expect(page.getByText("42.50").first()).toBeVisible();
-      await expect(page.getByText("Voting").first()).toBeVisible();
-      await expect(page.getByText("Endorsements").first()).toBeVisible();
+      // The four small KPI tiles (Pending/Claimed/Voting/Endorsements) were removed
+      // in VET-105; the Claimable Payouts card is now the prominent full-width card.
+      await expect(page.getByText("Claimable Payouts").first()).toBeVisible();
     });
   });
 
