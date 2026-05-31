@@ -10,18 +10,14 @@ import { useRewardClaiming } from "@/lib/hooks/useVettedContracts";
 import { GuildSelector } from "@/components/ui/guild-selector";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { Skeleton, SkeletonStatCard, SkeletonListItem } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonListItem } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import {
   TrendingUp,
-  Coins,
   Wallet,
-  CheckCircle2,
-  Calendar,
   Download,
-  Activity,
 } from "lucide-react";
 import type {
   EarningsEntry,
@@ -204,8 +200,6 @@ export default function EarningsPage() {
   const tierColors = REWARD_TIER_COLORS[tier.name] ?? REWARD_TIER_COLORS.Foundation;
 
   const totalVetd = summary?.totalVetd ?? 0;
-  const votingTotal = summary?.byType?.find((t) => t.type === "voting_reward")?.total ?? 0;
-  const endorsementTotal = summary?.byType?.find((t) => t.type === "endorsement")?.total ?? 0;
 
   const thisMonthEarnings = useMemo(() => {
     const now = new Date();
@@ -227,33 +221,25 @@ export default function EarningsPage() {
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        {/* ── Eyebrow + display heading ── */}
+        {/* ── Display heading ── */}
         <div>
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Workspace
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display">
             Earnings
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-            Track review income, pending payouts, and on-chain transactions across every guild you serve.
-          </p>
         </div>
 
         {/* ── Hero summary ── */}
         <DataSection
           isLoading={loading}
           skeleton={
-            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
+            <div className="space-y-4">
               <Skeleton className="h-44 rounded-xl" />
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
-              </div>
+              <Skeleton className="h-36 rounded-xl" />
             </div>
           }
         >
           <section
-            className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4"
+            className="space-y-4"
             {...dataTourTarget(TOUR_TARGETS.earningsSummary)}
           >
             {/* Total earned card */}
@@ -303,33 +289,15 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* KPI grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <KpiTile
-                icon={<Wallet className="w-4 h-4" />}
-                label="Pending"
-                value={`${Number(pendingAmount).toFixed(2)}`}
-                tone="warning"
-              />
-              <KpiTile
-                icon={<CheckCircle2 className="w-4 h-4" />}
-                label="Claimed"
-                value={`${Number(claimedAmount).toFixed(2)}`}
-                tone="positive"
-              />
-              <KpiTile
-                icon={<Activity className="w-4 h-4" />}
-                label="Voting"
-                value={votingTotal.toFixed(2)}
-                tone="primary"
-              />
-              <KpiTile
-                icon={<Coins className="w-4 h-4" />}
-                label="Endorsements"
-                value={endorsementTotal.toFixed(2)}
-                tone="info"
-              />
-            </div>
+            {/* Claimable payouts — full width, replaces the four KPI tiles */}
+            <ClaimRewardsCard
+              pendingAmount={pendingAmount}
+              claimedAmount={claimedAmount}
+              hasPending={hasPending}
+              isConfirming={isConfirming}
+              claimTxHash={claimTxHash}
+              onClaim={handleClaim}
+            />
           </section>
         </DataSection>
 
@@ -404,15 +372,6 @@ export default function EarningsPage() {
 
           {/* ── Right sticky rail ── */}
           <aside className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start space-y-4">
-            <ClaimRewardsCard
-              pendingAmount={pendingAmount}
-              claimedAmount={claimedAmount}
-              hasPending={hasPending}
-              isConfirming={isConfirming}
-              claimTxHash={claimTxHash}
-              onClaim={handleClaim}
-            />
-
             {/* By-guild breakdown */}
             {summary?.byGuild && summary.byGuild.length > 0 && (
               <SidebarCard title="By Guild">
@@ -441,28 +400,11 @@ export default function EarningsPage() {
                 </div>
               </SidebarCard>
             )}
-
-            <SidebarCard title="At a glance">
-              <KeyValue
-                icon={<Calendar className="w-3.5 h-3.5" />}
-                label="This month"
-                value={`${thisMonthEarnings.toFixed(2)} VETD`}
-              />
-              <KeyValue
-                icon={<Activity className="w-3.5 h-3.5" />}
-                label="Reviews"
-                value={`${profile?.reviewCount ?? 0}`}
-              />
-              <KeyValue
-                icon={<Coins className="w-3.5 h-3.5" />}
-                label="Endorsements"
-                value={`${profile?.endorsementCount ?? 0}`}
-              />
-            </SidebarCard>
-
-            <HowEarningsWork />
           </aside>
         </div>
+
+        {/* ── How earnings work (full width for a readable 2-up grid) ── */}
+        <HowEarningsWork />
       </div>
     </div>
   );
@@ -512,67 +454,6 @@ function SidebarCard({
         </h3>
       </div>
       <div className="p-4 space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function KeyValue({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="text-muted-foreground mt-0.5 flex-shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1 flex items-baseline justify-between gap-2">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-sm text-foreground font-medium leading-snug tabular-nums">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-interface KpiTileProps {
-  icon: React.ReactNode;
-  label: string;
-  value: number | string;
-  tone: "primary" | "positive" | "info" | "warning";
-}
-
-const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
-  primary: { bg: "bg-primary/10", text: "text-primary" },
-  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
-  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
-  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
-};
-
-function KpiTile({ icon, label, value, tone }: KpiTileProps) {
-  const t = KPI_TONE[tone];
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
-      <span
-        className={cn(
-          "w-9 h-9 rounded-lg grid place-items-center flex-shrink-0",
-          t.bg,
-          t.text,
-        )}
-      >
-        {icon}
-      </span>
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
-          {value}
-        </p>
-      </div>
     </div>
   );
 }

@@ -13,12 +13,12 @@ import { VettedIcon } from "@/components/ui/vetted-icon";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/20 p-4">
+    <div className="rounded-xl border border-border bg-muted/20 p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
         </div>
-        <h4 className="text-sm font-bold">{title}</h4>
+        <h4 className="text-sm font-bold leading-tight">{title}</h4>
       </div>
       {children}
     </div>
@@ -55,8 +55,8 @@ export function HowEarningsWork() {
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-border">
-          <div className="grid sm:grid-cols-2 gap-4 pt-4">
+        <div className="px-5 sm:px-6 pb-6 border-t border-border">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-5">
             <Section icon={({ className }: { className?: string }) => <VettedIcon name="voting" className={className ?? ""} />} title="Vetting Rewards">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Review candidates and submit your score</Bullet>
