@@ -1,7 +1,6 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import Link from "next/link";
 import { GuildFeedTab } from "./GuildFeedTab";
 import type { ExpertRole } from "@/types";
 
@@ -22,17 +21,7 @@ export function GuildInternalFeedTab({ guildId, membershipRole }: GuildInternalF
     <div className="space-y-4">
       <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
         <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span>
-          <strong className="text-foreground">Guild feed</strong> — same
-          conversations shown on the{" "}
-          <Link
-            href={`/guilds/${encodeURIComponent(guildId)}`}
-            className="text-primary hover:underline"
-          >
-            public guild page
-          </Link>
-          . A members-only feed is coming in v2.
-        </span>
+        <span>A members only feed is coming soon.</span>
       </div>
       <GuildFeedTab
         guildId={guildId}

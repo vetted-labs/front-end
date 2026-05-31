@@ -131,3 +131,66 @@ export const GUILD_WORKSPACE_TABS = [
   "leaderboard",
 ] as const;
 export type GuildWorkspaceTab = (typeof GUILD_WORKSPACE_TABS)[number];
+
+// --- Guild Activity tab (BE-C: GET /api/guilds/:guildId/activity) ---
+
+/**
+ * A candidate guild application awaiting review by the guild's experts.
+ * Surfaced in the "Pending reviews" section of the Guild Activity tab.
+ */
+export interface GuildActivityPendingReview {
+  candidateId: string;
+  candidateName: string;
+  expertiseLevel?: string | null;
+  /** ISO timestamp of when the candidate applied. */
+  appliedAt?: string | null;
+  /** Job title the candidate is associated with, when available. */
+  jobTitle?: string | null;
+  status?: string | null;
+}
+
+/** A candidate whose guild application was rejected. Shown under History. */
+export interface GuildActivityRejectedMember {
+  candidateId: string;
+  candidateName: string;
+  expertiseLevel?: string | null;
+  /** ISO timestamp of when the candidate applied. */
+  appliedAt?: string | null;
+  /** ISO timestamp of when the application was rejected. */
+  rejectedAt?: string | null;
+}
+
+/** A candidate who was accepted/joined the guild. Shown under History. */
+export interface GuildActivityJoinedMember {
+  candidateId: string;
+  candidateName: string;
+  expertiseLevel?: string | null;
+  /** ISO timestamp of when the candidate joined. */
+  joinedAt?: string | null;
+}
+
+/**
+ * A candidate job application against a job posted to this guild — e.g.
+ * "John applied to Software Engineer at {company}". Links to the job detail.
+ */
+export interface GuildActivityJobApplication {
+  applicationId: string;
+  status?: string | null;
+  /** ISO timestamp of when the candidate applied to the job. */
+  appliedAt?: string | null;
+  jobId: string;
+  jobTitle: string;
+  candidateId: string;
+  candidateName: string;
+  companyName?: string | null;
+}
+
+/** Full payload returned from `GET /api/guilds/:guildId/activity`. */
+export interface GuildActivityResponse {
+  pendingReviews: GuildActivityPendingReview[];
+  /** Candidates rejected from the guild. */
+  rejectedMembers: GuildActivityRejectedMember[];
+  /** Candidates who joined the guild. May be absent on older backends. */
+  joinedMembers?: GuildActivityJoinedMember[];
+  jobApplications: GuildActivityJobApplication[];
+}

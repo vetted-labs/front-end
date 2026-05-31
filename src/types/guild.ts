@@ -106,6 +106,10 @@ export interface ExpertGuildDetail extends ExpertGuild {
   earnings?: {
     totalPoints?: number;
     totalEndorsementEarnings?: number;
+    /** Endorsement earnings denominated in $VETD (dual-currency display). */
+    totalEndorsementVetd?: number;
+    /** Endorsement earnings converted to USD at reward-time exchange rate. */
+    totalEndorsementUsd?: number;
     recentEarnings?: Array<{ id: string; type: "proposal" | "endorsement"; amount: number; description: string; date: string }>;
   };
   statistics?: { vettedProposals?: number; totalVetdStaked?: number; totalEarningsFromEndorsements?: number };
@@ -148,6 +152,10 @@ export interface LeaderboardExpert {
 export interface GuildEarningsOverview {
   totalPoints: number;
   totalEndorsementEarnings: number;
+  /** Endorsement earnings denominated in $VETD (dual-currency display). */
+  totalEndorsementVetd: number;
+  /** Endorsement earnings converted to USD at reward-time exchange rate. */
+  totalEndorsementUsd: number;
   recentEarnings: Array<{
     id: string;
     type: "proposal" | "endorsement";

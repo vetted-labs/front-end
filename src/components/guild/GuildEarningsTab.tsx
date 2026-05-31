@@ -39,8 +39,18 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
             <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>
-          <p className="text-3xl font-bold text-foreground">
-            {formatVetd(earnings.totalEndorsementEarnings)}
+          {/* Dual-currency (BE-D): $VETD tokens stacked above the USD value. */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="text-3xl font-bold text-foreground">
+              {formatVetd(earnings.totalEndorsementVetd, "")}
+              <span className="ml-1.5 text-base font-semibold text-muted-foreground">
+                $VETD
+              </span>
+            </p>
+          </div>
+          <p className="mt-1 text-lg font-semibold text-muted-foreground">
+            {formatVetd(earnings.totalEndorsementUsd)}
+            <span className="ml-1.5 text-sm font-medium">USD</span>
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             From successful endorsements

@@ -41,14 +41,22 @@ export async function fetchAndNormalizeGuildData(
   const earningsRaw = data.earnings ?? {
     totalPoints: currentExpert?.reputation ?? 0,
     totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
+    totalEndorsementVetd: undefined as number | undefined,
+    totalEndorsementUsd: undefined as number | undefined,
     recentEarnings: [] as GuildEarningsOverview["recentEarnings"],
   };
   const earningsItems: GuildEarningsOverview["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
     ? earningsRaw.recentEarnings as GuildEarningsOverview["recentEarnings"]
     : [];
+  const totalEndorsementEarnings = earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0);
   const earnings: GuildEarningsOverview = {
     totalPoints: earningsRaw.totalPoints || earningsItems.filter(e => e.type === "proposal").reduce((s, e) => s + e.amount, 0),
-    totalEndorsementEarnings: earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0),
+    totalEndorsementEarnings,
+    // BE-D dual-currency endorsement earnings. The VETD figure falls back to
+    // the legacy total when the new field is absent; USD has no legacy
+    // equivalent so it stays 0 until the backend reports it.
+    totalEndorsementVetd: earningsRaw.totalEndorsementVetd ?? totalEndorsementEarnings,
+    totalEndorsementUsd: earningsRaw.totalEndorsementUsd ?? 0,
     recentEarnings: earningsItems,
   };
 

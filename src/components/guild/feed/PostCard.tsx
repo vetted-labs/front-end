@@ -1,14 +1,11 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import { formatTimeAgo, stripMarkdown } from "@/lib/utils";
+import { formatTimeAgo, stripMarkdown, truncateAddress } from "@/lib/utils";
 import { VoteButton } from "./VoteButton";
-import { BookmarkButton } from "./BookmarkButton";
-import { ReactionBar } from "./ReactionBar";
-import { AuthorBadge } from "./AuthorBadge";
+import { DownvoteButton } from "./DownvoteButton";
 import { PostTagBadge } from "./PostTag";
 import { AcceptedAnswerBadge } from "./AcceptedAnswerBadge";
-import { useFeedContext } from "./FeedContext";
 import type { GuildPost } from "@/types";
 
 interface PostCardProps {
@@ -26,16 +23,12 @@ const tagAccentColors: Record<string, string> = {
   job_related: "bg-positive",
 };
 
-export function PostCard({
-  post,
-  onClick,
-  isBookmarked,
-  onBookmarkToggle,
-}: PostCardProps) {
-  const { guildId } = useFeedContext();
+export function PostCard({ post, onClick }: PostCardProps) {
   const isSolved = !!post.acceptedReplyId && post.tag === "question";
   const isClosed = post.isClosed ?? false;
   const accentColor = tagAccentColors[post.tag] || "bg-primary";
+  const authorName =
+    post.author.fullName || truncateAddress(post.author.walletAddress || "") || "Member";
 
   return (
     <div
@@ -56,14 +49,11 @@ export function PostCard({
           </div>
         )}
 
-        {/* Author + Tag + Time */}
+        {/* Author + Tag (rank label, star + reputation removed per VET-101) */}
         <div className="flex items-center gap-2 flex-wrap mb-2">
-          <AuthorBadge author={post.author} showReputation />
+          <span className="text-sm font-medium text-foreground">{authorName}</span>
           <PostTagBadge tag={post.tag} />
           {isSolved && <AcceptedAnswerBadge variant="post-card" />}
-          <span className="text-xs text-muted-foreground">
-            {formatTimeAgo(post.createdAt)}
-          </span>
         </div>
 
         {/* Title */}
@@ -77,8 +67,11 @@ export function PostCard({
           {stripMarkdown(post.body)}
         </p>
 
-        {/* Footer: inline upvote + replies + bookmark */}
-        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+        {/* Footer: Upvote + Downvote + Comment, with publish time at the end */}
+        <div
+          className="flex items-center gap-3"
+          onClick={(e) => e.stopPropagation()}
+        >
           <VoteButton
             targetId={post.id}
             targetType="post"
@@ -86,21 +79,14 @@ export function PostCard({
             hasVoted={post.hasVoted}
             scoreHidden={post.scoreHidden}
           />
+          <DownvoteButton />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{post.replyCount} {post.replyCount === 1 ? "reply" : "replies"}</span>
           </div>
-          <ReactionBar
-            targetId={post.id}
-            targetType="post"
-            guildId={guildId}
-            summary={post.reactions}
-          />
-          <BookmarkButton
-            targetId={post.id}
-            isBookmarked={isBookmarked}
-            onBookmarkToggle={onBookmarkToggle}
-          />
+          <span className="ml-auto text-xs text-muted-foreground">
+            {formatTimeAgo(post.createdAt)}
+          </span>
         </div>
       </div>
     </div>

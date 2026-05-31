@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { GuildQueueRow } from "./GuildQueueRow";
-import type { ExpertSubmittedReview, GuildApplication, GuildQueueItem } from "@/types";
+import type {
+  ExpertSubmittedReview,
+  GuildApplication,
+  GuildQueueItem,
+  GuildWorkspaceStakePosition,
+} from "@/types";
 
 interface GuildMyReviewsTabProps {
   guildId: string;
@@ -12,16 +17,22 @@ interface GuildMyReviewsTabProps {
   applications?: GuildApplication[];
   /** Reviews the viewer has already committed — drives "Past" / "All" filters. */
   submittedReviews?: ExpertSubmittedReview[];
+  /**
+   * Stake position (Total staked / In review / Available / At risk) — moved
+   * here from the old Queue side panel per VET-101. Provided by the workspace
+   * shell.
+   */
+  stakePosition?: GuildWorkspaceStakePosition;
   /** True while the parent is resolving expertId or fetching review data. */
   isLoading?: boolean;
 }
 
-type FilterId = "active" | "awaiting" | "open" | "past" | "slashed" | "all";
+// "Reveal open" filter removed per VET-101.
+type FilterId = "active" | "awaiting" | "past" | "slashed" | "all";
 
 const FILTER_OPTIONS: Array<{ id: FilterId; label: string }> = [
   { id: "active", label: "Active" },
   { id: "awaiting", label: "Awaiting reveal" },
-  { id: "open", label: "Reveal open" },
   { id: "past", label: "Past 30 days" },
   { id: "slashed", label: "Slashed" },
   { id: "all", label: "All-time" },
@@ -184,9 +195,6 @@ function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
   if (filter === "awaiting") {
     return hasCommitReveal && app.voting_phase === "commit" && !app.finalized;
   }
-  if (filter === "open") {
-    return hasCommitReveal && app.voting_phase === "reveal" && !app.finalized;
-  }
   if (filter === "past") {
     if (!app.finalized || !app.finalized_at) return false;
     const finalizedMs = new Date(app.finalized_at).getTime();
@@ -213,10 +221,6 @@ function matchesSubmittedFilter(
     // shot reviews never sit in this bucket — they go straight from
     // submitted → finalized.
     return !isSingleShot && !finalized && phase !== "reveal";
-  }
-  if (filter === "open") {
-    // Reveal phase is live and the user still has work to do.
-    return !isSingleShot && !finalized && phase === "reveal";
   }
   if (filter === "past") {
     if (!finalized) return false;
@@ -246,6 +250,7 @@ export function GuildMyReviewsTab({
   expertId,
   applications,
   submittedReviews,
+  stakePosition,
   isLoading = false,
 }: GuildMyReviewsTabProps) {
   const [filter, setFilter] = useState<FilterId>("active");
@@ -299,7 +304,6 @@ export function GuildMyReviewsTab({
     return {
       active: countFilter("active"),
       awaiting: countFilter("awaiting"),
-      open: countFilter("open"),
       past: countFilter("past"),
       slashed: countFilter("slashed"),
       all: dedupedItems.length + submitted.length,
@@ -318,13 +322,15 @@ export function GuildMyReviewsTab({
 
   return (
     <div>
+      {/* Stake position — relocated from the old Queue side panel (VET-101). */}
+      <MyReviewsStakePanel data={stakePosition} />
+
       <div className="mb-5 flex flex-wrap gap-2">
         {FILTER_OPTIONS.map((opt) => {
           const isActive = filter === opt.id;
           const countMap: Partial<Record<FilterId, number>> = {
             active: counts.active,
             awaiting: counts.awaiting,
-            open: counts.open,
             past: counts.past,
             slashed: counts.slashed,
             all: counts.all,
@@ -378,6 +384,75 @@ export function GuildMyReviewsTab({
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * "Your stake position" card — moved here from the old Queue tab side panel
+ * (VET-101). Shows Total staked / In review / Available / At risk for the
+ * current guild.
+ */
+function MyReviewsStakePanel({
+  data,
+}: {
+  data?: GuildWorkspaceStakePosition;
+}) {
+  const total = data?.totalStakedVetd ?? 0;
+  const inReview = data?.inReviewVetd ?? 0;
+  const available = data?.availableVetd ?? 0;
+  const atRisk = data?.atRiskVetd ?? 0;
+  const lockedPercent = data?.inReviewPercent ?? 0;
+
+  return (
+    <div className="mb-5 rounded-xl border border-border bg-card p-4">
+      <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        Your stake position
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        <StakeCell label="Total staked" value={total} caption="VETD" />
+        <StakeCell
+          label="In review"
+          value={inReview}
+          caption={`${Math.round(lockedPercent)}% locked`}
+          tone="warning"
+        />
+        <StakeCell
+          label="Available"
+          value={available}
+          caption="VETD"
+          tone="positive"
+        />
+        <StakeCell label="At risk" value={atRisk} caption="slashable" />
+      </div>
+    </div>
+  );
+}
+
+function StakeCell({
+  label,
+  value,
+  caption,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  caption: string;
+  tone?: "default" | "warning" | "positive";
+}) {
+  const valueClass =
+    tone === "warning"
+      ? "text-warning"
+      : tone === "positive"
+        ? "text-positive"
+        : "text-foreground";
+  return (
+    <div className="rounded-lg bg-muted px-3 py-2.5">
+      <div className="mb-1 text-[11px] text-muted-foreground">{label}</div>
+      <div className={`font-display text-lg ${valueClass}`}>
+        {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </div>
+      <div className="text-[10px] text-muted-foreground">{caption}</div>
     </div>
   );
 }

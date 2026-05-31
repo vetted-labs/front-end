@@ -56,10 +56,6 @@ export function GuildGovernanceTab({ guildId: _guildId, proposals }: GuildGovern
   const open = list.filter((p) => p.status === "open");
   const past = list.filter((p) => p.status !== "open");
   const unvotedCount = open.filter((p) => !p.hasVoted).length;
-  const matchedMajority = past.filter((p) => p.myVote && p.status === "passed" && p.myVote === "for").length
-    + past.filter((p) => p.myVote && p.status === "rejected" && p.myVote === "against").length;
-  const votesCast = past.filter((p) => p.hasVoted).length;
-  const participation = past.length > 0 ? Math.round((votesCast / past.length) * 100) : 0;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -94,46 +90,22 @@ export function GuildGovernanceTab({ guildId: _guildId, proposals }: GuildGovern
       </div>
 
       <aside className="flex flex-col gap-3.5">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            Your governance record
-          </div>
-          <Stat label="Votes cast" value={`${votesCast} of ${past.length || 0}`} />
-          <Stat
-            label="Participation rate"
-            value={`${participation}%`}
-            tone={participation >= 70 ? "positive" : "warning"}
-          />
-          <Stat label="Matched majority" value={`${matchedMajority} of ${votesCast}`} />
-          <Stat label="Proposals authored" value="—" last />
-        </div>
-
-        {participation < 70 && past.length > 0 && (
-          <div className="rounded-xl border border-warning/30 bg-warning/[0.05] p-4">
-            <div className="mb-1 text-sm font-semibold text-foreground">
-              Participation below 70%
-            </div>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Members below 70% participation lose proposal authoring rights.
-              Cast a vote on the open proposals above.
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-xl border border-border bg-card p-4">
+        {/* "Your governance record" block removed per VET-101. Create a
+            Proposal is the prominent primary CTA. */}
+        <div className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/[0.10] to-card p-5">
           <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
             Propose change
           </div>
-          <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+          <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
             Senior+ members can author proposals. Requires 5 co-sponsors before
             going to vote.
           </p>
           <Link
             href="/expert/governance/create"
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
-            <ListChecks className="h-3.5 w-3.5" />
-            New proposal
+            <ListChecks className="h-4 w-4" />
+            Create a Proposal
           </Link>
         </div>
       </aside>
@@ -241,35 +213,6 @@ function Empty({ text }: { text: string }) {
   return (
     <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
       {text}
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone = "default",
-  last,
-}: {
-  label: string;
-  value: string;
-  tone?: "default" | "positive" | "warning";
-  last?: boolean;
-}) {
-  const valueClass =
-    tone === "positive"
-      ? "text-positive"
-      : tone === "warning"
-        ? "text-warning"
-        : "text-foreground";
-  return (
-    <div
-      className={`flex items-center justify-between py-2 ${
-        last ? "" : "border-b border-border"
-      }`}
-    >
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={`font-display text-base ${valueClass}`}>{value}</span>
     </div>
   );
 }

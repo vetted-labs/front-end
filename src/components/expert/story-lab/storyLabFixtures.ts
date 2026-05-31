@@ -127,6 +127,8 @@ export function buildStoryLabGuildDetail(): GuildDetailData {
     earnings: {
       totalPoints: STORY_LAB_EXPERT_GUILD.reputation,
       totalEndorsementEarnings: STORY_LAB_EXPERT_GUILD.totalEarnings,
+      totalEndorsementVetd: STORY_LAB_EXPERT_GUILD.totalEarnings,
+      totalEndorsementUsd: 0,
       recentEarnings: [],
     },
     recentActivity: [

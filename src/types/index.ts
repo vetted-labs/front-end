@@ -30,6 +30,11 @@ export type {
   GuildWorkspaceQueueResponse,
   GuildWorkspaceProposal,
   GuildWorkspaceTab,
+  GuildActivityResponse,
+  GuildActivityPendingReview,
+  GuildActivityRejectedMember,
+  GuildActivityJoinedMember,
+  GuildActivityJobApplication,
 } from "./guildWorkspace";
 export { GUILD_WORKSPACE_TABS } from "./guildWorkspace";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, GuildApplicationInfo, FieldErrors, GeneralAnswers, ExpertiseLevel, ExpertSubmittedReview } from "./expert";

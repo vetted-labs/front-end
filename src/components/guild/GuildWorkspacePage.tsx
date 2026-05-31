@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Settings, ExternalLink, Star, BadgeCheck } from "lucide-react";
+import { Settings, ExternalLink, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Alert } from "@/components/ui/alert";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -19,11 +19,9 @@ import {
   extractApiError,
   governanceApi,
   guildApplicationsApi,
-  guildFeedApi,
   guildsApi,
 } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { formatTimeAgo } from "@/lib/utils";
 import { getGuildIdentity } from "@/lib/guildIdentity";
 import { getGuildIconName } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
@@ -32,7 +30,6 @@ import type {
   ExpertRole,
   GuildApplication,
   GuildDetailData,
-  GuildPost,
   GuildStakeInfo,
   GuildWorkspaceKpis,
   GuildWorkspacePeriodStats,
@@ -44,7 +41,7 @@ import type {
 } from "@/types";
 import { GUILD_WORKSPACE_TABS } from "@/types";
 import { GuildKpiTile } from "./GuildKpiTile";
-import { GuildQueueTab } from "./GuildQueueTab";
+import { GuildActivityTab } from "./GuildActivityTab";
 import { GuildMyReviewsTab } from "./GuildMyReviewsTab";
 import { GuildGovernanceTab } from "./GuildGovernanceTab";
 import { GuildInternalFeedTab } from "./GuildInternalFeedTab";
@@ -60,14 +57,6 @@ interface KpiBundle {
   kpis: GuildWorkspaceKpis;
   stakePosition: GuildWorkspaceStakePosition;
   periodStats: GuildWorkspacePeriodStats;
-}
-
-interface ChatterPreview {
-  id: string;
-  author: string;
-  role?: string;
-  timeAgo: string;
-  body: string;
 }
 
 /**
@@ -216,17 +205,6 @@ function buildKpiBundle(args: {
   return { kpis, stakePosition, periodStats };
 }
 
-/** Convert a raw guild feed post into the sidebar chatter card preview shape. */
-function toChatterPreview(post: GuildPost): ChatterPreview {
-  return {
-    id: post.id,
-    author: post.author?.fullName || post.author?.walletAddress?.slice(0, 8) || "Member",
-    role: post.author?.expertRole || post.author?.guildRole,
-    timeAgo: post.createdAt ? formatTimeAgo(post.createdAt) : "",
-    body: post.body || post.title || "",
-  };
-}
-
 const TABS: Array<{
   id: GuildWorkspaceTab;
   label: string;
@@ -234,7 +212,7 @@ const TABS: Array<{
   alert?: boolean;
 }> = [
   { id: "feed", label: "Feed", countKey: "feed" },
-  { id: "queue", label: "Queue", countKey: "queue", alert: true },
+  { id: "queue", label: "Guild Activity", countKey: "queue", alert: true },
   { id: "reviews", label: "My Reviews", countKey: "active" },
   { id: "governance", label: "Governance", countKey: "governance", alert: true },
   { id: "members", label: "Members" },
@@ -432,21 +410,6 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     },
   );
 
-  // Latest 3 posts for the sidebar chatter card. Mirrors the public-feed
-  // visibility the workspace Feed tab now uses (members-only/internal feed
-  // is deferred to v2), so the preview and the tab show the same posts.
-  const { data: internalChatterPosts } = useFetch(
-    () => guildFeedApi.getPosts(guildId, { visibility: "public", limit: 3, sort: "new" }),
-    {
-      skip: !shouldLoadWorkspaceData,
-      onError: () => {},
-    },
-  );
-  const internalChatter: ChatterPreview[] = useMemo(
-    () => (internalChatterPosts?.data ?? []).slice(0, 3).map(toChatterPreview),
-    [internalChatterPosts],
-  );
-
   // Guild-scoped leaderboard — feeds the Leaderboard tab. Matches what the
   // old GuildDetailView pulled (raw entries + transform helper).
   const { data: leaderboardRaw } = useFetch(
@@ -491,8 +454,8 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="h-24 animate-pulse rounded-xl bg-muted" />
-        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-5">
-          {[0, 1, 2, 3, 4].map((i) => (
+        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
             <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
@@ -512,8 +475,8 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="h-24 animate-pulse rounded-xl bg-muted" />
-        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-5">
-          {[0, 1, 2, 3, 4].map((i) => (
+        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
             <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
@@ -533,6 +496,15 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const guildIconName = getGuildIconName(guild.name);
   const role = (guild.expertRole || "recruit").toLowerCase();
   const roleLabel = ROLE_LABEL[role] ?? guild.expertRole;
+
+  // Staked status for this guild — gates the "Stake to Review" CTA on the
+  // Guild Activity tab. Derived from the on-chain stake position already
+  // loaded for the KPI strip: a positive staked balance (or an explicit
+  // meets-minimum flag) means the viewer can review without staking again.
+  const isStaked =
+    (guildStake?.meetsMinimum ?? false) ||
+    parseFloat(guildStake?.stakedAmount ?? "0") > 0 ||
+    (kpiBundle?.stakePosition?.totalStakedVetd ?? 0) > 0;
 
   const kpis = kpiBundle?.kpis;
   const queueCount = kpis?.queueCount ?? 0;
@@ -556,7 +528,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           items={[
             { label: "Dashboard", href: "/expert/dashboard" },
             { label: "My Guilds", href: "/expert/guilds" },
-            { label: `${identity.shortName} · Workspace` },
+            { label: identity.shortName },
           ]}
         />
       </div>
@@ -584,19 +556,8 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-2.5">
               <h1 className="font-display text-xl font-bold leading-none text-foreground sm:text-[22px]">
-                {identity.displayName} · Workspace
+                {identity.displayName}
               </h1>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em]",
-                  identity.classes.bg,
-                  identity.classes.border,
-                  identity.classes.text,
-                )}
-              >
-                <BadgeCheck className="h-3 w-3" />
-                Member
-              </span>
               <span className="inline-flex items-center gap-1 rounded border border-warning/25 bg-warning/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-warning">
                 <Star className="h-3 w-3" />
                 {roleLabel}
@@ -644,10 +605,10 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           </div>
         </section>
 
-        {/* KPI strip */}
-        <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+        {/* KPI strip — Active commits + Pending payouts removed (VET-101). */}
+        <div className="mb-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           <GuildKpiTile
-            label="Your queue"
+            label="Pending reviews"
             value={queueCount}
             sub={
               queueUrgent > 0
@@ -659,35 +620,13 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
             tone={queueUrgent > 0 ? "urgent" : "default"}
           />
           <GuildKpiTile
-            label="Active commits"
-            value={kpis?.activeCommits ?? 0}
-            sub={(() => {
-              if (!kpis) return "—";
-              const parts: string[] = [];
-              if ((kpis.awaitingReveal ?? 0) > 0) parts.push(`${kpis.awaitingReveal} awaiting reveal`);
-              if ((kpis.revealOpen ?? 0) > 0) parts.push(`${kpis.revealOpen} reveal open`);
-              if (parts.length === 0) return (kpis.activeCommits ?? 0) > 0 ? "in flight" : "all clear";
-              return parts.join(" · ");
-            })()}
-          />
-          <GuildKpiTile
-            label="Stake locked"
+            label="Amount Staked"
             value={(kpis?.stakeLockedVetd ?? 0).toLocaleString()}
             sub={
               kpis?.stakeLockedReviewCount != null
                 ? `VETD across ${kpis.stakeLockedReviewCount} reviews`
                 : "VETD"
             }
-          />
-          <GuildKpiTile
-            label="Pending payouts"
-            value={`$${kpis?.pendingPayoutsUsd ?? 0}`}
-            sub={
-              (kpis?.pendingPayoutReviewCount ?? 0) > 0
-                ? `${kpis?.pendingPayoutReviewCount} reviews · paid on consensus`
-                : "paid on consensus"
-            }
-            subTone="positive"
           />
           <GuildKpiTile
             label="Reputation"
@@ -748,13 +687,10 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
         {/* Tab panels */}
         <div role="tabpanel">
           {activeTab === "queue" && (
-            <GuildQueueTab
+            <GuildActivityTab
               guildId={guildId}
               walletAddress={address}
-              queueData={queueData ?? undefined}
-              stakePosition={kpiBundle?.stakePosition}
-              periodStats={kpiBundle?.periodStats}
-              internalChatter={internalChatter}
+              isStaked={isStaked}
             />
           )}
           {activeTab === "reviews" && (
@@ -763,6 +699,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
               expertId={resolvedExpertId}
               applications={assignedForGuild}
               submittedReviews={submittedReviews ?? []}
+              stakePosition={kpiBundle?.stakePosition}
               isLoading={
                 assignedLoading || submittedLoading || (!resolvedExpertId && !!address)
               }

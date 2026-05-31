@@ -1145,6 +1145,118 @@ export const guildsApi = {
     apiRequest<import("@/types").ExpertActivity[]>(`/api/guilds/${encodeURIComponent(guildId)}/members/${encodeURIComponent(memberId)}/activity`),
 
   /**
+   * Guild Activity aggregate for the private workspace (BE-C).
+   *
+   * Returns three arrays — candidate applications awaiting review, members
+   * who joined or were rejected (History), and job applications against jobs
+   * posted to this guild. Expert-member auth: pass the viewer's wallet like
+   * the other guild expert calls. The backend mixes snake_case and camelCase
+   * field names across the arrays, so we normalize to the typed FE shape here
+   * (mirroring `getMemberQueue`) — callers empty-state when any array is empty.
+   */
+  getGuildActivity: async (
+    guildId: string,
+    wallet?: string,
+  ): Promise<import("@/types").GuildActivityResponse> => {
+    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+    interface BackendPendingReview {
+      candidateId?: string;
+      candidate_id?: string;
+      candidateName?: string;
+      candidate_name?: string;
+      expertiseLevel?: string | null;
+      expertise_level?: string | null;
+      submittedAt?: string | null;
+      applied_at?: string | null;
+      jobTitle?: string | null;
+      job_title?: string | null;
+      status?: string | null;
+    }
+    interface BackendRejectedMember {
+      candidateId?: string;
+      candidate_id?: string;
+      candidateName?: string;
+      candidate_name?: string;
+      expertiseLevel?: string | null;
+      expertise_level?: string | null;
+      applied_at?: string | null;
+      appliedAt?: string | null;
+      rejected_at?: string | null;
+      rejectedAt?: string | null;
+    }
+    interface BackendJoinedMember {
+      candidateId?: string;
+      candidate_id?: string;
+      candidateName?: string;
+      candidate_name?: string;
+      expertiseLevel?: string | null;
+      expertise_level?: string | null;
+      joined_at?: string | null;
+      joinedAt?: string | null;
+    }
+    interface BackendJobApplication {
+      application_id?: string;
+      applicationId?: string;
+      status?: string | null;
+      applied_at?: string | null;
+      appliedAt?: string | null;
+      job_id?: string;
+      jobId?: string;
+      job_title?: string;
+      jobTitle?: string;
+      candidate_id?: string;
+      candidateId?: string;
+      candidate_name?: string;
+      candidateName?: string;
+      company_name?: string | null;
+      companyName?: string | null;
+    }
+    interface BackendActivityResponse {
+      pendingReviews?: BackendPendingReview[];
+      rejectedMembers?: BackendRejectedMember[];
+      joinedMembers?: BackendJoinedMember[];
+      jobApplications?: BackendJobApplication[];
+    }
+    const raw = await apiRequest<BackendActivityResponse>(
+      `/api/guilds/${encodeURIComponent(guildId)}/activity${query}`,
+      { requiresAuth: false },
+    );
+    return {
+      pendingReviews: (raw.pendingReviews ?? []).map((p) => ({
+        candidateId: p.candidateId ?? p.candidate_id ?? "",
+        candidateName: p.candidateName ?? p.candidate_name ?? "Candidate",
+        expertiseLevel: p.expertiseLevel ?? p.expertise_level ?? null,
+        appliedAt: p.submittedAt ?? p.applied_at ?? null,
+        jobTitle: p.jobTitle ?? p.job_title ?? null,
+        status: p.status ?? null,
+      })),
+      rejectedMembers: (raw.rejectedMembers ?? []).map((r) => ({
+        candidateId: r.candidateId ?? r.candidate_id ?? "",
+        candidateName: r.candidateName ?? r.candidate_name ?? "Candidate",
+        expertiseLevel: r.expertiseLevel ?? r.expertise_level ?? null,
+        appliedAt: r.appliedAt ?? r.applied_at ?? null,
+        rejectedAt: r.rejectedAt ?? r.rejected_at ?? null,
+      })),
+      joinedMembers: (raw.joinedMembers ?? []).map((j) => ({
+        candidateId: j.candidateId ?? j.candidate_id ?? "",
+        candidateName: j.candidateName ?? j.candidate_name ?? "Candidate",
+        expertiseLevel: j.expertiseLevel ?? j.expertise_level ?? null,
+        joinedAt: j.joinedAt ?? j.joined_at ?? null,
+      })),
+      jobApplications: (raw.jobApplications ?? []).map((a) => ({
+        applicationId: a.applicationId ?? a.application_id ?? "",
+        status: a.status ?? null,
+        appliedAt: a.appliedAt ?? a.applied_at ?? null,
+        jobId: a.jobId ?? a.job_id ?? "",
+        jobTitle: a.jobTitle ?? a.job_title ?? "a job",
+        candidateId: a.candidateId ?? a.candidate_id ?? "",
+        candidateName: a.candidateName ?? a.candidate_name ?? "Candidate",
+        companyName: a.companyName ?? a.company_name ?? null,
+      })),
+    };
+  },
+
+  /**
    * Get the unified member queue for the private workspace surface.
    *
    * Returns triaged work items (due_soon / waiting / unclaimed) along with
