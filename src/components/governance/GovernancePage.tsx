@@ -142,16 +142,9 @@ export default function GovernancePage() {
           {...dataTourTarget(TOUR_TARGETS.governanceHero)}
         >
           <div>
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Workspace
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display">
               Governance
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5 max-w-lg">
-              Propose protocol changes, vote on the future of Vetted, and hold the network accountable.
-              Every vote is permanent and on-chain.
-            </p>
           </div>
           <button
             onClick={() => router.push("/expert/governance/create")}

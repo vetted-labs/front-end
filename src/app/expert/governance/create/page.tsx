@@ -1,10 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { CreateProposalForm } from "@/components/governance/CreateProposalForm";
+import { GOVERNANCE_ENABLED } from "@/config/constants";
 
 export default function CreateGovernanceProposalPage() {
+  // Governance hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED.
+  if (!GOVERNANCE_ENABLED) redirect("/expert/dashboard");
   const router = useRouter();
 
   return (

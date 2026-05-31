@@ -2,6 +2,7 @@ import type {
   ExpertOnboardingChecklistEvent,
   ExpertOnboardingChecklistEvents,
 } from "@/lib/expert-onboarding-tour";
+import { GOVERNANCE_ENABLED } from "@/config/constants";
 
 export interface ExpertSetupGuideStep {
   id: string;
@@ -11,7 +12,7 @@ export interface ExpertSetupGuideStep {
   body: string;
 }
 
-export const EXPERT_SETUP_GUIDE_STEPS: ExpertSetupGuideStep[] = [
+export const EXPERT_SETUP_GUIDE_STEPS: ExpertSetupGuideStep[] = ([
   {
     id: "applications",
     event: "applicationsVisited",
@@ -68,7 +69,8 @@ export const EXPERT_SETUP_GUIDE_STEPS: ExpertSetupGuideStep[] = [
     title: "Notifications",
     body: "Notifications collect deadlines, assigned work, finalized outcomes, and other prompts that need attention.",
   },
-];
+  // Governance step hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED.
+] satisfies ExpertSetupGuideStep[]).filter((step) => step.id !== "governance" || GOVERNANCE_ENABLED);
 
 export type DashboardTourCompletionAction =
   | "open-practice-review"

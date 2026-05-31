@@ -191,11 +191,9 @@ test.describe("Expert sidebar navigation flow", () => {
       await expect(page.getByRole("link", { name: "My Guilds" }).first()).toBeVisible();
     });
 
-    await test.step("sidebar Governance and Rewards group links are visible", async () => {
-      await expect(page.getByRole("link", { name: "Proposals" }).first()).toBeVisible();
+    await test.step("sidebar Rewards group links are visible", async () => {
       await expect(page.getByRole("link", { name: "Earnings" }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: "Reputation" }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: "Withdrawals" }).first()).toBeVisible();
     });
   });
 

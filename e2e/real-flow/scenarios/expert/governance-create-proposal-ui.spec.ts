@@ -53,6 +53,11 @@ const PROPOSAL_DESCRIPTION =
 //                   125s → round up to 180s for CI headroom
 test.setTimeout(180_000);
 
+// Governance hidden pending rework (VET-103) — re-enable with GOVERNANCE_ENABLED.
+test.beforeEach(() => {
+  test.skip(true, "Governance hidden pending rework (VET-103)");
+});
+
 test("expert creates a governance proposal via the UI form", async ({
   page,
   experts,

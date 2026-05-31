@@ -5,7 +5,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { VettedIconName } from "@/components/ui/vetted-icon";
-import { GUILD_RANKS_ENABLED } from "@/config/constants";
+import { GUILD_RANKS_ENABLED, GOVERNANCE_ENABLED } from "@/config/constants";
 
 export type SidebarIcon = LucideIcon | VettedIconName;
 
@@ -56,12 +56,15 @@ export const expertSidebarConfig: SidebarConfig = {
           : []),
       ],
     },
-    {
-      label: "Governance",
-      items: [
-        { label: "Proposals", href: "/expert/governance", icon: "voting" },
-      ],
-    },
+    // Governance hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED.
+    ...(GOVERNANCE_ENABLED
+      ? [{
+          label: "Governance",
+          items: [
+            { label: "Proposals", href: "/expert/governance", icon: "voting" } satisfies NavItem,
+          ],
+        } satisfies NavGroup]
+      : []),
     {
       label: "Rewards",
       items: [

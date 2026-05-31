@@ -5,6 +5,7 @@ import { CheckCircle2, X, ListChecks } from "lucide-react";
 import { GuildQueueRow } from "./GuildQueueRow";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import type { GuildQueueItem, GuildWorkspaceProposal } from "@/types";
+import { GOVERNANCE_ENABLED } from "@/config/constants";
 
 interface GuildGovernanceTabProps {
   guildId: string;
@@ -43,6 +44,14 @@ function proposalToQueueItem(p: GuildWorkspaceProposal): GuildQueueItem {
  */
 export function GuildGovernanceTab({ guildId: _guildId, proposals }: GuildGovernanceTabProps) {
   void _guildId;
+  // Governance hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED.
+  if (!GOVERNANCE_ENABLED) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        Governance is being reworked and will be available again soon.
+      </div>
+    );
+  }
   const list = proposals ?? [];
   const open = list.filter((p) => p.status === "open");
   const past = list.filter((p) => p.status !== "open");

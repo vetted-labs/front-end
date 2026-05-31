@@ -21,6 +21,7 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useExpertOnboardingTour } from "@/lib/hooks/useExpertOnboardingTour";
 import { isApprovedExpertForOnboarding } from "@/lib/expert-onboarding-route-markers";
+import { GOVERNANCE_ENABLED } from "@/config/constants";
 import {
   consumeStoryLabCompletionReady,
   isExpertStoryLabCompletionSearchParams,
@@ -671,8 +672,9 @@ export function EnhancedExpertDashboard() {
               <RecentActivity activities={profile?.recentActivity ?? []} />
             </div>
 
-            {/* Governance summary spans full width of left column */}
-            {!loading && (
+            {/* Governance summary spans full width of left column.
+                Hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED. */}
+            {!loading && GOVERNANCE_ENABLED && (
               <div {...dataTourTarget(TOUR_TARGETS.dashboardGovernanceCard)}>
                 <GovernanceSummaryCard />
               </div>

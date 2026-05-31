@@ -29,6 +29,11 @@ import { testApi } from "../../helpers/backend";
 
 test.setTimeout(180_000);
 
+// Governance hidden pending rework (VET-103) — re-enable with GOVERNANCE_ENABLED.
+test.beforeEach(() => {
+  test.skip(true, "Governance hidden pending rework (VET-103)");
+});
+
 test("expert votes For on a proposal via the UI", async ({
   page,
   cleanState: _cleanState,
