@@ -12,7 +12,14 @@ export default defineConfig({
       "src/**/*.test.{ts,tsx}",
       "e2e/real-flow/helpers/**/*.test.{ts,tsx}",
     ],
-    exclude: ["e2e/real-flow/helpers/__tests__/backend.test.ts"],
+    // These real-flow helper tests hit a live chain/backend (Anvil RPC, HTTP) and
+    // belong to the E2E Real Flow workflow, not the unit lane — exclude them here
+    // so `npm test` is hermetic (they fail without infra in CI).
+    exclude: [
+      "e2e/real-flow/helpers/__tests__/backend.test.ts",
+      "e2e/real-flow/helpers/__tests__/chain.test.ts",
+      "e2e/real-flow/helpers/__tests__/contracts.test.ts",
+    ],
   },
   resolve: {
     alias: {
