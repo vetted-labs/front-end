@@ -92,18 +92,6 @@ async function setupDashboardMocks(page: import("@playwright/test").Page) {
       }),
     });
   });
-
-  // Leaderboard
-  await page.route("**/api/experts/leaderboard**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        success: true,
-        data: { experts: [], stats: { totalExperts: 0, avgReviews: 0, topEarnings: 0, totalEarnings: 0 } },
-      }),
-    });
-  });
 }
 
 /**
@@ -208,7 +196,6 @@ test.describe("Expert sidebar navigation flow", () => {
       await expect(page.getByRole("link", { name: "Proposals" }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: "Earnings" }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: "Reputation" }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: "Leaderboard" }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: "Withdrawals" }).first()).toBeVisible();
     });
   });

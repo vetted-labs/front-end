@@ -63,7 +63,6 @@ export const expertSidebarConfig: SidebarConfig = {
       items: [
         { label: "Earnings", href: "/expert/earnings", icon: "earnings" },
         { label: "Reputation", href: "/expert/reputation", icon: "reputation" },
-        { label: "Leaderboard", href: "/expert/leaderboard", icon: "leaderboard" },
         { label: "Withdrawals", href: "/expert/withdrawals", icon: "wallet" },
       ],
     },

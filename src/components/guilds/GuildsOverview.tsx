@@ -12,7 +12,6 @@ import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Alert } from "../ui/alert";
 import { Modal } from "../ui/modal";
 import { GuildCard } from "@/components/guild/card";
-import LeaderboardPage from "../leaderboard/LeaderboardPage";
 import { getGuildDetailedInfo, getGuildIconName } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
@@ -20,7 +19,7 @@ import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { withStoryLabGuilds } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ExpertProfile, Guild } from "@/types";
 
-type TabType = "guilds" | "leaderboard";
+type TabType = "guilds";
 
 export function GuildsOverview() {
   const router = useRouter();
@@ -140,16 +139,6 @@ export function GuildsOverview() {
                 {profileGuilds.length}
               </span>
             )}
-          </button>
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-5 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "leaderboard"
-                ? "text-primary font-bold border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground"
-            }`}
-          >
-            Leaderboard
           </button>
         </div>
       </div>
@@ -286,11 +275,6 @@ export function GuildsOverview() {
             )}
           </DataSection>
         </div>
-      )}
-
-      {/* Leaderboard Tab */}
-      {activeTab === "leaderboard" && (
-        <LeaderboardPage />
       )}
 
       {/* Guild Picker Modal */}
