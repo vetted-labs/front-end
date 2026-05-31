@@ -8,19 +8,15 @@ import { CheckCircle2, Clock } from "lucide-react";
 
 interface GuildPublicHeroProps {
   guildName: string;
-  description: string;
   /** Stat strip values. */
   members: number;
   reviews: number;
   staked: string;
-  /** Numeric percent, or a string fallback (e.g. "—") when not yet wired. */
-  consensusPct: number | string;
   openRoles: number;
   /** Optional delta strings for stats. */
   membersDelta?: string;
   reviewsDelta?: string;
   stakedDelta?: string;
-  consensusDelta?: string;
   openRolesDelta?: string;
   /** Membership state */
   isMember: boolean;

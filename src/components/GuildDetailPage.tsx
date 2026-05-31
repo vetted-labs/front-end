@@ -279,10 +279,6 @@ export default function GuildDetailPage() {
   const stakedDisplay = guild.totalVetdStaked
     ? formatVetd(Number(guild.totalVetdStaked))
     : "—";
-  // Consensus rate is not yet exposed by the backend at this surface — show
-  // an em-dash so we don't display a fabricated number. Hook up once Phase 5
-  // adds it to the public guild detail payload.
-  const consensusPctDisplay: number | string = "—";
   const openRoles = guild.openPositions || guild.recentJobs?.length || 0;
 
   return (
@@ -303,11 +299,9 @@ export default function GuildDetailPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <GuildPublicHero
             guildName={guild.name}
-            description={guild.description}
             members={totalMembers}
             reviews={reviewsTotal}
             staked={stakedDisplay}
-            consensusPct={consensusPctDisplay}
             openRoles={openRoles}
             membersDelta={guild.expertCount > 0 ? `${guild.expertCount} experts` : undefined}
             // We don't yet have a "this period" diff for reviews. Hide the
@@ -315,7 +309,6 @@ export default function GuildDetailPage() {
             // statistics payload exposes a windowed count.
             reviewsDelta={undefined}
             stakedDelta="VETD across guild"
-            consensusDelta={undefined}
             openRolesDelta={undefined}
             isMember={isMember}
             isPending={isPending}
