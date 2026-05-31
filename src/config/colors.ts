@@ -211,6 +211,47 @@ export function getNotificationPriority(type: string): NotificationPriority {
   }
 }
 
+// ─── Notification Type Intent (brand palette: orange + neutrals) ─────
+// VET-96: per-type accents migrate off the green/blue/orange rainbow onto the
+// brand palette — action types (endorsements, proposals, deadlines) → primary
+// orange, rewards → positive, guild-feed chatter → neutral grey. Deadlines stay
+// in the orange family but the shell keeps them distinct via stripe/glow.
+
+export type NotificationTypeIntent = "primary" | "positive" | "neutral";
+
+/** Icon-tile classes (`bg-… text-…`) per notification intent. */
+export const NOTIFICATION_TYPE_ICON_CLASSES: Record<NotificationTypeIntent, string> = {
+  primary: "bg-primary/10 text-primary",
+  positive: "bg-positive/10 text-positive",
+  neutral: "bg-muted text-muted-foreground",
+} as const;
+
+/** Left-edge accent stripe class per notification intent. */
+export const NOTIFICATION_TYPE_STRIPE: Record<NotificationTypeIntent, string> = {
+  primary: "bg-primary",
+  positive: "bg-positive",
+  neutral: "bg-muted-foreground/40",
+} as const;
+
+/** Map a notification type to its brand-palette intent. */
+export function getNotificationTypeIntent(type: string): NotificationTypeIntent {
+  switch (type) {
+    // Guild feed chatter — quietest signal, neutral grey.
+    case "guild_post_reply":
+    case "guild_post_mention":
+      return "neutral";
+    // Positive outcomes — rewards / completions.
+    case "reward_earned":
+    case "application_accepted":
+    case "guild_report_ready":
+      return "positive";
+    // Everything else actionable (endorsements, proposals, applications,
+    // deadlines, guild applications) → brand orange.
+    default:
+      return "primary";
+  }
+}
+
 // ─── Activity Event Colors ──────────────────────────────────────────
 // 3 semantic categories: action (brand), positive (green), negative (red).
 

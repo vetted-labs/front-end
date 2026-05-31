@@ -10,7 +10,14 @@ import {
 } from "lucide-react";
 import type { Notification } from "@/types";
 import { logger } from "@/lib/logger";
-import { getNotificationPriority, NOTIFICATION_COLORS, STATUS_COLORS } from "@/config/colors";
+import {
+  getNotificationPriority,
+  NOTIFICATION_COLORS,
+  NOTIFICATION_TYPE_ICON_CLASSES,
+  getNotificationTypeIntent,
+  STATUS_COLORS,
+} from "@/config/colors";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import { getGuildReviewUrl, type ReviewApplicantType } from "@/lib/review-routing";
 
 export type { Notification };
@@ -37,6 +44,32 @@ export function getNotificationIcon(type: string): LucideIcon {
   }
 }
 
+/**
+ * Maps an expert notification type to a branded Vetted icon name.
+ * Used by the expert notification surfaces (shell, bell dropdown, dashboard
+ * feeds) which render `<VettedIcon name={…} />` rather than Lucide icons.
+ */
+export function getNotificationVettedIcon(type: string): VettedIconName {
+  switch (type) {
+    case "application_status":
+      return "consensus";
+    case "proposal_new":
+    case "proposal_deadline":
+    case "application_new":
+    case "application_deadline":
+      return "application";
+    case "reward_earned":
+      return "earnings";
+    case "guild_application":
+      return "guilds";
+    case "guild_post_reply":
+    case "guild_post_mention":
+      return "message";
+    default:
+      return "notification";
+  }
+}
+
 /** Returns true for notification types that represent an approaching deadline. */
 export function isDeadlineNotification(type: string): boolean {
   return type === "proposal_deadline" || type === "application_deadline";
@@ -45,6 +78,16 @@ export function isDeadlineNotification(type: string): boolean {
 export function getNotificationColor(type: string): string {
   const priority = getNotificationPriority(type);
   return NOTIFICATION_COLORS[priority].icon;
+}
+
+/**
+ * Brand-palette icon-tile classes (`bg-… text-…`) for an expert notification
+ * type. Action types → primary orange, rewards → positive, guild-feed →
+ * neutral grey, deadlines → primary orange (kept visually distinct via the
+ * card stripe/glow in the shell). Driven by {@link getNotificationTypeIntent}.
+ */
+export function getNotificationIconClasses(type: string): string {
+  return NOTIFICATION_TYPE_ICON_CLASSES[getNotificationTypeIntent(type)];
 }
 
 export function getApplicantTypeTag(applicantType?: "expert" | "candidate"): { label: string; className: string } | null {

@@ -6,12 +6,11 @@ import { notificationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import {
   type Notification,
-  getNotificationIcon,
-  getNotificationColor,
+  getNotificationVettedIcon,
+  getNotificationIconClasses,
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
-import { STATUS_COLORS } from "@/config/colors";
 
 interface SlimNotificationsFeedProps {
   walletAddress: string;
@@ -66,8 +65,8 @@ export function SlimNotificationsFeed({
       ) : (
         <div className="flex flex-col gap-2 mt-4">
           {notifications.slice(0, 4).map((notification) => {
-            const Icon = getNotificationIcon(notification.type);
-            const color = getNotificationColor(notification.type);
+            const vettedIconName = getNotificationVettedIcon(notification.type);
+            const iconClasses = getNotificationIconClasses(notification.type);
 
             return (
               <button
@@ -76,13 +75,9 @@ export function SlimNotificationsFeed({
                 className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/30 border border-border text-left hover:bg-muted/50 transition-colors"
               >
                 <div
-                  className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ backgroundColor: `${color}15` }}
+                  className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5 ${iconClasses}`}
                 >
-                  <Icon
-                    className="w-[14px] h-[14px]"
-                    style={{ color }}
-                  />
+                  <VettedIcon name={vettedIconName} className="w-[14px] h-[14px]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-foreground truncate">
@@ -96,7 +91,7 @@ export function SlimNotificationsFeed({
                   </div>
                 </div>
                 {!notification.isRead && (
-                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.info.dot} shrink-0 mt-2`} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-2" />
                 )}
               </button>
             );

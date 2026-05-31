@@ -4,14 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
-import { Bell, Check } from "lucide-react";
+import { Bell } from "lucide-react";
 import { toast } from "sonner";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { notificationsApi, extractApiError } from "@/lib/api";
 import { useNotificationCount, NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
 import {
   type Notification,
-  getNotificationIcon,
-  getNotificationColor,
+  getNotificationVettedIcon,
+  getNotificationIconClasses,
   getApplicantTypeTag,
   formatTimeAgo,
   buildNotificationUrl,
@@ -182,7 +183,6 @@ export function NotificationBell({ types, href }: NotificationBellProps = {}) {
               </div>
             ) : (
               notifications.map((notification) => {
-                const Icon = getNotificationIcon(notification.type);
                 const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
                 return (
                   <button
@@ -196,10 +196,10 @@ export function NotificationBell({ types, href }: NotificationBellProps = {}) {
                     <div
                       className={cn(
                         "mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
-                        getNotificationColor(notification.type)
+                        getNotificationIconClasses(notification.type)
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <VettedIcon name={getNotificationVettedIcon(notification.type)} className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
@@ -220,9 +220,6 @@ export function NotificationBell({ types, href }: NotificationBellProps = {}) {
                         </div>
                         {!notification.isRead && (
                           <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
-                        )}
-                        {notification.isRead && (
-                          <Check className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground" />
                         )}
                       </div>
                       <p className="truncate text-xs text-muted-foreground">

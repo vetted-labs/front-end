@@ -9,8 +9,8 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
 import {
   type Notification,
-  getNotificationIcon,
-  getNotificationColor,
+  getNotificationVettedIcon,
+  getNotificationIconClasses,
   getApplicantTypeTag,
   formatTimeAgo,
   buildNotificationUrl,
@@ -140,8 +140,8 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
             style={{ maxHeight: "360px" }}
           >
             {displayed.map((notification) => {
-              const Icon = getNotificationIcon(notification.type);
-              const colorClass = getNotificationColor(notification.type);
+              const vettedIconName = getNotificationVettedIcon(notification.type);
+              const colorClass = getNotificationIconClasses(notification.type);
               const isUnread = !notification.isRead;
               const isClicked = clickedId === notification.id;
               const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
@@ -170,7 +170,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
                         {isClicked ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Icon className="w-4 h-4" />
+                          <VettedIcon name={vettedIconName} className="w-4 h-4" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

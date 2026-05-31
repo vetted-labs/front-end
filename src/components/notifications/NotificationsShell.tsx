@@ -4,11 +4,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
-  Check,
   CheckCheck,
   Loader2,
   Settings,
-  Sparkles,
   Inbox,
   Briefcase,
   LayoutDashboard,
@@ -48,6 +46,7 @@ import {
 } from "@/lib/candidate-notification-helpers";
 import {
   getNotificationIcon,
+  getNotificationVettedIcon,
   isDeadlineNotification,
   getApplicantTypeTag,
   buildNotificationUrl,
@@ -58,7 +57,14 @@ import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { GuildBadge } from "@/components/ui/guild";
-import { STATUS_COLORS, getNotificationPriority } from "@/config/colors";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import {
+  STATUS_COLORS,
+  getNotificationPriority,
+  getNotificationTypeIntent,
+  NOTIFICATION_TYPE_ICON_CLASSES,
+  NOTIFICATION_TYPE_STRIPE,
+} from "@/config/colors";
 import { DataSection } from "@/lib/motion";
 import { NotificationSettingsModal } from "./NotificationSettingsModal";
 import {
@@ -83,8 +89,6 @@ export type NotificationsUserType = "company" | "candidate" | "expert";
 
 export interface NotificationsShellProps {
   userType: NotificationsUserType;
-  /** Optional eyebrow override; default is `userType` upper-cased. */
-  eyebrow?: string;
   /**
    * For company/candidate variants the parent page must gate via
    * `useRequireAuth(...)` and pass the resulting `ready` flag here.
@@ -164,20 +168,14 @@ const FILTER_DEFS: Record<NotificationsUserType, FilterDef[]> = {
   expert: EXPERT_FILTERS,
 };
 
-const COPY: Record<NotificationsUserType, { eyebrow: string; subtitle: string; emptyCta: { href: string; label: string } }> = {
+const COPY: Record<NotificationsUserType, { emptyCta: { href: string; label: string } }> = {
   company: {
-    eyebrow: "COMPANY",
-    subtitle: "Stay updated with applications, messages, and job activity.",
     emptyCta: { href: "/dashboard", label: "Visit your dashboard" },
   },
   candidate: {
-    eyebrow: "CANDIDATE",
-    subtitle: "Stay updated with your applications, interviews, and messages.",
     emptyCta: { href: "/browse/jobs", label: "Browse jobs" },
   },
   expert: {
-    eyebrow: "EXPERT",
-    subtitle: "Reviews, rewards, and guild activity at a glance.",
     emptyCta: { href: "/expert/dashboard", label: "Go to dashboard" },
   },
 };
@@ -223,17 +221,16 @@ function getPriorityStyles(type: string): {
   iconBg: string;
   isUrgent: boolean;
 } {
-  const priority = getNotificationPriority(type);
-  switch (priority) {
-    case "urgent":
-      return { stripe: "bg-negative", iconBg: "bg-negative/12 text-negative", isUrgent: true };
-    case "positive":
-      return { stripe: "bg-positive", iconBg: "bg-positive/12 text-positive", isUrgent: false };
-    case "action":
-      return { stripe: "bg-primary", iconBg: "bg-primary/12 text-primary", isUrgent: false };
-    default:
-      return { stripe: "bg-info-blue", iconBg: "bg-info-blue/12 text-info-blue", isUrgent: false };
-  }
+  // VET-96: brand palette (orange + neutrals). Action types → primary orange,
+  // rewards → positive, guild-feed → neutral grey. Deadlines stay in the orange
+  // family but remain distinct via the urgent glow/border in the card.
+  const intent = getNotificationTypeIntent(type);
+  return {
+    stripe: NOTIFICATION_TYPE_STRIPE[intent],
+    iconBg: NOTIFICATION_TYPE_ICON_CLASSES[intent],
+    isUrgent:
+      getNotificationPriority(type) === "urgent",
+  };
 }
 
 /**
@@ -287,7 +284,6 @@ function buildUrlFor(
 
 export function NotificationsShell({
   userType,
-  eyebrow,
   ready: readyProp,
   initialFilter,
 }: NotificationsShellProps) {
@@ -519,16 +515,9 @@ export function NotificationsShell({
           {...heroTourTarget}
         >
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-3">
-              <Sparkles className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
-              {eyebrow ?? copy.eyebrow}
-            </p>
-            <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-[1.05] mb-3">
+            <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-[1.05]">
               Notifications
             </h1>
-            <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-              {copy.subtitle}
-            </p>
           </div>
           <div className="flex items-center gap-3">
             {unreadCount > 0 && (
@@ -637,6 +626,10 @@ export function NotificationsShell({
                     <div className="space-y-3">
                       {group.items.map((notification) => {
                         const Icon = getIconFor(userType, notification.type);
+                        const vettedIconName =
+                          userType === "expert"
+                            ? getNotificationVettedIcon(notification.type)
+                            : null;
                         const isUnread = !notification.isRead;
                         const isClicked = clickedId === notification.id;
                         const isDeadline =
@@ -669,7 +662,7 @@ export function NotificationsShell({
                             className={`group w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                               isClicked ? "opacity-60 cursor-wait" : ""
                             } ${isUnread ? "" : "opacity-60"} ${
-                              isUrgent ? "border-negative/12" : ""
+                              isUrgent ? "border-primary/30" : ""
                             }`}
                             style={
                               isUrgent
@@ -685,6 +678,8 @@ export function NotificationsShell({
                             >
                               {isClicked ? (
                                 <Loader2 className="w-[22px] h-[22px] animate-spin" />
+                              ) : vettedIconName ? (
+                                <VettedIcon name={vettedIconName} className="w-[22px] h-[22px]" />
                               ) : (
                                 <Icon className="w-[22px] h-[22px]" />
                               )}
@@ -733,13 +728,6 @@ export function NotificationsShell({
                                   </>
                                 )}
                                 <span>{formatTimeAgo(notification.createdAt)}</span>
-                                {notification.isRead && notification.readAt && (
-                                  <>
-                                    <span>&bull;</span>
-                                    <Check className="w-3 h-3" />
-                                    <span>Read</span>
-                                  </>
-                                )}
                               </div>
                             </div>
                             {/* Quick mark-as-read on hover (no navigation). */}
