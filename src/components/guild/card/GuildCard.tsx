@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { cn, formatVetd } from "@/lib/utils";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getGuildIconName } from "@/lib/guildHelpers";
@@ -164,25 +163,15 @@ function toRegistrySlug(name: string): string {
   return name.split(/[,&]/)[0].trim().toUpperCase();
 }
 
-/* ─── Tenure helper ──────────────────────────────────────────────── */
-
-function calcTenureDays(joinedAt: string | undefined, nowMs: number): number | null {
-  if (!joinedAt) return null;
-  return Math.max(0, Math.floor((nowMs - new Date(joinedAt).getTime()) / (1000 * 60 * 60 * 24)));
-}
-
 /* ─── Main composer ──────────────────────────────────────────────── */
 
 export function GuildCard(props: GuildCardProps) {
-  // eslint-disable-next-line react-hooks/purity -- stable snapshot of current time used only for tenure math, memoized once per mount
-  const nowMs = useMemo(() => Date.now(), []);
   const idx = String(props.catalogueIndex).padStart(2, "0");
 
   if (props.variant === "workspace") {
     const { guild, currentUserId, stakedAmount, onClick } = props;
     const slug = toRegistrySlug(guild.name);
     const pending = guild.pendingProposals ?? 0;
-    const tenureDays = calcTenureDays(guild.joinedAt, nowMs);
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — workspace`}>
         {pending > 0 && <PendingBanner count={pending} />}
@@ -192,6 +181,7 @@ export function GuildCard(props: GuildCardProps) {
               registrySlug={slug}
               registryNumber={idx}
               role={guild.expertRole}
+              hideRegistryCode
               status="none"
             />
             <div className="flex items-center gap-4">
@@ -205,19 +195,6 @@ export function GuildCard(props: GuildCardProps) {
             count={guild.memberCount ?? 0}
             topMembers={guild.topMembers}
             currentUserId={currentUserId}
-            subCaption={
-              <>
-                <span className="text-foreground/80">Your rep:</span>{" "}
-                <span className="text-foreground/80">{guild.reputation ?? 0}</span>
-                {tenureDays !== null && (
-                  <>
-                    <span className="text-border mx-1.5">·</span>
-                    <span className="text-foreground/80">{tenureDays}d</span>{" "}
-                    tenure
-                  </>
-                )}
-              </>
-            }
           />
         </div>
         <GuildTickerStrip
@@ -232,6 +209,7 @@ export function GuildCard(props: GuildCardProps) {
             },
             {
               value: formatVetd(guild.totalEarnings ?? 0),
+              unitIcon: true,
               label: "Earned",
               tone: "positive",
             },
@@ -336,6 +314,7 @@ export function GuildCard(props: GuildCardProps) {
             },
             {
               value: formatVetd(guild.totalEarnings ?? 0),
+              unitIcon: true,
               label: "Earned",
               tone: "positive",
             },
@@ -382,6 +361,7 @@ export function GuildCard(props: GuildCardProps) {
             },
             {
               value: formatVetd(guild.totalEarnings ?? 0),
+              unitIcon: true,
               label: "Earned",
               tone: "positive",
             },

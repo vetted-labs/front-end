@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export interface TickerCell {
@@ -5,6 +6,12 @@ export interface TickerCell {
   value: string;
   /** Optional small unit suffix (e.g. "VETD", "USD"). */
   unit?: string;
+  /**
+   * When true, the $VETD token logo is rendered immediately after the value
+   * (in place of / alongside a textual unit) to denote VETD-denominated
+   * figures such as guild earnings.
+   */
+  unitIcon?: boolean;
   /** The label under the value (uppercase, mono). */
   label: string;
   /** Visual tint. */
@@ -37,6 +44,18 @@ export function GuildTickerStrip({ cells, compact = false }: GuildTickerStripPro
             )}
           >
             {cell.value}
+            {cell.unitIcon && (
+              <Image
+                src="/icons/vetted/vetd.svg"
+                alt="VETD"
+                width={compact ? 11 : 13}
+                height={compact ? 11 : 13}
+                className={cn(
+                  "ml-1 inline-block align-baseline translate-y-px",
+                  compact ? "w-[11px] h-[11px]" : "w-[13px] h-[13px]",
+                )}
+              />
+            )}
             {cell.unit && (
               <span className="ml-1 text-[10px] text-muted-foreground font-medium tracking-[0.04em]">
                 {cell.unit}

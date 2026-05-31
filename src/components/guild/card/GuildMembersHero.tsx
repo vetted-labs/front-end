@@ -80,7 +80,7 @@ export function GuildMembersHero({
                       i > 0 && "-ml-2",
                       isMe
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-card bg-muted/40 text-muted-foreground",
+                        : "border-card bg-muted/70 text-foreground",
                     )}
                     title={m.fullName}
                   >
@@ -103,7 +103,7 @@ export function GuildMembersHero({
               {overflow > 0 && (
                 <span
                   className={cn(
-                    "rounded-full flex items-center justify-center font-mono text-muted-foreground bg-muted/30 border-2 border-card -ml-2 font-bold",
+                    "rounded-full flex items-center justify-center font-mono text-foreground bg-muted/70 border-2 border-card -ml-2 font-bold",
                     overflowSize,
                   )}
                 >

@@ -7,6 +7,13 @@ interface GuildCardHeaderProps {
   registryNumber: string;
   /** Optional role pill displayed inline with the registry, e.g. "MASTER". */
   role?: ExpertRole;
+  /**
+   * When true, the "G-{number} · {slug}" registry eyebrow (and the inline role
+   * pill) is not rendered — used where the guild name is already shown nearby
+   * and the code would be redundant. The right-side status still renders, so
+   * the header collapses to a status-only row. Defaults to false (code shown).
+   */
+  hideRegistryCode?: boolean;
   /** Right-side status. */
   status:
     | "live"
@@ -19,14 +26,19 @@ export function GuildCardHeader({
   registrySlug,
   registryNumber,
   role,
+  hideRegistryCode = false,
   status,
 }: GuildCardHeaderProps) {
   return (
-    <div className="flex justify-between items-center font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+    <div className="flex justify-between items-center font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2 min-h-[14px]">
       <div className="truncate">
-        <span>G-{registryNumber} · {registrySlug}</span>
-        {role && (
-          <span className="text-primary ml-1.5 capitalize">{role}</span>
+        {!hideRegistryCode && (
+          <>
+            <span>G-{registryNumber} · {registrySlug}</span>
+            {role && (
+              <span className="text-primary ml-1.5 capitalize">{role}</span>
+            )}
+          </>
         )}
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
