@@ -154,10 +154,9 @@ export default function ReputationAndRanksPage() {
         separate counters attached to the same wallet.
       </p>
       <p>
-        Leaderboards and rank badges always specify the guild context. The
-        <em>Guild Ranks</em> page (<code>/expert/guild-ranks</code>) in the
-        product shows your standing per guild, your reputation delta over
-        time, and the next rank threshold.
+        Leaderboards and rank badges always specify the guild context. Your
+        per-guild standing, reputation delta over time, and next rank threshold
+        are shown on each guild&apos;s page.
       </p>
 
       <h2 id="timeline">The reputation timeline</h2>
@@ -198,9 +197,9 @@ export default function ReputationAndRanksPage() {
             kind: "app",
           },
           {
-            title: "Guild ranks leaderboard",
-            description: "Where you sit within each of your guilds.",
-            href: "/expert/guild-ranks",
+            title: "Your reputation",
+            description: "Track your standing across guilds and reputation over time.",
+            href: "/expert/reputation",
             icon: Trophy,
             kind: "app",
           },

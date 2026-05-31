@@ -1,6 +1,11 @@
 // API Configuration
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+// Feature flags for sections temporarily hidden pending rework. There is no
+// flag service, so they live here as simple constants — flip to re-enable
+// (keeps the removals reversible). See VET-102 (Guild Ranks).
+export const GUILD_RANKS_ENABLED = false;
+
 import { STATUS_COLORS } from "./colors";
 
 export const EXPERIENCE_LEVELS = [

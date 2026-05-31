@@ -5,6 +5,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { VettedIconName } from "@/components/ui/vetted-icon";
+import { GUILD_RANKS_ENABLED } from "@/config/constants";
 
 export type SidebarIcon = LucideIcon | VettedIconName;
 
@@ -49,7 +50,10 @@ export const expertSidebarConfig: SidebarConfig = {
       label: "Guilds",
       items: [
         { label: "My Guilds", href: "/expert/guilds", icon: "guilds" },
-        { label: "Guild Ranks", href: "/expert/guild-ranks", icon: "guild-ranks" },
+        // Guild Ranks hidden pending rework (VET-102) — re-enable via GUILD_RANKS_ENABLED.
+        ...(GUILD_RANKS_ENABLED
+          ? [{ label: "Guild Ranks", href: "/expert/guild-ranks", icon: "guild-ranks" } satisfies NavItem]
+          : []),
       ],
     },
     {
