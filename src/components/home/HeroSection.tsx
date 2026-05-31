@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { PatternBackground } from "@/components/ui/pattern-background";
 
@@ -15,8 +14,6 @@ interface RoleCard {
   icon: VettedIconName;
   tag: string;
   title: string;
-  desc: string;
-  cta: string;
   featured?: boolean;
 }
 
@@ -26,16 +23,12 @@ const cards: RoleCard[] = [
     icon: "vet-talent",
     tag: "Candidate",
     title: "Get Vetted",
-    desc: "Prove your skills once. Let domain experts make you visible to the right opportunities.",
-    cta: "Get vetted",
   },
   {
     key: "expert",
     icon: "vetting",
     tag: "Expert",
     title: "Monetize Your Judgment",
-    desc: "Define standards. Vet candidates. Build on-chain authority — and earn for accuracy.",
-    cta: "Stake your judgment",
     featured: true,
   },
   {
@@ -43,8 +36,6 @@ const cards: RoleCard[] = [
     icon: "job",
     tag: "Company",
     title: "Start Hiring",
-    desc: "Hire with conviction. Get a shortlist of pre-vetted candidates that experts bet on.",
-    cta: "Post a role",
   },
 ];
 
@@ -76,12 +67,12 @@ export function HeroSection({
 
         {/* Headline */}
         <h1 className="font-display font-bold text-3xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-12">
-          The Credibility Layer<br />for Hiring
+          Turning Expert Judgment into Accountable Signal for Hiring
         </h1>
 
         {/* Value Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-9">
-          {cards.map((card, idx) => {
+          {cards.map((card) => {
             return (
               <button
                 key={card.key}
@@ -99,7 +90,7 @@ export function HeroSection({
                   <span className="font-mono text-[10px] font-semibold tracking-[0.18em] text-muted-foreground/70 uppercase">
                     {card.tag}
                   </span>
-                  {card.featured ? (
+                  {card.featured && (
                     <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-primary uppercase inline-flex items-center gap-1.5">
                       <span className="relative flex w-1.5 h-1.5">
                         <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-60" />
@@ -107,17 +98,13 @@ export function HeroSection({
                       </span>
                       Featured
                     </span>
-                  ) : (
-                    <span aria-hidden className="font-mono text-[10px] font-semibold tracking-[0.14em] text-muted-foreground/40 uppercase tabular-nums">
-                      0{idx + 1} / 03
-                    </span>
                   )}
                 </div>
 
                 {/* Body */}
                 <div className="px-5 sm:px-6 pt-6 pb-5 flex flex-col flex-1">
                   {/* Icon + title composition — icon-left anchor */}
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-4">
                     <div
                       aria-hidden
                       className="shrink-0 w-[60px] h-[60px] rounded-xl flex items-center justify-center transition-transform group-hover:scale-[1.04] bg-primary/[0.09] border border-primary/20 shadow-[0_0_28px_-10px_hsl(var(--primary)/0.4)] group-hover:bg-primary/[0.14] group-hover:border-primary/30"
@@ -127,16 +114,6 @@ export function HeroSection({
                     <h3 className="font-display font-bold text-[22px] leading-[1.1] tracking-tight text-foreground">
                       {card.title}
                     </h3>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
-                    {card.desc}
-                  </p>
-
-                  {/* CTA */}
-                  <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2.5 transition-all">
-                    {card.cta}
-                    <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
               </button>

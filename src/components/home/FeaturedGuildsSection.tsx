@@ -16,15 +16,10 @@ export function FeaturedGuildsSection({ guilds }: FeaturedGuildsSectionProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div className="max-w-xl">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-primary/80 mb-3">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-primary/80">
               <Layers className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
               Active guilds
             </p>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground leading-[1.1]">
-              Domains, with their own
-              <br />
-              standards.
-            </h2>
           </div>
           <Link
             href="/guilds"

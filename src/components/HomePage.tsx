@@ -10,7 +10,6 @@ import { jobsApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { HeroSection } from "./home/HeroSection";
-import { StatsBar } from "./home/StatsBar";
 import { JobBrowser } from "./home/JobBrowser";
 import { FeaturedGuildsSection } from "./home/FeaturedGuildsSection";
 import type { Guild, Job } from "@/types";
@@ -23,7 +22,7 @@ export function HomePage() {
   const [mounted, setMounted] = useState(false);
   const auth = useAuthContext();
 
-  const { data: guilds, isLoading: isLoadingGuilds } = useFetch<Guild[]>(
+  const { data: guilds } = useFetch<Guild[]>(
     () => guildsApi.getAll(),
     { onError: () => {} }
   );
@@ -83,15 +82,10 @@ export function HomePage() {
         onPostJob={handlePostJob}
       />
 
-      {/* ── 2. Live stat strip ─────────────────────────────────────── */}
-      {!isLoadingGuilds && !isLoadingJobs && (
-        <StatsBar guilds={guildList} jobs={jobs ?? []} />
-      )}
-
-      {/* ── 3. Featured jobs ───────────────────────────────────────── */}
+      {/* ── 2. Featured jobs ───────────────────────────────────────── */}
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
 
-      {/* ── 4. Featured guilds ─────────────────────────────────────── */}
+      {/* ── 3. Featured guilds ─────────────────────────────────────── */}
       {featuredGuilds.length > 0 && <FeaturedGuildsSection guilds={featuredGuilds} />}
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
