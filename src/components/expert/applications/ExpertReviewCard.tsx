@@ -19,6 +19,8 @@ interface ExpertReviewCardProps {
   onReview: (application: ExpertMembershipApplication) => void;
   onViewReview?: (application: ExpertMembershipApplication) => void;
   showGuildBadge?: boolean;
+  /** When true (History tab) hide candidate PII: email, LinkedIn, resume. */
+  isHistory?: boolean;
 }
 
 /** Returns the accent bar + avatar gradient classes based on vetting state */
@@ -55,7 +57,7 @@ function getInitials(fullName: string | undefined | null): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-export function ExpertReviewCard({ application, onReview, onViewReview, showGuildBadge }: ExpertReviewCardProps) {
+export function ExpertReviewCard({ application, onReview, onViewReview, showGuildBadge, isHistory }: ExpertReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
   const phase = application.votingPhase;
   const isCommitReveal = phase === "commit" || phase === "finalized";
@@ -70,13 +72,11 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
 
   const phaseLabel: Record<string, string> = {
     commit: "Voting open",
-    finalized: "Finalized",
   };
 
   const phaseColor: Record<string, string> = {
     commit: STATUS_COLORS.warning.text,
     reveal: STATUS_COLORS.info.text,
-    finalized: STATUS_COLORS.positive.text,
   };
 
   // Derive vetting review state for the status badge.
@@ -146,10 +146,12 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
             )}
           </div>
 
-          {/* Row 2: Email */}
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">
-            {application.email}
-          </p>
+          {/* Row 2: Email — hidden in History to avoid leaking candidate PII */}
+          {!isHistory && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {application.email}
+            </p>
+          )}
 
           {/* Row 3: Date + review count + job title + links */}
           <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
@@ -173,7 +175,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 {application.yearsOfExperience > 0 && ` · ${application.yearsOfExperience}y`}
               </span>
             )}
-            {application.linkedinUrl && (
+            {!isHistory && application.linkedinUrl && (
               <a
                 href={application.linkedinUrl}
                 target="_blank"
@@ -184,7 +186,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 LinkedIn <ExternalLink className="w-3 h-3" />
               </a>
             )}
-            {application.resumeUrl && (
+            {!isHistory && application.resumeUrl && (
               <a
                 href={getAssetUrl(application.resumeUrl)}
                 target="_blank"
@@ -233,14 +235,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
             </span>
           </div>
 
-          {/* Commit-reveal phase + timer */}
-          {isCommitReveal && (
+          {/* Commit-reveal phase + timer. Suppressed when finalized: the status
+              pill already reads "Reviewed", so a second phase label here would
+              duplicate it (see VET-97). */}
+          {isCommitReveal && phase !== "finalized" && (
             <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
               <span className={`inline-flex items-center gap-2 font-medium ${phaseColor[phase!] ?? "text-muted-foreground"}`}>
                 <ShieldCheck className="w-3 h-3" />
                 {phaseLabel[phase!] ?? phase}
               </span>
-              {activeDeadline && phase !== "finalized" && (
+              {activeDeadline && (
                 <span
                   {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardDeadline) : {})}
                 >

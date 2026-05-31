@@ -11,6 +11,8 @@ interface CandidateReviewCardProps {
   onReview: (application: CandidateGuildApplication) => void;
   onViewReview?: (application: CandidateGuildApplication) => void;
   showGuildBadge?: boolean;
+  /** When true (History tab) hide candidate PII: email. */
+  isHistory?: boolean;
 }
 
 /** Derives 1-2 uppercase initials from a full name */
@@ -20,7 +22,7 @@ function getInitials(fullName: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-export function CandidateReviewCard({ application, onReview, onViewReview, showGuildBadge }: CandidateReviewCardProps) {
+export function CandidateReviewCard({ application, onReview, onViewReview, showGuildBadge, isHistory }: CandidateReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
   const { isActive: isStoryLabPreview } = useStoryLabContext();
 
@@ -64,10 +66,12 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
             )}
           </div>
 
-          {/* Row 2: Email */}
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">
-            {application.candidateEmail}
-          </p>
+          {/* Row 2: Email — hidden in History to avoid leaking candidate PII */}
+          {!isHistory && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {application.candidateEmail}
+            </p>
+          )}
 
           {/* Row 3: Date + review count + job title */}
           <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">

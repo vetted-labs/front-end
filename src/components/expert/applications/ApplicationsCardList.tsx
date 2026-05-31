@@ -20,6 +20,8 @@ type HistoryItem =
 
 interface ApplicationsCardListProps {
   activeTab: ApplicationsTabType;
+  /** True when rendering the History tab — hides candidate PII (email, LinkedIn, resume). */
+  isHistory: boolean;
   filterMode: ApplicationsFilterMode;
   isLoading: boolean;
   isAllGuilds: boolean;
@@ -65,6 +67,7 @@ function LoadingSkeleton() {
 
 export function ApplicationsCardList({
   activeTab,
+  isHistory,
   filterMode,
   isLoading,
   isAllGuilds,
@@ -119,6 +122,7 @@ export function ApplicationsCardList({
             onReview={onReviewExpert}
             onViewReview={onViewExpertReview}
             showGuildBadge={isAllGuilds}
+            isHistory={isHistory}
           />
         ))
       )}
@@ -131,6 +135,7 @@ export function ApplicationsCardList({
             onReview={onReviewCandidate}
             onViewReview={onViewCandidateReview}
             showGuildBadge={isAllGuilds}
+            isHistory={isHistory}
           />
         ))
       )}
@@ -164,6 +169,7 @@ export function ApplicationsCardList({
               onReview={onReviewExpert}
               onViewReview={onViewExpertReview}
               showGuildBadge={isAllGuilds}
+              isHistory={isHistory}
             />
           ) : (
             <CandidateReviewCard
@@ -172,6 +178,7 @@ export function ApplicationsCardList({
               onReview={() => {}}
               onViewReview={onViewCandidateReview}
               showGuildBadge={isAllGuilds}
+              isHistory={isHistory}
             />
           )
         )

@@ -16,7 +16,8 @@ import dynamic from "next/dynamic";
 
 import { Input } from "@/components/ui/input";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { FirstTimeReviewerGuide } from "@/components/expert/FirstTimeReviewerGuide";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 import { ViewReviewModal } from "./ViewReviewModal";
 import { ApplicationsStatsRow } from "./ApplicationsStatsRow";
 import { ApplicationsFilters } from "./ApplicationsFilters";
@@ -541,21 +542,18 @@ export default function ApplicationsPage() {
         >
           <div className="px-6 py-5">
             <h1 className="text-xl font-bold tracking-tight">Reviews</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Review applications, vote on proposals, and track your review history.
-            </p>
+            <div className="mt-1">
+              <HelpLink href={DOC_LINKS.commitReveal} size="sm">
+                How reviews work
+              </HelpLink>
+            </div>
           </div>
           <div className="border-t border-border" />
           <ApplicationsStatsRow
             pendingReviews={data.pendingReviews}
-            proposalsToVote={data.proposalsToVote}
             completedReviews={data.historyCount}
-            guildsActive={data.guildRecords.length}
           />
         </div>
-
-        {/* Onboarding guide for first-time reviewers */}
-        <FirstTimeReviewerGuide />
 
         {/* Staking Warning */}
         {!data.guildStakesLoading && !data.hasAnyStake && (
@@ -605,6 +603,7 @@ export default function ApplicationsPage() {
         {/* Content */}
         <ApplicationsCardList
           activeTab={data.activeTab}
+          isHistory={data.activeTab === "history"}
           filterMode={data.filterMode}
           isLoading={data.isLoading}
           isAllGuilds={data.isAllGuilds}

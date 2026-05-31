@@ -180,7 +180,7 @@ export const VETTING_REVIEW_STATE_CONFIG: Record<string, { label: string; classN
   committing: { label: "Committing…", className: `${STATUS_COLORS.info.badge} animate-pulse` },
   committed: { label: "Committed", className: STATUS_COLORS.warning.badge },
   revealed: { label: "Revealed", className: STATUS_COLORS.positive.badge },
-  finalized: { label: "Finalized", className: "bg-muted text-muted-foreground border-border" },
+  finalized: { label: "Reviewed", className: "bg-muted text-muted-foreground border-border" },
 };
 
 /**

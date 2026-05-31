@@ -69,7 +69,7 @@ export function ApplicationsFilters({
       value: "proposals",
       label: (
         <>
-          Proposals
+          Governance Proposals
           {pendingCounts.proposals > 0 && (
             <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {pendingCounts.proposals}

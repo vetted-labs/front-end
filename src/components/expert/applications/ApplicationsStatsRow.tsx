@@ -2,9 +2,7 @@ import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tou
 
 interface ApplicationsStatsRowProps {
   pendingReviews: number;
-  proposalsToVote: number;
   completedReviews: number;
-  guildsActive: number;
 }
 
 function StatCell({
@@ -30,20 +28,16 @@ function StatCell({
 
 export function ApplicationsStatsRow({
   pendingReviews,
-  proposalsToVote,
   completedReviews,
-  guildsActive,
 }: ApplicationsStatsRowProps) {
   return (
     <div>
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"
         {...dataTourTarget(TOUR_TARGETS.applicationsStats)}
       >
         <StatCell label="Pending" value={pendingReviews} />
-        <StatCell label="To Vote" value={proposalsToVote} />
-        <StatCell label="Completed" value={completedReviews} />
-        <StatCell label="Guilds" value={guildsActive} last />
+        <StatCell label="Completed" value={completedReviews} last />
       </div>
     </div>
   );
