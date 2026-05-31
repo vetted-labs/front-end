@@ -89,6 +89,8 @@ export type {
 export type {
   ReputationTimelineEntry,
   ReputationTierConfig,
+  ReputationBreakdownEntry,
+  ReputationHistoryEntry,
   RewardTierName,
   RewardTier,
 } from "./reputation";

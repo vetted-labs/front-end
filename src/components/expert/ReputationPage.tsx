@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -13,6 +13,8 @@ import {
   Sparkles,
   Clock,
   CheckCircle2,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { Skeleton, SkeletonStatCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
@@ -24,10 +26,14 @@ import { GUILD_RANK_ORDER } from "@/config/constants";
 import { getDaysUntilDecay } from "@/lib/reputation-helpers";
 import { cn } from "@/lib/utils";
 import { GuildAvatar } from "@/components/ui/guild";
+import { getGuildIdentity } from "@/lib/guildIdentity";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import {
   getRewardTierProgress,
   type ReputationTimelineEntry,
   type ReputationTimelineResponse,
+  type ReputationBreakdownEntry,
   type ExpertProfile,
   type PaginationInfo,
 } from "@/types";
@@ -55,17 +61,25 @@ export default function ReputationPage() {
   const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [timeline, setTimeline] = useState<ReputationTimelineEntry[]>([]);
+  const [breakdown, setBreakdown] = useState<ReputationBreakdownEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [page, setPage] = useState(1);
+  // undefined = all guilds / global aggregate (default on first load)
+  const [selectedGuildId, setSelectedGuildId] = useState<string | undefined>(undefined);
 
   const { isLoading: loading, refetch } = useFetch(
     async () => {
       if (!address) return null;
-      const [profileRes, timelineRes] = await Promise.all([
+      const [profileRes, timelineRes, breakdownRes] = await Promise.all([
         expertApi.getProfile(address),
-        expertApi.getReputationTimeline(address, { page, limit: 15 }) as Promise<ReputationTimelineResponse>,
+        expertApi.getReputationTimeline(address, {
+          page,
+          limit: 15,
+          guildId: selectedGuildId,
+        }) as Promise<ReputationTimelineResponse>,
+        expertApi.getReputationBreakdown(address),
       ]);
-      return { profileRes, timelineRes };
+      return { profileRes, timelineRes, breakdownRes };
     },
     {
       skip: !address,
@@ -85,6 +99,7 @@ export default function ReputationPage() {
           setTimeline(rawTimeline);
           setPagination(rawPagination);
         }
+        setBreakdown(result.breakdownRes);
       },
       onError: () => {
         toast.error("Failed to load reputation data");
@@ -92,13 +107,13 @@ export default function ReputationPage() {
     }
   );
 
-  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on page change (useFetch doesn't support custom deps)
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on page / address / guild-scope change (useFetch doesn't support custom deps)
   useEffect(() => {
     if (address) {
       refetch();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable, only re-run on page/address change
-  }, [page, address]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable, only re-run on page/address/guild change
+  }, [page, address, selectedGuildId]);
 
   // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
   useEffect(() => {
@@ -108,14 +123,50 @@ export default function ReputationPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable
   }, []);
 
-  // Compute stats from timeline
+  // Reset to the first page whenever the guild scope changes.
+  const handleGuildChange = useCallback((guildId: string | undefined) => {
+    setSelectedGuildId(guildId);
+    setPage(1);
+  }, []);
+
+  // Guild options for the scope selector (id + name from the expert's profile).
+  const guildOptions = useMemo(
+    () => (profile?.guilds ?? []).map((g) => ({ id: g.id, name: g.name })),
+    [profile]
+  );
+  const selectedGuild = selectedGuildId
+    ? guildOptions.find((g) => g.id === selectedGuildId)
+    : undefined;
+  const selectedBreakdown = selectedGuildId
+    ? breakdown.find((b) => b.guildId === selectedGuildId)
+    : undefined;
+
+  // Compute stats from the (already guild-scoped) timeline.
   const totalGains = timeline.filter((e) => e.change_amount > 0).reduce((s, e) => s + e.change_amount, 0);
   const totalLosses = timeline.filter((e) => e.change_amount < 0).reduce((s, e) => s + e.change_amount, 0);
   const alignedCount = timeline.filter((e) => e.reason === "aligned").length;
   const deviationCount = timeline.filter((e) => e.reason?.includes("deviation")).length;
 
-  // Per-guild breakdown derived from profile guilds + timeline activity
+  // Per-guild breakdown sourced from the authoritative breakdown endpoint.
+  // Falls back to deriving rows from the profile guilds + timeline when the
+  // breakdown endpoint returns nothing (e.g. story-lab preview fixtures).
+  // When a guild is scoped, narrow the list to just that guild.
   const guildBreakdown = useMemo(() => {
+    if (breakdown.length > 0) {
+      const rows = selectedGuildId
+        ? breakdown.filter((b) => b.guildId === selectedGuildId)
+        : breakdown;
+      return rows.map((b) => ({
+        id: b.guildId,
+        name: b.guildName,
+        role: b.role,
+        delta: b.totalGains + b.totalLosses,
+        entries: b.totalEvents,
+        reputation: b.reputation,
+      }));
+    }
+
+    // Fallback: derive from profile guilds + timeline activity.
     const guilds = profile?.guilds;
     if (!guilds) return [];
     const byGuild = new Map<string, { entries: number; delta: number }>();
@@ -126,18 +177,20 @@ export default function ReputationPage() {
       cur.delta += e.change_amount;
       byGuild.set(key, cur);
     }
-    return guilds.map((g) => {
-      const stats = byGuild.get(g.name) ?? { entries: 0, delta: 0 };
-      return {
-        id: g.id,
-        name: g.name,
-        role: g.expertRole,
-        delta: stats.delta,
-        entries: stats.entries,
-        reputation: g.reputation ?? 0,
-      };
-    });
-  }, [profile, timeline]);
+    return guilds
+      .filter((g) => !selectedGuildId || g.id === selectedGuildId)
+      .map((g) => {
+        const stats = byGuild.get(g.name) ?? { entries: 0, delta: 0 };
+        return {
+          id: g.id,
+          name: g.name,
+          role: g.expertRole,
+          delta: stats.delta,
+          entries: stats.entries,
+          reputation: g.reputation ?? 0,
+        };
+      });
+  }, [breakdown, profile, timeline, selectedGuildId]);
 
   if (!address) {
     return (
@@ -150,28 +203,30 @@ export default function ReputationPage() {
     );
   }
 
-  const reputation = profile?.reputation ?? 0;
+  // Scope the reputation score: a selected guild uses its per-guild reputation,
+  // otherwise we show the global aggregate from the profile.
+  const reputation = selectedGuildId
+    ? selectedBreakdown?.reputation ??
+      profile?.guilds?.find((g) => g.id === selectedGuildId)?.reputation ??
+      0
+    : profile?.reputation ?? 0;
   const daysUntilDecay = getDaysUntilDecay(profile?.recentActivity);
   const tone = repTone(reputation);
   const { tier, nextTier, progress } = getRewardTierProgress(reputation);
   const tierColors = REWARD_TIER_COLORS[tier.name] ?? REWARD_TIER_COLORS.Foundation;
-  const tierLabelMap: Record<StatusTone, string> = {
-    positive: "Strong",
-    warning: "Stable",
-    negative: "Watch",
-    neutral: "Foundation",
-    info: "Foundation",
-    pending: "Foundation",
-  };
 
-  // Highest rank across guilds
-  const primaryRank = profile?.guilds?.length
-    ? profile.guilds.reduce((best, g) => {
-        const gIdx = GUILD_RANK_ORDER.indexOf(g.expertRole);
-        const bIdx = GUILD_RANK_ORDER.indexOf(best);
-        return gIdx > bIdx ? g.expertRole : best;
-      }, profile.guilds[0].expertRole)
-    : null;
+  // Rank shown next to the tier chip: scoped guild's role, else highest across guilds.
+  const primaryRank = selectedGuildId
+    ? selectedBreakdown?.role ??
+      profile?.guilds?.find((g) => g.id === selectedGuildId)?.expertRole ??
+      null
+    : profile?.guilds?.length
+      ? profile.guilds.reduce((best, g) => {
+          const gIdx = GUILD_RANK_ORDER.indexOf(g.expertRole);
+          const bIdx = GUILD_RANK_ORDER.indexOf(best);
+          return gIdx > bIdx ? g.expertRole : best;
+        }, profile.guilds[0].expertRole)
+      : null;
   const rankColors = primaryRank ? getRankColors(primaryRank) : null;
   const alignmentRate =
     alignedCount + deviationCount > 0
@@ -183,17 +238,18 @@ export default function ReputationPage() {
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-8">
-        {/* ── Eyebrow + display heading ── */}
-        <div>
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Workspace
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+        {/* ── Heading + guild scope selector ── */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display">
             Reputation
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-            Track your standing across guilds, decay timers, and the rewards your accuracy unlocks.
-          </p>
+          {guildOptions.length > 0 && (
+            <ReputationGuildSwitcher
+              guilds={guildOptions}
+              value={selectedGuildId}
+              onChange={handleGuildChange}
+            />
+          )}
         </div>
 
         {/* ── Hero ring card ── */}
@@ -235,7 +291,7 @@ export default function ReputationPage() {
                     )}
                   >
                     <Sparkles className="w-3 h-3" />
-                    {tier.name} · {tier.rewardWeight}× rewards
+                    {tier.rewardWeight}× rewards
                   </span>
                   {rankColors && primaryRank && (
                     <span
@@ -248,14 +304,12 @@ export default function ReputationPage() {
                       <span className="capitalize">{primaryRank}</span>
                     </span>
                   )}
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em]",
-                      STATUS_COLORS[tone].badge,
-                    )}
-                  >
-                    {tierLabelMap[tone]}
-                  </span>
+                  {selectedGuild && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-muted/40 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      <Shield className="w-3 h-3" />
+                      {getGuildIdentity(selectedGuild.name).shortName}
+                    </span>
+                  )}
                 </div>
 
                 <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
@@ -264,8 +318,8 @@ export default function ReputationPage() {
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   {nextTier
-                    ? `${(nextTier.minReputation - reputation).toLocaleString()} pts to ${nextTier.name} tier (${nextTier.rewardWeight}×)`
-                    : `You're at the top tier — ${tier.rewardWeight}× rewards across guilds.`}
+                    ? `${(nextTier.minReputation - reputation).toLocaleString()} pts to ${nextTier.minReputation.toLocaleString()} (${nextTier.rewardWeight}×)`
+                    : `You're at the top tier — ${tier.rewardWeight}× rewards.`}
                 </p>
 
                 {/* Tier progress bar */}
@@ -491,6 +545,205 @@ export default function ReputationPage() {
 }
 
 /* ── Inline helpers ─────────────────────────────────────────────── */
+
+interface ReputationGuildSwitcherProps {
+  guilds: Array<{ id: string; name: string }>;
+  value: string | undefined;
+  onChange: (guildId: string | undefined) => void;
+}
+
+/**
+ * Guild scope selector for the Reputation page. Mirrors the
+ * MarketplaceGuildSwitcher visual pattern but adds an "All guilds" option so
+ * the page can default to the global / aggregate view.
+ */
+function ReputationGuildSwitcher({ guilds, value, onChange }: ReputationGuildSwitcherProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  useClickOutside(containerRef, close, open);
+
+  const selectedGuild = guilds.find((g) => g.id === value);
+  const selectedIdentity = selectedGuild ? getGuildIdentity(selectedGuild.name) : null;
+
+  const handleSelect = (id: string | undefined) => {
+    onChange(id);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={cn(
+          "group flex items-center gap-2.5 cursor-pointer pl-1.5 pr-3 py-1.5",
+          "rounded-xl border bg-card/40 backdrop-blur-md text-left",
+          "transition-all duration-200",
+          "hover:bg-card/60",
+          "focus:outline-none focus:ring-2 focus:ring-primary/30",
+          "dark:bg-white/[0.04] dark:hover:bg-white/[0.07]",
+          open
+            ? "border-primary/45 ring-2 ring-primary/15"
+            : "border-border/60 hover:border-primary/40 dark:border-white/[0.08]"
+        )}
+      >
+        <span
+          className={cn(
+            "relative flex h-7 w-7 items-center justify-center rounded-lg flex-shrink-0",
+            "bg-gradient-to-br from-primary/25 via-primary/12 to-primary/5",
+            "ring-1 ring-primary/30",
+            "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+          )}
+        >
+          <VettedIcon
+            name={selectedIdentity?.iconName ?? "guilds"}
+            className={cn("h-4 w-4", selectedIdentity ? "text-primary" : "text-primary/70")}
+          />
+        </span>
+
+        <span className="flex flex-col items-start leading-none">
+          <span className="text-[9px] font-semibold tracking-[0.14em] text-muted-foreground/70 uppercase">
+            Scope
+          </span>
+          <span className="mt-0.5 text-sm font-semibold text-foreground tracking-tight">
+            {selectedIdentity?.shortName ?? "All guilds"}
+          </span>
+        </span>
+
+        <ChevronDown
+          className={cn(
+            "ml-1 h-4 w-4 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180 text-primary"
+          )}
+        />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div
+          role="listbox"
+          className={cn(
+            "absolute right-0 top-full mt-2 z-50 w-[20rem] overflow-hidden",
+            "rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl",
+            "shadow-2xl shadow-black/30",
+            "dark:bg-card/85 dark:border-white/[0.08]",
+            "animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150"
+          )}
+        >
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40 dark:border-white/[0.06]">
+            <span className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+              Reputation scope
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground/70">
+              {guilds.length} {guilds.length === 1 ? "guild" : "guilds"}
+            </span>
+          </div>
+
+          <div className="p-1.5 max-h-80 overflow-y-auto">
+            {/* All guilds (global aggregate) */}
+            <GuildScopeOption
+              iconName="guilds"
+              primary="All guilds"
+              secondary="Global aggregate"
+              isSelected={value === undefined}
+              onSelect={() => handleSelect(undefined)}
+            />
+            {guilds.map((guild) => {
+              const identity = getGuildIdentity(guild.name);
+              return (
+                <GuildScopeOption
+                  key={guild.id}
+                  iconName={identity.iconName}
+                  primary={identity.shortName}
+                  secondary={identity.displayName}
+                  isSelected={value === guild.id}
+                  onSelect={() => handleSelect(guild.id)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface GuildScopeOptionProps {
+  iconName: React.ComponentProps<typeof VettedIcon>["name"];
+  primary: string;
+  secondary: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+function GuildScopeOption({
+  iconName,
+  primary,
+  secondary,
+  isSelected,
+  onSelect,
+}: GuildScopeOptionProps) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={isSelected}
+      onClick={onSelect}
+      className={cn(
+        "group w-full text-left px-2.5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-150",
+        isSelected
+          ? "bg-primary/[0.08] dark:bg-primary/[0.10]"
+          : "hover:bg-muted/50 dark:hover:bg-white/[0.04]"
+      )}
+    >
+      <span
+        className={cn(
+          "relative flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 transition-all duration-150",
+          isSelected
+            ? "bg-gradient-to-br from-primary/30 via-primary/15 to-primary/5 ring-2 ring-primary/45"
+            : "bg-gradient-to-br from-primary/15 via-primary/8 to-primary/3 ring-1 ring-border/60 group-hover:ring-primary/35 dark:ring-white/[0.08]"
+        )}
+      >
+        <VettedIcon
+          name={iconName}
+          className={cn(
+            "h-5 w-5 transition-colors",
+            isSelected ? "text-primary" : "text-primary/70 group-hover:text-primary"
+          )}
+        />
+      </span>
+
+      <span className="flex-1 min-w-0 flex flex-col">
+        <span
+          className={cn(
+            "text-sm font-semibold leading-tight truncate transition-colors",
+            isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
+          )}
+        >
+          {primary}
+        </span>
+        <span className="mt-0.5 text-[11px] text-muted-foreground/80 truncate">
+          {secondary}
+        </span>
+      </span>
+
+      <span
+        className={cn(
+          "flex h-5 w-5 items-center justify-center rounded-full flex-shrink-0 transition-all",
+          isSelected
+            ? "bg-primary/15 ring-1 ring-primary/40 opacity-100 scale-100"
+            : "opacity-0 scale-75"
+        )}
+      >
+        <Check className="h-3 w-3 text-primary" strokeWidth={3} />
+      </span>
+    </button>
+  );
+}
 
 function ScoreRing({
   reputation,

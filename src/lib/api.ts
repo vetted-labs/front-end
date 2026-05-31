@@ -892,6 +892,23 @@ export const expertApi = {
     });
   },
 
+  getReputationBreakdown: (walletAddress: string) => {
+    const q = new URLSearchParams({ wallet: walletAddress });
+    return apiRequest<import("@/types").ReputationBreakdownEntry[]>(
+      `/api/experts/reputation/breakdown?${q.toString()}`,
+      { requiresAuth: false },
+    );
+  },
+
+  getReputationHistory: (walletAddress: string, params?: { limit?: number }) => {
+    const q = new URLSearchParams({ wallet: walletAddress });
+    if (params?.limit) q.append("limit", params.limit.toString());
+    return apiRequest<import("@/types").ReputationHistoryEntry[]>(
+      `/api/experts/reputation/history?${q.toString()}`,
+      { requiresAuth: false },
+    );
+  },
+
   getEarningsBreakdown: (walletAddress: string, params?: { guildId?: string; type?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number }) => {
     const q = new URLSearchParams({ wallet: walletAddress });
     if (params?.guildId) q.append("guildId", params.guildId);

@@ -106,12 +106,13 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
                 <div className="flex items-center justify-between mb-1">
                   <div>
                     <p className={`font-display text-xl font-bold ${isCurrent ? "text-warning" : isLocked ? colors.text : "text-muted-foreground"}`}>
-                      {symbol} {tier.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
+                      {symbol}{" "}
                       {tier.maxReputation
                         ? `${tier.minReputation.toLocaleString()} \u2013 ${tier.maxReputation.toLocaleString()} rep`
                         : `${tier.minReputation.toLocaleString()}+ rep`}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {tier.rewardWeight}\u00d7 rewards
                     </p>
                   </div>
                   {isCurrent && (

@@ -23,6 +23,27 @@ export interface ReputationTierConfig {
   border: string;
 }
 
+/** One guild's reputation totals — from GET /api/experts/reputation/breakdown. */
+export interface ReputationBreakdownEntry {
+  guildId: string;
+  guildName: string;
+  reputation: number;
+  role: string;
+  totalEvents: number;
+  totalGains: number;
+  totalLosses: number;
+}
+
+/** One reputation change-log row — from GET /api/experts/reputation/history. */
+export interface ReputationHistoryEntry {
+  id: string;
+  eventType: string;
+  amount: number;
+  reason: string;
+  guildName: string | null;
+  createdAt: string;
+}
+
 /** 3-tier reward system from whitepaper Section 3. */
 export type RewardTierName = "Foundation" | "Established" | "Authority";
 
