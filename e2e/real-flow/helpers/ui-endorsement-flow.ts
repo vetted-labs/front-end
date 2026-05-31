@@ -338,6 +338,10 @@ export async function expectExpertEarningsShowsEndorsement(
   }
 }
 
+// VET-99 merged the standalone /expert/endorsements/history route into the main
+// Endorsements page. Outcomes now surface in the "Active Endorsements" area: a
+// not-hired endorsement keeps the "Not Hired — 10% Slashed" badge on its rich
+// row, and hired outcomes live behind the "Hired" filter tab.
 export async function expectExpertHistoryShowsSlashedEndorsement(
   basePage: Page,
   expert: Expert,
@@ -347,20 +351,15 @@ export async function expectExpertHistoryShowsSlashedEndorsement(
   const page = await openExpertPage(
     basePage,
     expert,
-    "/expert/endorsements/history",
+    "/expert/endorsements",
     testContexts,
   );
   try {
     await expect(
-      page.getByRole("heading", { name: /endorsement history/i }),
+      page.getByRole("heading", { name: /active endorsements/i }).first(),
     ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible(
-      {
-        timeout: 30_000,
-      },
-    );
     await expect(page.getByText(candidateNamePattern).first()).toBeVisible({
       timeout: 30_000,
     });
@@ -386,20 +385,17 @@ export async function expectExpertHistoryShowsHiredEndorsement(
   const page = await openExpertPage(
     basePage,
     expert,
-    "/expert/endorsements/history",
+    "/expert/endorsements",
     testContexts,
   );
   try {
     await expect(
-      page.getByRole("heading", { name: /endorsement history/i }),
+      page.getByRole("heading", { name: /active endorsements/i }).first(),
     ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText(/completed endorsements/i).first()).toBeVisible(
-      {
-        timeout: 30_000,
-      },
-    );
+    // Switch to the "Hired" filter tab (VET-99) before asserting the outcome.
+    await page.getByRole("button", { name: /^hired \(/i }).first().click();
     await expect(page.getByText(candidateNamePattern).first()).toBeVisible({
       timeout: 30_000,
     });

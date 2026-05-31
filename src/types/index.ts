@@ -152,6 +152,8 @@ export type {
   EndorsementStats,
   EndorsementApplication,
   ActiveEndorsement,
+  EndorsementOutcomeRow,
+  EndorsementOutcomesResponse,
   DisputePanelMember,
   DisputeDetail,
   EarningsBreakdown,

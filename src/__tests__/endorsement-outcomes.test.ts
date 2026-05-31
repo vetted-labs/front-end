@@ -49,7 +49,7 @@ describe("analyticsApi contract", () => {
 // ─── Endorsement outcome logic ────────────────────────────────────────────────
 
 /**
- * COMPLETED_STATUSES mirrors the Set defined in MyEndorsementsHistory.tsx.
+ * COMPLETED_STATUSES mirrors the Set defined in ActiveEndorsementsList.tsx.
  * Tests verify the membership rules without importing from the component
  * (which is a React module and would require a full DOM render environment).
  */
@@ -87,7 +87,7 @@ describe("COMPLETED_STATUSES — completed set membership", () => {
 
 /**
  * OutcomeBadge label mapping — mirrors the component logic from
- * MyEndorsementsHistory.tsx without requiring a React render.
+ * ActiveEndorsementsList.tsx without requiring a React render.
  */
 function getOutcomeBadgeLabel(statusKey: string): string | null {
   if (statusKey === "hired") return "Hired";

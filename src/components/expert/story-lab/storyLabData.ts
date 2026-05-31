@@ -1106,13 +1106,13 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
       {
         id: "accountability-history",
-        target: TOUR_TARGETS.endorsementHistoryLink,
+        target: TOUR_TARGETS.endorsementActiveList,
         fallbackTarget: TOUR_TARGETS.endorsementMarketplace,
         placement: "auto",
         eyebrow: "Your track record",
         title: "Every endorsement you make is on the record",
         body:
-          "Active endorsements show above the marketplace; the full history — wins, losses, slashes — lives behind View All so anyone can audit your calls.",
+          "Your Active Endorsements list sits above the marketplace. Filter it by Hired or 90 days retained to see wins, losses, and slashes — so anyone can audit your calls.",
         detail:
           "Companies and other experts weigh your endorsement track record when yours appears next to theirs.",
         navTrigger: {

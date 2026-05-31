@@ -356,6 +356,40 @@ export interface ActiveEndorsement {
   };
 }
 
+/**
+ * A single row from `GET /api/endorsements/my-outcomes` — the authenticated
+ * expert's endorsement joined with the endorsed application's hire outcome.
+ * Powers the "Hired" and "90 days retained" filter tabs (VET-99 / BE-B).
+ */
+export interface EndorsementOutcomeRow {
+  endorsement_id: string;
+  application_id: string;
+  guild_id: string;
+  stake_amount: string;
+  endorsement_status: string;
+  application_status: string;
+  /** `hired` | `not_hired` | `performance_issue` | `successful_retention` | null */
+  hire_outcome: string | null;
+  hired_at: string | null;
+  retention_deadline: string | null;
+  retention_confirmed: boolean;
+  /** Computed server-side: `confirmed` once retained, `pending` while in window, else null. */
+  retention_status: "confirmed" | "pending" | null;
+  job_title: string;
+  location: string | null;
+  company_name: string | null;
+  candidate_name: string;
+  candidate_profile_picture_url: string | null;
+}
+
+/** Paginated envelope returned by `GET /api/endorsements/my-outcomes`. */
+export interface EndorsementOutcomesResponse {
+  data: EndorsementOutcomeRow[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // --- Endorsement Disputes ---
 export interface DisputePanelMember {
   id: string;

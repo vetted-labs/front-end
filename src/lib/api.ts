@@ -1990,6 +1990,37 @@ export const endorsementAccountabilityApi = {
   getHireOutcome: (applicationId: string) =>
     apiRequest<import("@/types").DisputeDetail>(`/api/endorsements/hire-outcome/${applicationId}`),
 
+  /**
+   * The authenticated expert's endorsements joined with each endorsed
+   * application's hire outcome (VET-99 / BE-B). Auth = expert wallet, passed
+   * as `?wallet=` like the other expert endpoints.
+   *
+   * Tab mapping (Decision 7): the "Hired" tab passes `hireOutcome: "hired"`;
+   * the "90 days retained" tab passes `retentionStatus: "confirmed"`.
+   */
+  getMyOutcomes: (
+    walletAddress: string,
+    params?: {
+      guildId?: string;
+      hireOutcome?: "hired" | "not_hired" | "performance_issue" | "successful_retention";
+      retentionStatus?: "confirmed" | "pending";
+      page?: number;
+      limit?: number;
+    },
+  ) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("wallet", walletAddress);
+    if (params?.guildId) queryParams.append("guildId", params.guildId);
+    if (params?.hireOutcome) queryParams.append("hireOutcome", params.hireOutcome);
+    if (params?.retentionStatus)
+      queryParams.append("retentionStatus", params.retentionStatus);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.limit) queryParams.append("limit", String(params.limit));
+    return apiRequest<import("@/types").EndorsementOutcomesResponse>(
+      `/api/endorsements/my-outcomes?${queryParams.toString()}`,
+    );
+  },
+
   getExpertRewards: (expertId: string) =>
     apiRequest<Record<string, unknown>>(`/api/endorsements/rewards/${expertId}`),
 

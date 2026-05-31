@@ -37,7 +37,7 @@ const EndorseCandidateModal = dynamic(
   { ssr: false },
 );
 import { EndorsementHeader } from "./endorsements/EndorsementHeader";
-import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
+import { ActiveEndorsementsList } from "./endorsements/ActiveEndorsementsList";
 import { STATUS_COLORS } from "@/config/colors";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
@@ -443,9 +443,10 @@ export function EndorsementMarketplace({
           </div>
         }
       >
-        <MyActiveEndorsements
-          userEndorsements={userEndorsements}
-          allUserEndorsements={allUserEndorsements}
+        <ActiveEndorsementsList
+          endorsements={userEndorsements}
+          walletAddress={address}
+          guildId={allGuilds ? undefined : guildId}
           guildName={allGuilds ? "any guild" : guildName}
           onSelectEndorsement={handleViewEndorsement}
         />

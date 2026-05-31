@@ -41,7 +41,7 @@ export const TOUR_TARGETS = {
   endorsementCandidateBidCta: "expert-endorsement-candidate-bid-cta",
   endorsementCandidateCard: "expert-endorsement-candidate-card",
   endorsementFilters: "expert-endorsement-filters",
-  endorsementHistoryLink: "expert-endorsement-history-link",
+  endorsementActiveList: "expert-endorsement-active-list",
   endorsementMarketplace: "expert-endorsement-marketplace",
   endorseModal: "expert-endorse-modal",
   endorseModalCandidate: "expert-endorse-modal-candidate",
