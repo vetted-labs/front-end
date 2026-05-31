@@ -2,15 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Shield,
-  ArrowUpRight,
-  Users,
-  FileCheck,
-  Briefcase,
-  Sparkles,
-  Search,
-} from "lucide-react";
+import { Shield, ArrowUpRight, Search } from "lucide-react";
 
 import { GuildCard } from "@/components/guild/card";
 
@@ -71,17 +63,7 @@ export default function GuildsListingPage() {
     router.push(`/guilds/${guildId}`);
   };
 
-  const allGuilds = guilds ?? [];
-  const totalGuilds = allGuilds.length;
-  const totalExperts = allGuilds.reduce(
-    (s, g) => s + (g.expertCount ?? g.totalMembers ?? 0),
-    0,
-  );
-  const totalOpenJobs = allGuilds.reduce((s, g) => s + (g.openPositions ?? 0), 0);
-  const totalReviews = allGuilds.reduce(
-    (s, g) => s + (g.totalProposalsReviewed ?? 0),
-    0,
-  );
+  const totalGuilds = (guilds ?? []).length;
 
   return (
     <div className="relative min-h-screen bg-background text-foreground animate-page-enter">
@@ -96,45 +78,10 @@ export default function GuildsListingPage() {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── Hero ── */}
         <header className="pt-16 pb-10 md:pt-20 md:pb-12">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-4">
-            <Sparkles className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
-            Explore
-          </p>
-
-          <h1 className="font-display font-bold text-[clamp(2.25rem,5.5vw,3.75rem)] leading-[1.05] tracking-tight text-foreground mb-4">
-            Guilds.
+          <h1 className="font-display font-bold text-[clamp(2.25rem,5.5vw,3.75rem)] leading-[1.05] tracking-tight text-foreground">
+            Active Guilds
           </h1>
-
-          <p className="text-sm sm:text-base text-muted-foreground max-w-xl leading-relaxed">
-            Curated communities of peer-reviewed domain experts who define what{" "}
-            <span className="text-foreground/80">qualified</span> means, vet
-            with skin in the game, and earn from being right.
-          </p>
         </header>
-
-        {/* ── KPI strip ── */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-          <KpiTile
-            label="Guilds"
-            value={isLoading ? null : totalGuilds.toLocaleString()}
-            icon={Shield}
-          />
-          <KpiTile
-            label="Experts"
-            value={isLoading ? null : totalExperts.toLocaleString()}
-            icon={Users}
-          />
-          <KpiTile
-            label="Open roles"
-            value={isLoading ? null : totalOpenJobs.toLocaleString()}
-            icon={Briefcase}
-          />
-          <KpiTile
-            label="Reviews completed"
-            value={isLoading ? null : totalReviews.toLocaleString()}
-            icon={FileCheck}
-          />
-        </section>
 
         {/* ── Search ── */}
         <div className="mb-6 flex items-center gap-3">
@@ -235,34 +182,6 @@ export default function GuildsListingPage() {
             </button>
           </div>
         </section>
-      </div>
-    </div>
-  );
-}
-
-interface KpiTileProps {
-  label: string;
-  value: string | null;
-  icon: typeof Shield;
-}
-
-function KpiTile({ label, value, icon: Icon }: KpiTileProps) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
-          {label}
-        </p>
-        {value === null ? (
-          <Skeleton className="h-7 w-16" />
-        ) : (
-          <p className="font-display text-2xl sm:text-[26px] font-bold tracking-tight text-foreground tabular-nums">
-            {value}
-          </p>
-        )}
-      </div>
-      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center flex-shrink-0">
-        <Icon className="w-4 h-4" />
       </div>
     </div>
   );

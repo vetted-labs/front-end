@@ -234,6 +234,7 @@ export function GuildCard(props: GuildCardProps) {
             <GuildCardHeader
               registrySlug={slug}
               registryNumber={idx}
+              hideRegistryCode
               status={open > 0 ? { kind: "open", count: open } : "none"}
             />
             <div className="flex items-center gap-4">

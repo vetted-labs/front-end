@@ -68,16 +68,13 @@ function StatCell({ label, value, delta, positive = true, last = false }: StatCe
 
 export function GuildPublicHero({
   guildName,
-  description,
   members,
   reviews,
   staked,
-  consensusPct,
   openRoles,
   membersDelta,
   reviewsDelta,
   stakedDelta,
-  consensusDelta,
   openRolesDelta,
   isMember,
   isPending,
@@ -139,17 +136,9 @@ export function GuildPublicHero({
           </div>
 
           <div className="flex-1 pb-2 min-w-0">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.06em] mb-2.5 ${identity.classes.bg} ${identity.classes.text} border ${identity.classes.border}`}
-            >
-              {identity.shortName} Guild
-            </span>
-            <h1 className="font-display text-[32px] sm:text-[36px] leading-[1.1] tracking-[-0.01em] text-foreground mb-2">
+            <h1 className="font-display text-[32px] sm:text-[36px] leading-[1.1] tracking-[-0.01em] text-foreground">
               {guildName}
             </h1>
-            <p className="text-[15px] leading-[1.5] text-muted-foreground max-w-2xl line-clamp-2">
-              {description}
-            </p>
           </div>
 
           <div className="flex flex-col items-end gap-2 pb-2 flex-shrink-0">
@@ -195,16 +184,11 @@ export function GuildPublicHero({
         </div>
       </div>
 
-      {/* 5-stat strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-t border-surface-border">
+      {/* 4-stat strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-surface-border">
         <StatCell label="Members" value={members.toLocaleString()} delta={membersDelta} />
         <StatCell label="Reviews" value={reviews.toLocaleString()} delta={reviewsDelta} />
         <StatCell label="Staked" value={staked} delta={stakedDelta} positive={false} />
-        <StatCell
-          label="Consensus"
-          value={typeof consensusPct === "number" ? `${consensusPct}%` : consensusPct}
-          delta={consensusDelta}
-        />
         <StatCell
           label="Open roles"
           value={openRoles}
