@@ -61,7 +61,6 @@ export const expertSidebarConfig: SidebarConfig = {
     {
       label: "Rewards",
       items: [
-        { label: "Analytics", href: "/expert/analytics", icon: "reputation" },
         { label: "Earnings", href: "/expert/earnings", icon: "earnings" },
         { label: "Reputation", href: "/expert/reputation", icon: "reputation" },
         { label: "Leaderboard", href: "/expert/leaderboard", icon: "leaderboard" },
@@ -117,7 +116,6 @@ export const companySidebarConfig: SidebarConfig = {
       label: "Company",
       items: [
         { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
-        { label: "Analytics", href: "/dashboard/analytics", icon: "reputation" },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
     },
@@ -132,7 +130,6 @@ export const candidateSidebarConfig: SidebarConfig = {
       items: [
         { label: "Dashboard", href: "/candidate/dashboard", icon: "home", exact: true },
         { label: "Notifications", href: "/candidate/notifications", icon: "notification", badge: "notifications" },
-        { label: "Analytics", href: "/candidate/analytics", icon: "reputation" },
       ],
     },
     {
