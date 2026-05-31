@@ -46,12 +46,12 @@ describe("expert setup flow", () => {
   });
 
   it("walks the page guide through applications, earnings, reputation, and notifications", () => {
+    // Governance step is filtered out while GOVERNANCE_ENABLED is off (VET-103).
     expect(EXPERT_SETUP_GUIDE_STEPS.map((step) => step.id)).toEqual([
       "applications",
       "guilds",
       "staking",
       "endorsements",
-      "governance",
       "earnings",
       "reputation",
       "notifications",
