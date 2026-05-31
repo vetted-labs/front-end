@@ -3,9 +3,10 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000
 
 // Feature flags for sections temporarily hidden pending rework. There is no
 // flag service, so they live here as simple constants — flip to re-enable
-// (keeps the removals reversible). See VET-102 (Guild Ranks) / VET-103 (Governance).
+// (keeps the removals reversible). See VET-102 (Guild Ranks) / VET-103 (Governance) / VET-104 (Analytics).
 export const GUILD_RANKS_ENABLED = false;
 export const GOVERNANCE_ENABLED = false;
+export const ANALYTICS_ENABLED = false;
 
 import { STATUS_COLORS } from "./colors";
 
