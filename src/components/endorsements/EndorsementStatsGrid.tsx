@@ -2,26 +2,50 @@
 
 import { useMemo } from "react";
 import { STATUS_COLORS } from "@/config/colors";
-import type { ActiveEndorsement, EarningsBreakdownResponse, EarningsEntry } from "@/types";
+import { getCurrencySymbol } from "@/lib/web3Utils";
+import type {
+  ActiveEndorsement,
+  EarningsBreakdownResponse,
+  EarningsEntry,
+  EndorsementApplication,
+} from "@/types";
 
 interface EndorsementStatsGridProps {
-  /** Endorsements in the currently selected guild */
+  /** Endorsements in the currently selected guild (or all of them in all-guilds mode) */
   guildEndorsements: ActiveEndorsement[];
   /** All endorsements across all guilds */
   allEndorsements: ActiveEndorsement[];
   /** Real earnings data from expertApi.getEarningsBreakdown() */
   earningsData: EarningsBreakdownResponse | null;
+  /** Currently loaded applications — source of the Potential Earning range (VET-98 / D6). */
+  applications: EndorsementApplication[];
+  /** Whether the cross-guild ("All guilds") scope is active. */
+  allGuilds: boolean;
+  /** Number of guilds the expert belongs to (for the aggregate label). */
+  memberGuildCount: number;
 }
 
 const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 40; // r=40
 
-function GuildShareGauge({ rate, guildCount, totalCount }: { rate: number; guildCount: number; totalCount: number }) {
+function NumberOfEndorsementsGauge({
+  rate,
+  guildCount,
+  totalCount,
+  allGuilds,
+  memberGuildCount,
+}: {
+  rate: number;
+  guildCount: number;
+  totalCount: number;
+  allGuilds: boolean;
+  memberGuildCount: number;
+}) {
   const offset = GAUGE_CIRCUMFERENCE - (rate / 100) * GAUGE_CIRCUMFERENCE;
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 transition-all hover:border-border">
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
-        Guild Share
+        Number of Endorsements
       </p>
       <div className="flex items-center gap-4">
         <div className="relative w-[100px] h-[100px] shrink-0">
@@ -45,19 +69,88 @@ function GuildShareGauge({ rate, guildCount, totalCount }: { rate: number; guild
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-mono font-bold text-2xl text-foreground leading-none">
-              {rate}<span className="text-sm text-muted-foreground">%</span>
-            </span>
+            {allGuilds ? (
+              <span className="font-mono font-bold text-2xl text-foreground leading-none">
+                {guildCount}
+              </span>
+            ) : (
+              <span className="font-mono font-bold text-2xl text-foreground leading-none">
+                {rate}<span className="text-sm text-muted-foreground">%</span>
+              </span>
+            )}
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-muted-foreground font-medium mb-1.5">
-            {guildCount} of {totalCount} in this guild
-          </p>
-          <p className="text-xs text-muted-foreground/50 leading-relaxed">
-            Endorsements in this guild out of your total.
-          </p>
+          {allGuilds ? (
+            <>
+              <p className="text-sm text-muted-foreground font-medium mb-1.5">
+                {guildCount} across {memberGuildCount}{" "}
+                {memberGuildCount === 1 ? "guild" : "guilds"}
+              </p>
+              <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                Your active endorsements across every guild you belong to.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground font-medium mb-1.5">
+                {guildCount} of {totalCount} in this guild
+              </p>
+              <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                Endorsements in this guild out of your total.
+              </p>
+            </>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Potential Earning card (VET-98 / Decision 6). Displays the server-provided
+ * `potential_earning_min`..`potential_earning_max` as a range. We aggregate the
+ * loaded applications into the lowest floor and highest ceiling; rows whose
+ * values are null are skipped. Renders "—" when no usable range exists.
+ */
+function PotentialEarningCard({ applications }: { applications: EndorsementApplication[] }) {
+  const { min, max, currency } = useMemo(() => {
+    let lo: number | null = null;
+    let hi: number | null = null;
+    let cur: string | undefined;
+    for (const app of applications) {
+      const appMin = app.potential_earning_min;
+      const appMax = app.potential_earning_max;
+      if (typeof appMin === "number" && (lo === null || appMin < lo)) lo = appMin;
+      if (typeof appMax === "number" && (hi === null || appMax > hi)) hi = appMax;
+      if (!cur && (typeof appMin === "number" || typeof appMax === "number")) {
+        cur = app.salary_currency;
+      }
+    }
+    return { min: lo, max: hi, currency: cur };
+  }, [applications]);
+
+  const symbol = getCurrencySymbol(currency ?? "USD");
+  const hasRange = min !== null && max !== null;
+  const fmt = (n: number) =>
+    `${symbol}${Math.round(n).toLocaleString("en-US")}`;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 transition-all hover:border-border">
+      <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
+        Potential Earning
+      </p>
+      <div className="flex h-[100px] flex-col justify-center">
+        <div className="flex items-baseline gap-2">
+          <span className={`font-mono font-bold text-2xl leading-none ${STATUS_COLORS.positive.text}`}>
+            {hasRange ? `${fmt(min!)} – ${fmt(max!)}` : "—"}
+          </span>
+        </div>
+        <p className="mt-2.5 text-xs text-muted-foreground/50 leading-relaxed">
+          {hasRange
+            ? "Estimated reward range across the open applications you can endorse."
+            : "Available once an open application reports a salary range."}
+        </p>
       </div>
     </div>
   );
@@ -212,7 +305,12 @@ export function EndorsementStatsGrid({
   guildEndorsements,
   allEndorsements,
   earningsData,
+  applications,
+  allGuilds,
+  memberGuildCount,
 }: EndorsementStatsGridProps) {
+  // In all-guilds mode the "guild" scope already spans every guild, so the
+  // count IS the cross-guild total (aggregated sum across member guilds).
   const guildCount = guildEndorsements.length;
   const totalCount = allEndorsements.length;
 
@@ -226,12 +324,15 @@ export function EndorsementStatsGrid({
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <GuildShareGauge
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <NumberOfEndorsementsGauge
         rate={guildShareRate}
         guildCount={guildCount}
         totalCount={totalCount}
+        allGuilds={allGuilds}
+        memberGuildCount={memberGuildCount}
       />
+      <PotentialEarningCard applications={applications} />
       <EarningsChart earningsData={earningsData} />
       <ActiveEndorsementsStat
         count={guildCount}

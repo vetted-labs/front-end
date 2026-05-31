@@ -16,7 +16,6 @@ import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
 import { useFetch } from "@/lib/hooks/useFetch";
 import type {
   EndorsementApplication,
-  GuildRecord,
   EarningsBreakdownResponse,
   TokenBalance,
   StakeBalance,
@@ -83,9 +82,10 @@ interface EndorsementMarketplaceProps {
   guildName: string;
   blockchainGuildId?: `0x${string}`;
   initialApplicationId?: string;
-  guilds: GuildRecord[];
-  selectedGuildId: string | undefined;
-  onGuildChange: (guildId: string) => void;
+  /** When true, show endorsement-eligible applications across every member guild. */
+  allGuilds?: boolean;
+  /** Number of guilds the expert belongs to (used to aggregate the all-guilds view). */
+  memberGuildCount?: number;
 }
 
 export function EndorsementMarketplace({
@@ -93,9 +93,8 @@ export function EndorsementMarketplace({
   guildName,
   blockchainGuildId: blockchainGuildIdProp,
   initialApplicationId,
-  guilds,
-  selectedGuildId,
-  onGuildChange,
+  allGuilds = false,
+  memberGuildCount = 0,
 }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
@@ -114,9 +113,6 @@ export function EndorsementMarketplace({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"endorse" | "view">("endorse");
   const [modalInitialStep, setModalInitialStep] = useState<1 | 2 | 3 | 4>(1);
-  const [applicationFilter, setApplicationFilter] = useState<
-    "active" | "closed"
-  >("active");
   const [search, setSearch] = useState("");
 
   // Track whether we've already auto-opened the modal for initialApplicationId
@@ -142,12 +138,22 @@ export function EndorsementMarketplace({
     },
   );
 
-  // Load applications with server-side pagination
+  // Load applications with server-side pagination. In all-guilds mode we hit
+  // the cross-guild endpoint, which returns eligible applications across every
+  // guild the expert belongs to.
   const APPS_PER_PAGE = 12;
   const fetchApplications = useCallback(
     async (page: number, limit: number) => {
-      if (!guildId || !address)
-        return { data: [] as EndorsementApplication[], total: 0 };
+      if (!address) return { data: [] as EndorsementApplication[], total: 0 };
+      if (allGuilds) {
+        const response = await blockchainApi.getApplicationsForAllGuilds(
+          address,
+          page,
+          limit,
+        );
+        return { data: response.data ?? [], total: response.total ?? 0 };
+      }
+      if (!guildId) return { data: [] as EndorsementApplication[], total: 0 };
       const response = await blockchainApi.getApplicationsForEndorsement(
         guildId,
         address,
@@ -156,7 +162,7 @@ export function EndorsementMarketplace({
       );
       return { data: response.data ?? [], total: response.total ?? 0 };
     },
-    [guildId, address],
+    [guildId, address, allGuilds],
   );
   const {
     data: rawApplications,
@@ -168,7 +174,7 @@ export function EndorsementMarketplace({
     setPage: setApplicationsPage,
   } = usePaginatedFetch<EndorsementApplication>(fetchApplications, {
     limit: APPS_PER_PAGE,
-    skip: !guildId || !address,
+    skip: !address || (!allGuilds && !guildId),
     onError: (error) => {
       toast.error(error || "Failed to load applications");
     },
@@ -218,31 +224,27 @@ export function EndorsementMarketplace({
     { skip: !address || !blockchainGuildId },
   );
 
-  // Filter endorsements for current guild
-  const userEndorsements = allUserEndorsements.filter(
-    (e) => e.guild?.id === guildId,
-  );
+  // Endorsements scoped to the selected guild — or all of them in all-guilds mode.
+  const userEndorsements = allGuilds
+    ? allUserEndorsements
+    : allUserEndorsements.filter((e) => e.guild?.id === guildId);
 
-  // Split applications by bidding status for filter tabs
+  // Only open (non-expired) applications are shown — the Closed tab was removed
+  // (VET-98). A deep-link to a now-closed application simply degrades to empty.
   const activeApps = (applications ?? []).filter(
     (app) => !isBiddingExpired(app),
   );
-  const closedApps = (applications ?? []).filter((app) =>
-    isBiddingExpired(app),
-  );
-  const tabFilteredApplications =
-    applicationFilter === "active" ? activeApps : closedApps;
 
   const filteredApplications = useMemo(() => {
-    if (!search.trim()) return tabFilteredApplications;
+    if (!search.trim()) return activeApps;
     const q = search.toLowerCase();
-    return tabFilteredApplications.filter(
+    return activeApps.filter(
       (app) =>
         app.candidate_name?.toLowerCase().includes(q) ||
         app.job_title?.toLowerCase().includes(q) ||
         app.company_name?.toLowerCase().includes(q),
     );
-  }, [tabFilteredApplications, search]);
+  }, [activeApps, search]);
 
   // eslint-disable-next-line no-restricted-syntax -- runtime deps: auto-open modal once applications finish loading with a matching applicationId
   useEffect(() => {
@@ -397,13 +399,12 @@ export function EndorsementMarketplace({
         isOnSepolia={isOnSepolia}
         chainName={chain?.name}
         onSwitchToSepolia={() => switchChain({ chainId: sepolia.id })}
-        guilds={guilds}
-        selectedGuildId={selectedGuildId}
-        onGuildChange={onGuildChange}
         guildEndorsements={userEndorsements}
         allEndorsements={allUserEndorsements}
         earningsData={earningsData}
-        userStake={userStake}
+        applications={applications ?? []}
+        allGuilds={allGuilds}
+        memberGuildCount={memberGuildCount}
       />
 
       {!meetsMinimumStake && (
@@ -430,7 +431,7 @@ export function EndorsementMarketplace({
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3">
-                Your Active Endorsements
+                Active Endorsements
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -445,19 +446,19 @@ export function EndorsementMarketplace({
         <MyActiveEndorsements
           userEndorsements={userEndorsements}
           allUserEndorsements={allUserEndorsements}
-          guildName={guildName}
+          guildName={allGuilds ? "any guild" : guildName}
           onSelectEndorsement={handleViewEndorsement}
         />
       </DataSection>
 
-      {/* Applications */}
+      {/* Job applications */}
       <div
         className="mt-8"
         {...dataTourTarget(TOUR_TARGETS.endorsementApplicationsList)}
       >
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <h2 className="font-display font-bold text-xl tracking-tight">
-            Applications
+            Job applications
           </h2>
           {!loading && (
             <div
@@ -470,34 +471,6 @@ export function EndorsementMarketplace({
                 onChange={(e) => setSearch(e.target.value)}
                 className="max-w-xs h-8 text-xs"
               />
-              <div className="flex items-center gap-0.5 rounded-lg bg-muted/30 border border-border p-0.5">
-                <button
-                  onClick={() => setApplicationFilter("active")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    applicationFilter === "active"
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Active
-                  <span className="ml-1.5 font-mono text-[10px] opacity-60">
-                    {activeApps.length}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setApplicationFilter("closed")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    applicationFilter === "closed"
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Closed
-                  <span className="ml-1.5 font-mono text-[10px] opacity-60">
-                    {closedApps.length}
-                  </span>
-                </button>
-              </div>
               <span className="font-mono text-xs text-muted-foreground">
                 {applicationsTotalItems} total
               </span>
@@ -509,16 +482,8 @@ export function EndorsementMarketplace({
           loading={loading}
           onSelectApplication={handleViewDetails}
           onViewExistingBid={handleViewEndorsement}
-          emptyTitle={
-            applicationFilter === "active"
-              ? "No Active Applications"
-              : "No Closed Applications"
-          }
-          emptyDescription={
-            applicationFilter === "active"
-              ? "All applications on this page have closed bidding, or there are no applications yet."
-              : "There are no applications with closed bidding on this page."
-          }
+          emptyTitle="No Active Applications"
+          emptyDescription="There are no open applications to endorse right now."
           markedApplicationId={
             isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined
           }

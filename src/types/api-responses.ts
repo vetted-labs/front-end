@@ -275,6 +275,10 @@ export interface EndorsementApplication {
   salary_min: number;
   salary_max: number;
   salary_currency?: string;
+  /** Server-computed potential endorser earning floor (VET-98 / BE-A). `null` when salary is unknown. */
+  potential_earning_min?: number | null;
+  /** Server-computed potential endorser earning ceiling (VET-98 / BE-A). `null` when salary is unknown. */
+  potential_earning_max?: number | null;
   applied_at: string;
   /** ISO timestamp 24h after applied_at — when blind bidding ends. */
   bidding_deadline?: string;

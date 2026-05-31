@@ -1526,6 +1526,30 @@ export const blockchainApi = {
     return { data: json.data ?? [], total: json.total ?? (json.data?.length ?? 0) };
   },
 
+  // VET-98 / BE-A — endorsement-eligible applications across ALL the expert's member guilds.
+  getApplicationsForAllGuilds: async (expertAddress: string, page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    params.append("allGuilds", "true");
+    params.append("wallet", expertAddress);
+    if (page) params.append("page", String(page));
+    if (limit) params.append("limit", String(limit));
+    // Use rawEnvelope to preserve `total` + `memberGuildsFiltered` alongside `data`.
+    const json = await apiRequest<{
+      success?: boolean;
+      data?: import("@/types").EndorsementApplication[];
+      total?: number;
+      memberGuildsFiltered?: boolean;
+    }>(`/api/blockchain/endorsements/applications?${params.toString()}`, {
+      rawEnvelope: true,
+      requiresAuth: false,
+    });
+    return {
+      data: json.data ?? [],
+      total: json.total ?? (json.data?.length ?? 0),
+      memberGuildsFiltered: json.memberGuildsFiltered ?? false,
+    };
+  },
+
   getExpertEndorsements: async (walletAddress: string, params?: { status?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.status) queryParams.append("status", params.status);

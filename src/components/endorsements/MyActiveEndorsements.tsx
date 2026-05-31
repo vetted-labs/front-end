@@ -157,15 +157,12 @@ export function MyActiveEndorsements({
     onSelectEndorsement(applicationForModal);
   };
 
-  // Compute total staked across guild endorsements
-  const totalStaked = userEndorsements.reduce((sum, e) => sum + parseFloat(e.stakeAmount || '0'), 0);
-
   return (
     <div className="min-w-0">
       {/* Section header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3">
-          Your Active Endorsements
+          Active Endorsements
           {userEndorsements.length > 0 && (
             <span className="font-mono text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               {userEndorsements.length}
@@ -173,11 +170,6 @@ export function MyActiveEndorsements({
           )}
         </h2>
         <div className="flex items-center gap-4">
-          {totalStaked > 0 && (
-            <span className="font-mono text-xs text-muted-foreground">
-              Total: <span className="text-foreground font-medium">{totalStaked.toFixed(0)} VETD</span> staked
-            </span>
-          )}
           {allUserEndorsements.length > 0 && (
             <Link
               href="/expert/endorsements/history"

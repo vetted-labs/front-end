@@ -1,11 +1,10 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
 import { VettedIcon } from "@/components/ui/vetted-icon";
-import { Button } from "@/components/ui/button";
-import { HelpLink } from "@/components/ui/HelpLink";
-import { DOC_LINKS } from "@/config/docLinks";
+import { MarketplaceGuildSwitcher } from "@/components/endorsements/MarketplaceGuildSwitcher";
+import { ALL_GUILDS_ID } from "@/components/endorsements/allGuilds";
 import { expertApi } from "@/lib/api";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -16,7 +15,6 @@ import { getGuildIdentity } from "@/lib/guildIdentity";
 import type { GuildRecord } from "@/types";
 
 export default function EndorsementsPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const applicationIdParam = searchParams.get("applicationId");
   const guildIdParam = searchParams.get("guildId");
@@ -47,13 +45,16 @@ export default function EndorsementsPage() {
     ? withStoryLabGuildRecords(expertGuildRecords)
     : expertGuildRecords;
 
+  // `null` = no manual selection yet; ALL_GUILDS_ID = cross-guild view.
   const [manualGuildId, setManualGuildId] = useState<string | null>(null);
+
+  const isAllGuilds = manualGuildId === ALL_GUILDS_ID;
 
   const selectedGuild = useMemo(() => {
     if (guildRecords.length === 0) return null;
 
     // Manual selection takes priority
-    if (manualGuildId) {
+    if (manualGuildId && manualGuildId !== ALL_GUILDS_ID) {
       const match = guildRecords.find(g => g.id === manualGuildId);
       if (match) return match;
     }
@@ -71,6 +72,16 @@ export default function EndorsementsPage() {
 
   const guildIdentity = selectedGuild ? getGuildIdentity(selectedGuild.name) : null;
 
+  // Third breadcrumb crumb: "All guilds" in cross-guild mode, else the guild short name.
+  const scopeCrumb = isAllGuilds ? "All guilds" : guildIdentity?.shortName ?? null;
+  // The big title is just the scope name (guild name or "All guilds").
+  const scopeTitle = isAllGuilds
+    ? "All guilds"
+    : guildIdentity?.shortName ?? "Endorsement";
+
+  // Selector value: the sentinel in all-guilds mode, otherwise the resolved guild id.
+  const selectorValue = isAllGuilds ? ALL_GUILDS_ID : selectedGuild?.id;
+
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -79,13 +90,13 @@ export default function EndorsementsPage() {
           {/* Breadcrumb trail */}
           <div className="mb-4 flex items-center gap-2 text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground/80">
             <VettedIcon name="endorsement" className="h-3.5 w-3.5 text-primary/70" />
-            <span>Expert Workspace</span>
+            <span>Dashboard</span>
             <span className="text-muted-foreground/40">/</span>
-            <span>Endorsements</span>
-            {guildIdentity && (
+            <span>Endorsement</span>
+            {scopeCrumb && (
               <>
                 <span className="text-muted-foreground/40">/</span>
-                <span className="text-foreground/85">{guildIdentity.shortName}</span>
+                <span className="text-foreground/85">{scopeCrumb}</span>
               </>
             )}
           </div>
@@ -97,62 +108,41 @@ export default function EndorsementsPage() {
                 <div className="absolute inset-0 -m-1 rounded-2xl bg-primary/20 blur-xl opacity-60 pointer-events-none" aria-hidden />
                 <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 via-primary/15 to-primary/5 ring-1 ring-primary/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]">
                   <VettedIcon
-                    name={guildIdentity?.iconName ?? "endorsement"}
+                    name={isAllGuilds ? "guilds" : guildIdentity?.iconName ?? "endorsement"}
                     className="h-8 w-8 text-primary"
                   />
                 </div>
               </div>
 
-              <div className="min-w-0 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/[0.08] ring-1 ring-primary/25 text-[10px] font-semibold tracking-[0.14em] uppercase text-primary">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                    Live Marketplace
-                  </span>
-                </div>
+              <div className="min-w-0 flex items-center">
                 <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight leading-[1.05]">
-                  {guildIdentity ? (
-                    <>
-                      <span className="text-primary">{guildIdentity.shortName}</span>
-                      <span className="text-muted-foreground/40 mx-2">·</span>
-                      <span>Endorsements</span>
-                    </>
-                  ) : (
-                    "Endorsement Marketplace"
-                  )}
+                  <span className="text-primary">{scopeTitle}</span>
                 </h1>
-                <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed">
-                  {guildIdentity
-                    ? `Endorse candidates applying to the ${guildIdentity.displayName}. Top 3 endorsers earn rewards when the candidate is hired.`
-                    : "Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when the candidate is hired."}{" "}
-                  <HelpLink href={DOC_LINKS.endorsements} size="sm">
-                    How endorsements work
-                  </HelpLink>
-                </p>
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0"
-              onClick={() => router.push("/expert/earnings")}
-            >
-              <VettedIcon name="endorsement" className="w-4 h-4 mr-2" />
-              View Rewards
-            </Button>
+            {/* Guild scope selector — replaces the former "View Rewards" button */}
+            <div className="flex flex-col items-start gap-1.5 sm:items-end flex-shrink-0">
+              <span className="text-[11px] font-medium tracking-[0.06em] uppercase text-muted-foreground/80">
+                Endorse candidates in
+              </span>
+              <MarketplaceGuildSwitcher
+                guilds={guildRecords}
+                value={selectorValue}
+                onChange={setManualGuildId}
+              />
+            </div>
           </div>
         </div>
 
         <EndorsementMarketplace
-          key={selectedGuild?.id ?? "loading"}
+          key={isAllGuilds ? "all-guilds" : selectedGuild?.id ?? "loading"}
           guildId={selectedGuild?.id ?? ""}
           guildName={selectedGuild?.name ?? ""}
           blockchainGuildId={selectedGuild?.blockchainGuildId as `0x${string}` | undefined}
           initialApplicationId={applicationIdParam || undefined}
-          guilds={guildRecords}
-          selectedGuildId={selectedGuild?.id}
-          onGuildChange={setManualGuildId}
+          allGuilds={isAllGuilds}
+          memberGuildCount={guildRecords.length}
         />
       </div>
     </div>
