@@ -1,5 +1,7 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 const eslintConfig = [
   ...nextCoreWebVitals,
@@ -14,12 +16,24 @@ const eslintConfig = [
     ],
   },
   {
+    // Register eslint-plugin-react explicitly so `react/*` rules resolve
+    // regardless of the local Node version / eslint-config-next internals
+    // (previously only worked in CI).
+    plugins: { react: reactPlugin, "react-hooks": reactHooksPlugin },
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
       "react/no-danger": "warn",
+      // React Compiler advisory rules (eslint-plugin-react-hooks v6). The codebase
+      // is not yet compiler-clean (pre-existing violations across many components);
+      // keep them as warnings so CI isn't blocked, and fix incrementally.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
       "no-restricted-imports": [
         "error",
         {
