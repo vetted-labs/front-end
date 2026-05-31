@@ -17,11 +17,14 @@ interface ActionButtonPanelProps {
     stakedAmount: string;
   };
   onRefresh?: () => void;
+  /** Whether to render the "Start Endorsing" action. Defaults to true. */
+  showEndorse?: boolean;
 }
 
 export function ActionButtonPanel({
   stakingStatus,
   onRefresh,
+  showEndorse = true,
 }: ActionButtonPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,18 +49,20 @@ export function ActionButtonPanel({
             <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.positive.dot} ml-1`} />
           )}
         </button>
-        <button
-          onClick={() => router.push("/expert/endorsements")}
-          className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-primary/[0.12] border border-primary/[0.25] text-primary text-xs font-medium hover:bg-primary/[0.18] transition-colors"
-        >
-          <VettedIcon name="endorsement" className="w-3.5 h-3.5" />
-          Start Endorsing
-          {!meetsMinimum && (
-            <span className={`text-xs ${STATUS_COLORS.warning.text} ml-1`}>
-              Stake Required
-            </span>
-          )}
-        </button>
+        {showEndorse && (
+          <button
+            onClick={() => router.push("/expert/endorsements")}
+            className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-primary/[0.12] border border-primary/[0.25] text-primary text-xs font-medium hover:bg-primary/[0.18] transition-colors"
+          >
+            <VettedIcon name="endorsement" className="w-3.5 h-3.5" />
+            Start Endorsing
+            {!meetsMinimum && (
+              <span className={`text-xs ${STATUS_COLORS.warning.text} ml-1`}>
+                Stake Required
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       {showStakingModal && (

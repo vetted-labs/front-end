@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Lock, Shield, Vote, Coins, Activity, Wallet, Copy, Check, ExternalLink, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { Vote, Wallet, Copy, Check, ExternalLink } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 
-import { SkeletonStatCard, SkeletonCard } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
@@ -16,7 +16,6 @@ import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
 import { RankProgress } from "@/components/dashboard/RankProgress";
 import { GuildsSection } from "@/components/dashboard/GuildsSection";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { SlimNotificationsFeed } from "@/components/dashboard/SlimNotificationsFeed";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useExpertOnboardingTour } from "@/lib/hooks/useExpertOnboardingTour";
@@ -35,29 +34,13 @@ import { EXPERT_STORY_COMPLETION_EVENTS } from "@/components/expert/onboarding/E
 import {
   TOUR_TARGETS,
   dataTourTarget,
-  tourTargetSelector,
 } from "@/components/expert/onboarding/tourTargets";
 
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
 import { truncateAddress, cn } from "@/lib/utils";
-import {
-  GUILD_RANK_ORDER,
-  REPUTATION_DECAY_WARNING_DAYS,
-  REPUTATION_DECAY_CYCLE_DAYS,
-  computeVoteWeight,
-} from "@/config/constants";
-import { STATUS_COLORS, getRankColors, REWARD_TIER_COLORS } from "@/config/colors";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, ExpertGuild } from "@/types";
-
-type StatusTone = "positive" | "warning" | "negative" | "neutral" | "info" | "pending";
-
-function repTone(reputation: number): StatusTone {
-  if (reputation >= 1500) return "positive";
-  if (reputation >= 750) return "info";
-  if (reputation === 0) return "neutral";
-  return "warning";
-}
 
 function GovernanceSummaryCard() {
   const router = useRouter();
@@ -100,32 +83,6 @@ function GovernanceSummaryCard() {
       </span>
     </div>
   );
-}
-
-function getDaysUntilDecay(lastActivityTimestamp: number | null): number {
-  if (lastActivityTimestamp === null) return 0;
-  const decayDate = lastActivityTimestamp + REPUTATION_DECAY_CYCLE_DAYS * 24 * 60 * 60 * 1000;
-  return Math.max(0, Math.ceil((decayDate - Date.now()) / (24 * 60 * 60 * 1000)));
-}
-
-function findVisibleCommitRevealTarget(): HTMLElement | null {
-  if (typeof document === "undefined") return null;
-
-  const target = document.querySelector<HTMLElement>(
-    tourTargetSelector(TOUR_TARGETS.commitReveal)
-  );
-  if (!target) return null;
-
-  const rect = target.getBoundingClientRect();
-  const isVisible =
-    rect.width > 0 &&
-    rect.height > 0 &&
-    rect.bottom >= 0 &&
-    rect.right >= 0 &&
-    rect.top <= window.innerHeight &&
-    rect.left <= window.innerWidth;
-
-  return isVisible ? target : null;
 }
 
 export function EnhancedExpertDashboard() {
@@ -321,56 +278,7 @@ export function EnhancedExpertDashboard() {
     meetsMinimum: totalStaked > 0,
   };
 
-  const highestRank = profile?.guilds?.length
-    ? profile.guilds.reduce((best, g) => {
-        const gIdx = GUILD_RANK_ORDER.indexOf(g.expertRole);
-        const bIdx = GUILD_RANK_ORDER.indexOf(best);
-        return gIdx > bIdx ? g.expertRole : best;
-      }, profile.guilds[0].expertRole)
-    : null;
-
-  const rankLabels: Record<string, string> = {
-    recruit: "Recruit",
-    apprentice: "Apprentice",
-    craftsman: "Craftsman",
-    officer: "Officer",
-    master: "Guild Master",
-  };
-
-  const mostRecentActivityMs = (() => {
-    if (!profile?.recentActivity?.length) return null;
-    const timestamps = profile.recentActivity
-      .map((a) => new Date(a.timestamp).getTime())
-      .filter((t) => !isNaN(t));
-    return timestamps.length > 0 ? Math.max(...timestamps) : null;
-  })();
-
-  const isDecayActive = useMemo(() => {
-    if (mostRecentActivityMs === null) return true;
-    // eslint-disable-next-line react-hooks/purity -- Date.now compared against stored activity timestamps, memoized on activity change
-    const daysSince = Math.floor((Date.now() - mostRecentActivityMs) / (1000 * 60 * 60 * 24));
-    return daysSince >= REPUTATION_DECAY_WARNING_DAYS;
-  }, [mostRecentActivityMs]);
-
-  const daysUntilDecay = profile ? getDaysUntilDecay(mostRecentActivityMs) : null;
-
   const activeReviewCount = assignedApplications?.length ?? 0;
-
-  const consensusRate =
-    profile?.reviewCount && profile.reviewCount > 0 && profile.approvalCount != null
-      ? Math.round((profile.approvalCount / profile.reviewCount) * 100)
-      : null;
-
-  const isGuildMaster = profile?.guilds?.some((g) => g.expertRole === "master") ?? false;
-  const voteWeight = computeVoteWeight(profile?.reputation ?? 0, isGuildMaster);
-
-  function getRewardTier(reputation: number) {
-    if (reputation >= 2000) return { name: "Authority", multiplier: "1.5×" };
-    if (reputation >= 1000) return { name: "Established", multiplier: "1.25×" };
-    return { name: "Foundation", multiplier: "1.0×" };
-  }
-  const rewardTier = getRewardTier(profile?.reputation ?? 0);
-  const tierColors = REWARD_TIER_COLORS[rewardTier.name] ?? REWARD_TIER_COLORS.Foundation;
 
   const loading = isLoading || !profile;
   const profileLoaded = !loading && !!profile;
@@ -407,22 +315,6 @@ export function EnhancedExpertDashboard() {
   });
   const { completeTour, markChecklistEvent } = onboarding;
 
-  const focusCommitRevealExplainer = useCallback(() => {
-    const target = document.querySelector<HTMLElement>(
-      tourTargetSelector(TOUR_TARGETS.commitReveal)
-    );
-    target?.scrollIntoView({ block: "center", behavior: "smooth" });
-    target?.focus({ preventScroll: true });
-  }, []);
-  const handleCommitRevealExplainerViewed = useCallback(() => {
-    const target = findVisibleCommitRevealTarget();
-    if (!target) {
-      focusCommitRevealExplainer();
-      return;
-    }
-
-    markChecklistEvent("commitRevealViewed");
-  }, [focusCommitRevealExplainer, markChecklistEvent]);
   const handleStoryComplete = useCallback(() => {
     for (const event of EXPERT_STORY_COMPLETION_EVENTS) {
       markChecklistEvent(event);
@@ -461,9 +353,6 @@ export function EnhancedExpertDashboard() {
     router,
   ]);
 
-  const reputation = profile?.reputation ?? 0;
-  const tone = repTone(reputation);
-  const rankColors = highestRank ? getRankColors(highestRank) : null;
   const expertName = profile?.fullName?.trim() || "Expert";
   const firstName = expertName.split(" ")[0];
 
@@ -486,58 +375,35 @@ export function EnhancedExpertDashboard() {
         className="rounded-xl border border-border bg-card p-6 sm:p-8 relative overflow-hidden"
         {...dataTourTarget(TOUR_TARGETS.dashboardOverview)}
       >
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/60" />
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Workspace
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display">
               Hi, {firstName}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5 max-w-lg">
-              {!loading && highestRank
-                ? `${rankLabels[highestRank]} across ${profile?.guilds?.length ?? 0} guild${profile?.guilds?.length === 1 ? "" : "s"} — review the queue, finalize commits, and shape protocol governance.`
-                : "Your expert workspace — reviews, governance, and earnings in one place."}
-            </p>
 
-            {/* Pills row: rank + tier */}
-            {!loading && (
-              <div className="flex flex-wrap items-center gap-2 mt-4">
-                {rankColors && highestRank && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",
-                      rankColors.badge,
-                    )}
-                  >
-                    <span className={cn("w-1.5 h-1.5 rounded-full", rankColors.dot)} />
-                    {rankLabels[highestRank]}
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",
-                    tierColors.bg,
-                    tierColors.border,
-                    tierColors.text,
-                  )}
-                >
-                  <Sparkles className="w-3 h-3" />
-                  {rewardTier.name} · {rewardTier.multiplier}
+            {/* Earnings — relocated from the KPI strip into the hero */}
+            <div
+              className="inline-flex items-center gap-3 mt-4 px-3 py-2 rounded-lg bg-muted/40 border border-border"
+              {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}
+            >
+              <span className="w-9 h-9 rounded-lg bg-muted/60 grid place-items-center flex-shrink-0">
+                <Image
+                  src="/vetted-logo-icon.png"
+                  alt="Vetted"
+                  width={20}
+                  height={20}
+                  className="w-5 h-5 object-contain"
+                />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Earnings
                 </span>
-                {isDecayActive && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em]",
-                      STATUS_COLORS.warning.badge,
-                    )}
-                  >
-                    Decay active
-                  </span>
-                )}
-              </div>
-            )}
+                <span className="block text-xl font-bold text-foreground tabular-nums leading-tight">
+                  ${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}
+                </span>
+              </span>
+            </div>
           </div>
 
           {/* Right: wallet + actions */}
@@ -563,8 +429,20 @@ export function EnhancedExpertDashboard() {
                 <ActionButtonPanel
                   stakingStatus={stakingStatus}
                   onRefresh={refetch}
+                  showEndorse={false}
                 />
               </div>
+            )}
+            {address && (
+              <a
+                href={`https://etherscan.io/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-primary hover:underline lg:self-end"
+              >
+                View on explorer
+                <ExternalLink className="w-3 h-3" />
+              </a>
             )}
             {activeReviewCount > 0 && (
               <button
@@ -579,78 +457,6 @@ export function EnhancedExpertDashboard() {
         </div>
       </section>
 
-      {/* ── KPI strip ── */}
-      <DataSection
-        isLoading={loading}
-        skeleton={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
-          </div>
-        }
-      >
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
-          {...dataTourTarget(TOUR_TARGETS.dashboardStatsRow)}
-        >
-          <div {...dataTourTarget(TOUR_TARGETS.dashboardReputationStat)}>
-            <KpiTile
-              icon={<Shield className="w-4 h-4" />}
-              label="Reputation"
-              value={(profile?.reputation ?? 0).toLocaleString()}
-              tone={tone === "warning" ? "warning" : tone === "info" ? "info" : "primary"}
-              hint={
-                isDecayActive
-                  ? "Decay active"
-                  : daysUntilDecay !== null && daysUntilDecay < 7
-                    ? `Decay in ${daysUntilDecay}d`
-                    : undefined
-              }
-              hintTone={isDecayActive || (daysUntilDecay !== null && daysUntilDecay < 7) ? "warning" : undefined}
-            />
-          </div>
-          <KpiTile
-            icon={<Activity className="w-4 h-4" />}
-            label="Vote Weight"
-            value={`${voteWeight.toFixed(2)}×`}
-            tone="info"
-            hint={`${rewardTier.name} · ${rewardTier.multiplier}`}
-          />
-          <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
-            <KpiTile
-              icon={<Vote className="w-4 h-4" />}
-              label="Active Reviews"
-              value={activeReviewCount}
-              tone="warning"
-              hint={
-                activeReviewCount > 0
-                  ? `${Math.round(totalStaked).toLocaleString()} VETD · 25% locked`
-                  : `${profile?.reviewCount ?? 0} lifetime · ${consensusRate ?? 0}% consensus`
-              }
-            />
-          </div>
-          <KpiTile
-            icon={<Wallet className="w-4 h-4" />}
-            label="Staked VETD"
-            value={Math.round(totalStaked).toLocaleString()}
-            tone="info"
-            hint={
-              activeReviewCount > 0
-                ? `25% locked · ${activeReviewCount} active`
-                : `across ${profile?.guilds?.length ?? 0} guild${profile?.guilds?.length === 1 ? "" : "s"}`
-            }
-          />
-          <div {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}>
-            <KpiTile
-              icon={<Coins className="w-4 h-4" />}
-              label="Earnings"
-              value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
-              tone="positive"
-              hint="total earned"
-            />
-          </div>
-        </div>
-      </DataSection>
-
       {/* ── Two-column workspace ── */}
       <DataSection
         isLoading={loading}
@@ -662,17 +468,13 @@ export function EnhancedExpertDashboard() {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* MAIN — Review queue + Recent activity */}
+          {/* MAIN — Review queue + Governance + Recent activity */}
           <div className="lg:col-span-2 space-y-6 min-w-0">
             <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
               <ReviewQueue applications={assignedApplications ?? []} />
             </div>
 
-            <div {...dataTourTarget(TOUR_TARGETS.dashboardRecentActivity)}>
-              <RecentActivity activities={profile?.recentActivity ?? []} />
-            </div>
-
-            {/* Governance summary spans full width of left column.
+            {/* Governance summary sits above Recent Activity.
                 Hidden pending rework (VET-103) — re-enable via GOVERNANCE_ENABLED. */}
             {!loading && GOVERNANCE_ENABLED && (
               <div {...dataTourTarget(TOUR_TARGETS.dashboardGovernanceCard)}>
@@ -680,7 +482,11 @@ export function EnhancedExpertDashboard() {
               </div>
             )}
 
-            {/* Your Guilds — pulled into left column to fill space below governance */}
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardRecentActivity)}>
+              <RecentActivity activities={profile?.recentActivity ?? []} />
+            </div>
+
+            {/* Your Guilds — pulled into left column to fill space below activity */}
             <div {...dataTourTarget(TOUR_TARGETS.dashboardGuildsSection)}>
               <GuildsSection
                 guilds={profile?.guilds ?? []}
@@ -697,181 +503,9 @@ export function EnhancedExpertDashboard() {
               totalStaked={totalStaked}
               onManageStake={() => markChecklistEvent("stakingExplanationViewed")}
             />
-
-            <div
-              className="rounded-xl border border-border bg-card overflow-hidden"
-              tabIndex={-1}
-              {...dataTourTarget(TOUR_TARGETS.commitReveal)}
-            >
-              <div className="px-4 py-3 border-b border-border">
-                <h3 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                  Commit / Reveal
-                </h3>
-              </div>
-              <div className="p-4">
-                <p className="text-xs leading-5 text-muted-foreground">
-                  Some rounds hide scores while experts vote. Commit blind; the app reveals or finalizes when the round is ready.
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-3 px-0"
-                  onClick={handleCommitRevealExplainerViewed}
-                >
-                  Mark explainer viewed
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
-                <h3 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                  At a Glance
-                </h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <KeyValue
-                  icon={<Shield className="w-3.5 h-3.5" />}
-                  label="Guilds"
-                  value={`${profile?.guilds?.length ?? 0}`}
-                />
-                <KeyValue
-                  icon={<Coins className="w-3.5 h-3.5" />}
-                  label="Staked VETD"
-                  value={Math.round(totalStaked).toLocaleString()}
-                />
-                <KeyValue
-                  icon={<Vote className="w-3.5 h-3.5" />}
-                  label="Lifetime Reviews"
-                  value={`${profile?.reviewCount ?? 0}`}
-                />
-                {consensusRate !== null && (
-                  <KeyValue
-                    icon={<Activity className="w-3.5 h-3.5" />}
-                    label="Consensus rate"
-                    value={`${consensusRate}%`}
-                  />
-                )}
-                {activeReviewCount > 0 && (
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 pt-3 border-t border-border text-xs",
-                      STATUS_COLORS.warning.text,
-                    )}
-                  >
-                    <Lock className="w-3 h-3 flex-shrink-0" />
-                    <span>
-                      25% locked · {activeReviewCount} active review
-                      {activeReviewCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                )}
-                {address && (
-                  <a
-                    href={`https://etherscan.io/address/${address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-primary hover:underline pt-2 border-t border-border w-full"
-                  >
-                    View on explorer
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-            </div>
           </aside>
         </div>
       </DataSection>
-
-      {/* ── Notifications feed ── */}
-      <DataSection
-        isLoading={loading}
-        skeleton={<SkeletonCard className="min-h-[180px]" />}
-      >
-        <div {...dataTourTarget(TOUR_TARGETS.dashboardNotificationsFeed)}>
-          <SlimNotificationsFeed walletAddress={address!} />
-        </div>
-      </DataSection>
-    </div>
-  );
-}
-
-/* ─── Inline helpers ─────────────────────────────────────────── */
-
-interface KpiTileProps {
-  icon: React.ReactNode;
-  label: string;
-  value: number | string;
-  tone: "primary" | "positive" | "info" | "warning";
-  hint?: string;
-  hintTone?: "warning" | "default";
-}
-
-const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
-  primary: { bg: "bg-primary/10", text: "text-primary" },
-  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
-  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
-  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
-};
-
-function KpiTile({ icon, label, value, tone, hint, hintTone }: KpiTileProps) {
-  const t = KPI_TONE[tone];
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-      <span
-        className={cn(
-          "w-10 h-10 rounded-lg grid place-items-center flex-shrink-0",
-          t.bg,
-          t.text,
-        )}
-      >
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-2xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
-          {value}
-        </p>
-        {hint && (
-          <p
-            className={cn(
-              "text-[10.5px] mt-0.5 truncate",
-              hintTone === "warning"
-                ? STATUS_COLORS.warning.text
-                : "text-muted-foreground",
-            )}
-          >
-            {hint}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function KeyValue({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="text-muted-foreground mt-0.5 flex-shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1 flex items-baseline justify-between gap-2">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-sm text-foreground font-medium leading-snug tabular-nums truncate">
-          {value}
-        </p>
-      </div>
     </div>
   );
 }
