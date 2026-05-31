@@ -571,7 +571,7 @@ export default function ApplicationsPage() {
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                   To review applications and vote on proposals, you need to stake VETD tokens in at least one guild. Your stake will be returned after reviews, with bonus rewards if you vote with the majority.
                 </p>
-                <Button onClick={() => router.push("/expert/withdrawals")}>
+                <Button onClick={() => router.push("/expert/dashboard?openStaking=withdraw")}>
                   <Coins className="w-4 h-4 mr-2" />
                   Stake VETD Tokens
                   <ArrowRight className="w-4 h-4 ml-2" />

@@ -38,7 +38,7 @@ export function PracticeReviewFlow({
         Go to Applications
       </Link>
       <Link
-        href="/expert/withdrawals"
+        href="/expert/dashboard?openStaking=withdraw"
         onClick={() => onOpenChange(false)}
         className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
       >

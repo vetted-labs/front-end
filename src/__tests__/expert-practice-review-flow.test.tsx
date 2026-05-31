@@ -182,7 +182,7 @@ function renderPracticeModal(
       practiceActions={
         <>
           <a href="/expert/voting">Go to Applications</a>
-          <a href="/expert/withdrawals">Check staking</a>
+          <a href="/expert/dashboard?openStaking=withdraw">Check staking</a>
         </>
       }
       {...props}

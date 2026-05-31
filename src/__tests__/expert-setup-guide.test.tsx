@@ -87,7 +87,7 @@ describe("ExpertSetupGuide", () => {
 
     expect(screen.getByText("Staking")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^next$/i })).toBeInTheDocument();
-    expect(navMocks.push).toHaveBeenCalledWith("/expert/withdrawals");
+    expect(navMocks.push).toHaveBeenCalledWith("/expert/dashboard?openStaking=withdraw");
   });
 
   it("waits on the guided page until the user clicks next", async () => {

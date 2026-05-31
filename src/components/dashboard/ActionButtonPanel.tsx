@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 
@@ -24,7 +24,13 @@ export function ActionButtonPanel({
   onRefresh,
 }: ActionButtonPanelProps) {
   const router = useRouter();
-  const [showStakingModal, setShowStakingModal] = useState(false);
+  const searchParams = useSearchParams();
+  // Stake management lives here now (the standalone Withdrawals page was removed
+  // in VET-108). Links elsewhere deep-link via ?openStaking=withdraw to open the
+  // modal straight in withdraw mode.
+  const openStakingParam = searchParams.get("openStaking");
+  const [showStakingModal, setShowStakingModal] = useState(Boolean(openStakingParam));
+  const stakingDefaultMode = openStakingParam === "withdraw" ? "withdraw" : "stake";
   const meetsMinimum = stakingStatus?.meetsMinimum ?? false;
 
   return (
@@ -57,6 +63,7 @@ export function ActionButtonPanel({
       {showStakingModal && (
         <StakingModal
           isOpen={showStakingModal}
+          defaultMode={stakingDefaultMode}
           onClose={() => setShowStakingModal(false)}
           onSuccess={() => {
             setShowStakingModal(false);

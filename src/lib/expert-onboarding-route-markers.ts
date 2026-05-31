@@ -119,13 +119,6 @@ export function getExpertOnboardingEventForRoute(
   }
 
   if (
-    pathname === "/expert/withdrawals" ||
-    pathname.startsWith("/expert/withdrawals/")
-  ) {
-    return "stakingExplanationViewed";
-  }
-
-  if (
     pathname === "/expert/notifications" ||
     pathname.startsWith("/expert/notifications/")
   ) {

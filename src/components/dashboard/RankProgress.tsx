@@ -53,7 +53,7 @@ export function RankProgress({
         <button
           onClick={() => {
             onManageStake?.();
-            router.push("/expert/withdrawals");
+            router.push("/expert/dashboard?openStaking=withdraw");
           }}
           className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
         >

@@ -191,10 +191,10 @@ export default function EarningsPage() {
       <DocsStepList
         steps={[
           {
-            title: "Open the Withdrawals page",
+            title: "Open stake management",
             description: (
               <p>
-                From the sidebar, navigate to <strong>Rewards → Withdrawals</strong>.
+                On your <strong>Dashboard</strong>, click <strong>Manage Stake</strong>.
                 Each guild you've staked in appears as a separate position
                 with the current stake and an <strong>Unstake</strong> button.
               </p>
@@ -272,9 +272,9 @@ export default function EarningsPage() {
             kind: "app",
           },
           {
-            title: "My withdrawals",
-            description: "Start an unstake or complete a pending withdrawal.",
-            href: "/expert/withdrawals",
+            title: "Manage stake",
+            description: "Stake or request a withdrawal from your dashboard.",
+            href: "/expert/dashboard?openStaking=withdraw",
             icon: Wallet,
             kind: "app",
           },

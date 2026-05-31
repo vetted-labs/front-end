@@ -425,65 +425,6 @@ export function LeaderboardSkeleton() {
   );
 }
 
-/* ─── Withdrawals / Staking ─────────────────────────────── */
-/* Narrower max-w-3xl, back button + header + stats + guild stake cards */
-
-export function WithdrawalsSkeleton() {
-  return (
-    <div className="min-h-full">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Breadcrumb */}
-        <Skeleton className="h-4 w-40" />
-
-        {/* Hero number */}
-        <div className="space-y-3 mt-2">
-          <Skeleton className="h-3 w-28" />
-          <Skeleton className="h-14 w-64" />
-          <Skeleton className="h-5 w-32 rounded-full" />
-        </div>
-
-        {/* Stats strip */}
-        <div className="grid grid-cols-3 rounded-xl border border-border overflow-hidden">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-card p-5 border-r border-border last:border-r-0">
-              <Skeleton className="h-3 w-24 mb-2" />
-              <Skeleton className="h-5 w-32" />
-            </div>
-          ))}
-        </div>
-
-        {/* Allocation bar */}
-        <div>
-          <Skeleton className="h-3 w-20 mb-4" />
-          <Skeleton className="h-9 w-full rounded-lg mb-4" />
-          <div className="flex gap-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-24" />
-            ))}
-          </div>
-        </div>
-
-        {/* Two-column: donut + positions */}
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-          <div className="rounded-xl border border-border bg-card p-6 flex flex-col items-center">
-            <Skeleton className="w-[220px] h-[220px] rounded-full mb-4" />
-            <div className="w-full space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-4 w-full" />
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-5 w-32 mb-3" />
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Generic fallbacks (kept for backward compat) ──────── */
 

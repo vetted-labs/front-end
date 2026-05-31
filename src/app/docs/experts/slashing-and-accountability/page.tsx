@@ -226,9 +226,9 @@ export default function SlashingPage() {
       <DocsNextSteps
         steps={[
           {
-            title: "My withdrawals",
-            description: "See staked positions and the 7-day cooldown timer.",
-            href: "/expert/withdrawals",
+            title: "Manage stake",
+            description: "See staked positions and request withdrawals from your dashboard.",
+            href: "/expert/dashboard?openStaking=withdraw",
             icon: Wallet,
             kind: "app",
           },

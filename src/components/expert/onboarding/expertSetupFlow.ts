@@ -29,9 +29,9 @@ export const EXPERT_SETUP_GUIDE_STEPS: ExpertSetupGuideStep[] = [
   {
     id: "staking",
     event: "stakingExplanationViewed",
-    href: "/expert/withdrawals",
+    href: "/expert/dashboard?openStaking=withdraw",
     title: "Staking",
-    body: "The staking page explains what is active, what is locked by reviews, and what can be withdrawn after review windows settle.",
+    body: "Manage your stake from the dashboard: stake to unlock vetting, see what is locked by reviews, and request withdrawals when review windows settle.",
   },
   {
     id: "endorsements",

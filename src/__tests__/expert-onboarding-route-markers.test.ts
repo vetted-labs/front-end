@@ -84,12 +84,10 @@ describe("expert onboarding route markers", () => {
     expect(getExpertOnboardingEventForRoute("/expert/notifications")).toBe("notificationsVisited");
   });
 
-  it("marks earnings, reputation, and staking routes independently", () => {
+  it("marks earnings and reputation routes independently", () => {
     expect(getExpertOnboardingEventForRoute("/expert/earnings")).toBe("rewardsVisited");
     expect(getExpertOnboardingEventForRoute("/expert/reputation/history"))
       .toBe("reputationVisited");
-    expect(getExpertOnboardingEventForRoute("/expert/withdrawals"))
-      .toBe("stakingExplanationViewed");
   });
 
   it("does not trust stale local approved status for shell rendering before profile verification", () => {
