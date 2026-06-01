@@ -860,10 +860,12 @@ export function useExpertApplicationFlow(
     setIsLoading(true);
 
     try {
+      const referralCode = searchParams.get("ref") ?? undefined;
       const result = await expertApi.apply({
         ...formData,
         yearsOfExperience: parseInt(formData.yearsOfExperience),
         walletAddress: address,
+        ...(referralCode ? { referralCode } : {}),
         applicationResponses: {
           general: {
             learningFromFailure: generalAnswers.learningFromFailure,

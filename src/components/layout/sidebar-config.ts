@@ -87,6 +87,13 @@ export const restrictedExpertSidebarConfig: SidebarConfig = {
   variant: "expert",
   groups: [
     {
+      label: "Home",
+      items: [
+        // Pending experts can earn via General quests + daily streak before approval (VET-114).
+        { label: "Quests", href: "/expert/quests", icon: Swords },
+      ],
+    },
+    {
       label: "Application",
       items: [
         { label: "My Status", href: "/expert/application-pending", icon: Clock, exact: true },

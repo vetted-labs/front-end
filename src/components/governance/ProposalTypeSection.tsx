@@ -14,6 +14,8 @@ import {
   Coins,
   ArrowRight,
   Scale,
+  Swords,
+  Pencil,
 } from "lucide-react";
 import { GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD } from "@/config/constants";
 import type { GuildRecord } from "@/types";
@@ -55,6 +57,18 @@ const PROPOSAL_TYPES = [
     description: "Propose an upgrade to the protocol",
     icon: ArrowRight,
   },
+  {
+    value: "create_quest",
+    label: "New Quest",
+    description: "Propose a new quest for your guild (VET-114)",
+    icon: Swords,
+  },
+  {
+    value: "edit_quest",
+    label: "Edit Quest",
+    description: "Propose changes to an existing quest",
+    icon: Pencil,
+  },
 ];
 
 /** Types that require a guild selection */
@@ -62,7 +76,11 @@ export const GUILD_REQUIRED_TYPES = [
   "guild_policy",
   "guild_master_election",
   "guild_creation",
+  "create_quest",
 ];
+
+/** Quest governance proposal types. */
+export const QUEST_PROPOSAL_TYPES = ["create_quest", "edit_quest"];
 
 interface ProposalTypeSectionProps {
   proposalType: string;
@@ -81,6 +99,13 @@ interface ProposalTypeSectionProps {
   guildId: string;
   onGuildIdChange: (value: string) => void;
   guilds: GuildRecord[];
+  // Quest proposal fields (create_quest / edit_quest)
+  questType: string;
+  onQuestTypeChange: (value: string) => void;
+  questReward: string;
+  onQuestRewardChange: (value: string) => void;
+  questId: string;
+  onQuestIdChange: (value: string) => void;
 }
 
 export function ProposalTypeSection({
@@ -97,8 +122,15 @@ export function ProposalTypeSection({
   guildId,
   onGuildIdChange,
   guilds,
+  questType,
+  onQuestTypeChange,
+  questReward,
+  onQuestRewardChange,
+  questId,
+  onQuestIdChange,
 }: ProposalTypeSectionProps) {
   const needsGuild = GUILD_REQUIRED_TYPES.includes(proposalType);
+  const isQuestProposal = proposalType === "create_quest" || proposalType === "edit_quest";
   const threshold =
     GOVERNANCE_THRESHOLDS[proposalType] ?? DEFAULT_GOVERNANCE_THRESHOLD;
 
@@ -226,6 +258,53 @@ export function ProposalTypeSection({
             onChange={(e) => onNomineeWalletChange(e.target.value)}
             placeholder="0x..."
           />
+        </div>
+      )}
+
+      {/* Conditional: Quest proposal details (VET-114) */}
+      {isQuestProposal && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Swords className="w-4 h-4 text-primary" />
+            <p className="text-sm font-medium text-primary">Quest Details</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The proposal title and description become the quest&apos;s title and description.
+            {proposalType === "create_quest"
+              ? " The quest is created for the selected guild when this proposal passes."
+              : " Enter the ID of the quest to edit."}
+          </p>
+          {proposalType === "edit_quest" && (
+            <Input
+              label="Quest ID *"
+              value={questId}
+              onChange={(e) => onQuestIdChange(e.target.value)}
+              placeholder="Quest UUID to edit"
+            />
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Quest type</label>
+              <Select value={questType} onValueChange={onQuestTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="text_answer">Text answer</SelectItem>
+                  <SelectItem value="rubric">Rubric</SelectItem>
+                  <SelectItem value="verifiable">Verifiable</SelectItem>
+                  <SelectItem value="one_time">One-time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Input
+              label="Reward (VETD)"
+              type="number"
+              value={questReward}
+              onChange={(e) => onQuestRewardChange(e.target.value)}
+              placeholder="20"
+            />
+          </div>
         </div>
       )}
 

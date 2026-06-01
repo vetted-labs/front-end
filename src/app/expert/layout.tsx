@@ -43,6 +43,7 @@ import {
 const RESTRICTED_ALLOWED_PREFIXES = [
   "/expert/application-pending",
   "/expert/apply",
+  "/expert/quests",
   "/guilds",
 ];
 

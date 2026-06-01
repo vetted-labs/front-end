@@ -38,6 +38,9 @@ export function CreateProposalForm() {
   const [currentValue, setCurrentValue] = useState("");
   const [proposedValue, setProposedValue] = useState("");
   const [nomineeWallet, setNomineeWallet] = useState("");
+  const [questType, setQuestType] = useState("text_answer");
+  const [questReward, setQuestReward] = useState("");
+  const [questId, setQuestId] = useState("");
   const [submitStep, setSubmitStep] = useState<ProposalSubmitStep>("idle");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -107,6 +110,16 @@ export function CreateProposalForm() {
       if (guildId) data.targetGuildId = guildId;
     }
 
+    if (proposalType === "create_quest" || proposalType === "edit_quest") {
+      data.questPayload = {
+        category: proposalType === "create_quest" ? "specific" : undefined,
+        questType: questType || "text_answer",
+        ...(guildId ? { guildId } : {}),
+        ...(questReward ? { rewardAmount: parseFloat(questReward) } : {}),
+        ...(proposalType === "edit_quest" && questId ? { questId } : {}),
+      };
+    }
+
     return data;
   }, [
     title,
@@ -120,6 +133,9 @@ export function CreateProposalForm() {
     currentValue,
     proposedValue,
     nomineeWallet,
+    questType,
+    questReward,
+    questId,
   ]);
 
   // eslint-disable-next-line no-restricted-syntax -- reacts to blockchain tx confirmation status
@@ -175,6 +191,11 @@ export function CreateProposalForm() {
 
     if (needsGuild && !guildId) {
       toast.error("Please select a guild for this proposal type");
+      return;
+    }
+
+    if (proposalType === "edit_quest" && !questId.trim()) {
+      toast.error("Please enter the Quest ID to edit");
       return;
     }
 
@@ -269,6 +290,12 @@ export function CreateProposalForm() {
             guildId={guildId}
             onGuildIdChange={setGuildId}
             guilds={guildRecords}
+            questType={questType}
+            onQuestTypeChange={setQuestType}
+            questReward={questReward}
+            onQuestRewardChange={setQuestReward}
+            questId={questId}
+            onQuestIdChange={setQuestId}
           />
 
           <div className="border-t border-border" />

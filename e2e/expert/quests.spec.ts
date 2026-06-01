@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { setExpertSession } from "../helpers/expert-auth";
-import { setupCommonExpertMocks } from "../helpers/guild-mocks";
+import { setupCommonExpertMocks, MOCK_EXPERT_PROFILE } from "../helpers/guild-mocks";
 import {
   setupQuestMocks,
   MOCK_QUESTS_RESPONSE,
@@ -165,6 +165,30 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
 
     await test.step("the review panel renders its empty state", async () => {
       await expect(page.getByText(/Nothing to review/i)).toBeVisible();
+    });
+  });
+
+  test("a wallet-verified PENDING expert can reach Quests and see General quests (VET-114)", async ({ page }) => {
+    await test.step("a pending (not-yet-approved) expert session + mocks are set up", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page);
+      await setupCommonExpertMocks(page, {
+        expertProfile: { ...MOCK_EXPERT_PROFILE, status: "pending" },
+      });
+      await page.route("**/api/governance/proposals**", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, data: [] }) }),
+      );
+      await setupQuestMocks(page);
+    });
+
+    await test.step("the pending expert opens /expert/quests", async () => {
+      await page.goto("/expert/quests", { waitUntil: "networkidle" });
+    });
+
+    await test.step("they are NOT redirected to the application-pending page and see General quests", async () => {
+      await expect(page).toHaveURL(/\/expert\/quests/);
+      await expect(page.getByRole("heading", { name: "Quests" }).first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("Follow Vetted Protocol on X").first()).toBeVisible();
     });
   });
 
