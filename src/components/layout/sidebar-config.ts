@@ -2,6 +2,7 @@ import {
   Building2,
   Settings,
   Clock,
+  Swords,
   type LucideIcon,
 } from "lucide-react";
 import type { VettedIconName } from "@/components/ui/vetted-icon";
@@ -36,6 +37,7 @@ export const expertSidebarConfig: SidebarConfig = {
       label: "Home",
       items: [
         { label: "Dashboard", href: "/expert/dashboard", icon: "home" },
+        { label: "Quests", href: "/expert/quests", icon: Swords },
         { label: "Notifications", href: "/expert/notifications", icon: "notification", badge: "notifications" },
       ],
     },

@@ -217,6 +217,20 @@ export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";
 export type { ExpertMembershipApplication, CandidateGuildApplication, MyReviewData, ExpertApplicationFinalization, ReviewModalApplication, ReviewGuildApplicationModalProps } from "./review";
 export type { MatchDimension, MatchScoreBreakdown, MatchScoreResult, RecommendedJob } from "./matching";
 export type {
+  QuestCategory,
+  QuestType,
+  QuestCompletionStatus,
+  Quest,
+  QuestStreak,
+  QuestGuildRef,
+  QuestsResponse,
+  QuestCompletion,
+  PendingSubmission,
+  StreakClaimResult,
+  QuestReferralItem,
+  QuestReferralSummary,
+} from "./quest";
+export type {
   EarningsItem,
   ExpertOverviewData,
   ReputationPoint,

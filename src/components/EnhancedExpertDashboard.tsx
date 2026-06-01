@@ -16,6 +16,7 @@ import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
 import { RankProgress } from "@/components/dashboard/RankProgress";
 import { GuildsSection } from "@/components/dashboard/GuildsSection";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { QuestsWidget } from "@/components/dashboard/QuestsWidget";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useExpertOnboardingTour } from "@/lib/hooks/useExpertOnboardingTour";
@@ -472,6 +473,10 @@ export function EnhancedExpertDashboard() {
           <div className="lg:col-span-2 space-y-6 min-w-0">
             <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
               <ReviewQueue applications={assignedApplications ?? []} />
+            </div>
+
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardQuests)}>
+              <QuestsWidget wallet={address} />
             </div>
 
             {/* Governance summary sits above Recent Activity.

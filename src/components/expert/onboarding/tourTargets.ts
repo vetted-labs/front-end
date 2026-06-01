@@ -26,6 +26,7 @@ export const TOUR_TARGETS = {
   dashboardGuildsSection: "expert-dashboard-guilds-section",
   dashboardNotificationsFeed: "expert-dashboard-notifications-feed",
   dashboardOverview: "expert-dashboard-overview",
+  dashboardQuests: "expert-dashboard-quests",
   dashboardRecentActivity: "expert-dashboard-recent-activity",
   dashboardReputationStat: "expert-dashboard-reputation-stat",
   dashboardReviewQueue: "expert-dashboard-review-queue",
@@ -49,6 +50,7 @@ export const TOUR_TARGETS = {
   endorseAmountInput: "expert-endorse-amount-input",
   endorseSubmitButton: "expert-endorse-submit-button",
   navDashboard: "expert-nav-dashboard",
+  navQuests: "expert-nav-quests",
   navNotifications: "expert-nav-notifications",
   navApplications: "expert-nav-applications",
   navEndorsements: "expert-nav-endorsements",
@@ -148,6 +150,7 @@ export type TourTargetSelector =
 
 const NAV_TOUR_TARGET_BY_HREF: Record<string, TourTargetValue> = {
   "/expert/dashboard": TOUR_TARGETS.navDashboard,
+  "/expert/quests": TOUR_TARGETS.navQuests,
   "/expert/notifications": TOUR_TARGETS.navNotifications,
   "/expert/voting": TOUR_TARGETS.navApplications,
   "/expert/endorsements": TOUR_TARGETS.navEndorsements,

@@ -2694,3 +2694,89 @@ export const matchingApi = {
       { requiresAuth: true }
     ),
 };
+
+/**
+ * Quests (VET-111..114). Experts are wallet-authenticated like the rest of the
+ * expert surface: requiresAuth:false + the connected wallet passed as ?wallet=
+ * (and x-wallet-address for the multipart submit). The caller threads the
+ * wallet from useExpertAccount()/useAuthContext().
+ */
+export const questsApi = {
+  getQuests: (wallet: string) =>
+    apiRequest<import("@/types").QuestsResponse>(`/api/quests?wallet=${wallet}`, {
+      requiresAuth: false,
+    }),
+
+  getStreak: (wallet: string) =>
+    apiRequest<import("@/types").QuestStreak>(`/api/quests/streak?wallet=${wallet}`, {
+      requiresAuth: false,
+    }),
+
+  claimStreak: (wallet: string) =>
+    apiRequest<import("@/types").StreakClaimResult>(`/api/quests/streak/claim?wallet=${wallet}`, {
+      method: "POST",
+      requiresAuth: false,
+    }),
+
+  completeQuest: (questId: string, wallet: string) =>
+    apiRequest<import("@/types").QuestCompletion>(
+      `/api/quests/${questId}/complete?wallet=${wallet}`,
+      { method: "POST", requiresAuth: false },
+    ),
+
+  submitQuest: (
+    questId: string,
+    wallet: string,
+    payload: { text?: string; url?: string; screenshot?: File | null },
+  ) => {
+    const formData = new FormData();
+    if (payload.text) formData.append("text", payload.text);
+    if (payload.url) formData.append("url", payload.url);
+    if (payload.screenshot) formData.append("screenshot", payload.screenshot);
+    return apiRequest<import("@/types").QuestCompletion>(
+      `/api/quests/${questId}/submit?wallet=${wallet}`,
+      {
+        method: "POST",
+        requiresAuth: false,
+        // Use the exact casing apiRequest guards on ("X-Wallet-Address"), otherwise it
+        // ALSO injects its own header and the two collapse to "addr, addr", which the
+        // backend mismatch guard rejects with 403 on every submission.
+        headers: { "X-Wallet-Address": wallet },
+        body: formData,
+      },
+    );
+  },
+
+  listPendingSubmissions: (wallet: string) =>
+    apiRequest<import("@/types").PendingSubmission[]>(
+      `/api/quests/submissions/pending?wallet=${wallet}`,
+      { requiresAuth: false },
+    ),
+
+  reviewSubmission: (
+    completionId: string,
+    wallet: string,
+    decision: "approve" | "reject",
+    note?: string,
+  ) =>
+    apiRequest<import("@/types").QuestCompletion>(
+      `/api/quests/submissions/${completionId}/review?wallet=${wallet}`,
+      { method: "POST", requiresAuth: false, body: JSON.stringify({ decision, note }) },
+    ),
+
+  getReferral: (wallet: string) =>
+    apiRequest<import("@/types").QuestReferralSummary>(`/api/quests/referrals?wallet=${wallet}`, {
+      requiresAuth: false,
+    }),
+
+  createReferral: (wallet: string) =>
+    apiRequest<import("@/types").QuestReferralSummary>(`/api/quests/referrals?wallet=${wallet}`, {
+      method: "POST",
+      requiresAuth: false,
+      body: JSON.stringify({}),
+    }),
+
+  /** Authenticated screenshot URL for the review panel (served by the backend, wallet-gated). */
+  screenshotUrl: (completionId: string, wallet: string) =>
+    `${API_BASE_URL}/api/quests/submissions/${completionId}/screenshot?wallet=${wallet}`,
+};
