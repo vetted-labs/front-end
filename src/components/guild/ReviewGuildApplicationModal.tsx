@@ -1535,7 +1535,7 @@ export function ReviewGuildApplicationModal({
 
   const handleSubmit = async () => {
     // `levelTemplate` is legitimately null for guilds with no domain rubric
-    // (e.g. the Testing Guild) — gate on the load state, not its presence.
+    // (e.g. the Founding Experts Pool) — gate on the load state, not its presence.
     if (!generalTemplate || loadingTemplates || templateError) {
       setValidationError("Review templates are still loading. Please try again in a moment.");
       return;

@@ -35,7 +35,7 @@ import { Alert } from "./ui/alert";
 import { getPersonAvatar } from "@/lib/avatars";
 import { GuildCard } from "@/components/guild/card";
 import { GuildBadge } from "@/components/ui/guild";
-import { getRankColors, STATUS_COLORS } from "@/config/colors";
+import { getRankColors, STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import {
   getActivityIconComponent,
   getActivityColorClasses,
@@ -362,13 +362,11 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               icon={<Star className="w-4 h-4" />}
               label="Reputation"
               value={profile.reputation.toLocaleString()}
-              tone="primary"
             />
             <KpiTile
               icon={<Shield className="w-4 h-4" />}
               label="Active guilds"
               value={profile.guilds.length}
-              tone="info"
             />
             <KpiTile
               icon={<Eye className="w-4 h-4" />}
@@ -378,13 +376,11 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                   ? (profile.reviewCount ?? 0)
                   : totalVotes
               }
-              tone="warning"
             />
             <KpiTile
               icon={<DollarSign className="w-4 h-4" />}
               label="Earnings"
               value={`${formatVetd(displayEarnings)} VETD`}
-              tone="positive"
             />
           </div>
 
@@ -977,25 +973,16 @@ interface KpiTileProps {
   icon: React.ReactNode;
   label: string;
   value: number | string;
-  tone: "primary" | "positive" | "info" | "warning";
 }
 
-const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
-  primary: { bg: "bg-primary/10", text: "text-primary" },
-  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
-  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
-  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
-};
-
-function KpiTile({ icon, label, value, tone }: KpiTileProps) {
-  const t = KPI_TONE[tone];
+function KpiTile({ icon, label, value }: KpiTileProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
       <span
         className={cn(
           "w-9 h-9 rounded-lg grid place-items-center flex-shrink-0",
-          t.bg,
-          t.text
+          STAT_ICON.bg,
+          STAT_ICON.text
         )}
       >
         {icon}

@@ -283,6 +283,7 @@ export function GuildCard(props: GuildCardProps) {
               registrySlug={slug}
               registryNumber={idx}
               role={guild.expertRole}
+              hideRegistryCode
               status="none"
             />
             <div className="flex items-center gap-4">

@@ -267,7 +267,9 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     }
 
     if (shouldEnforceRestrictedStatus && !isAllowedForRestricted(pathname)) {
-      router.replace("/expert/application-pending");
+      // VET-115: onboarding is non-blocking — restricted experts land on Quests
+      // (which they can use immediately) rather than a pending gate.
+      router.replace("/expert/quests");
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- auth guard releases the shell after wallet/status checks settle
       setChecked(true);
@@ -412,7 +414,8 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
       (profileVerification.status === "pending" || profileVerification.status === "rejected") &&
       !isAllowedForRestricted(pathname)
     ) {
-      router.replace("/expert/application-pending");
+      // VET-115: non-blocking onboarding — send restricted experts to Quests.
+      router.replace("/expert/quests");
     }
   }, [pathname, profileVerification.status, profileVerificationLoaded, router, shouldEnforceRestrictedStatus]);
 

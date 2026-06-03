@@ -6,6 +6,8 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
+import { EXPERTISE_FIELDS } from "@/config/quests";
 import { toast } from "sonner";
 import type { Quest } from "@/types";
 
@@ -13,6 +15,13 @@ export interface QuestSubmitPayload {
   text?: string;
   url?: string;
   screenshot?: File | null;
+  /**
+   * VET-115: when set, the expert also wants this answer shared to the expert
+   * feed (tagged with `shareField`). Sharing only succeeds once the submission
+   * is approved (backend gate), so the caller treats this as a deferred intent.
+   */
+  share?: boolean;
+  shareField?: string;
 }
 
 interface QuestSubmitModalProps {
@@ -36,6 +45,8 @@ export function QuestSubmitModal({
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [share, setShare] = useState(false);
+  const [shareField, setShareField] = useState<string>(EXPERTISE_FIELDS[0]);
 
   if (!quest) return null;
 
@@ -43,11 +54,21 @@ export function QuestSubmitModal({
   const needsUrl = action === "social_post";
   const allowsScreenshot = action === "bug_report" || action === "suggestion";
   const needsText = action !== "social_post"; // post just needs the link
+  // Sharing to the expert feed only makes sense for free-text answers in a
+  // field (not social posts / bug reports). The backend additionally gates
+  // sharing on an APPROVED completion, so this is an opt-in intent captured at
+  // submit time.
+  const canShareToFeed =
+    action === "expertise_answer" ||
+    quest.questType === "text_answer" ||
+    quest.questType === "rubric";
 
   function reset() {
     setText("");
     setUrl("");
     setScreenshot(null);
+    setShare(false);
+    setShareField(EXPERTISE_FIELDS[0]);
   }
 
   function handleClose() {
@@ -88,6 +109,8 @@ export function QuestSubmitModal({
       text: text.trim() || undefined,
       url: url.trim() || undefined,
       screenshot,
+      share: canShareToFeed ? share : undefined,
+      shareField: canShareToFeed && share ? shareField : undefined,
     });
   }
 
@@ -153,6 +176,41 @@ export function QuestSubmitModal({
                   onChange={(e) => handleFile(e.target.files?.[0])}
                 />
               </label>
+            )}
+          </div>
+        )}
+
+        {canShareToFeed && (
+          <div className="rounded-lg border border-border bg-muted/20 p-3">
+            <label className="inline-flex items-start gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                data-testid="quest-share-to-feed"
+                checked={share}
+                onChange={(e) => setShare(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary/40"
+              />
+              <span className="text-sm font-medium text-foreground">
+                Share this answer to the expert feed
+                <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                  Once your answer is approved, the team reviews it before it appears publicly.
+                </span>
+              </span>
+            </label>
+            {share && (
+              <div className="mt-3">
+                <NativeSelect
+                  label="Expertise field"
+                  value={shareField}
+                  onChange={(e) => setShareField(e.target.value)}
+                >
+                  {EXPERTISE_FIELDS.map((field) => (
+                    <option key={field} value={field}>
+                      {field}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
             )}
           </div>
         )}

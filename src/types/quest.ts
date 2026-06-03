@@ -1,6 +1,6 @@
-/** Types for the Quests feature (VET-111..114). */
+/** Types for the Quests feature (VET-111..114, reworked in VET-115). */
 
-export type QuestCategory = "general" | "specific";
+export type QuestCategory = "specific" | "bonus";
 export type QuestType = "one_time" | "verifiable" | "referral" | "text_answer" | "rubric";
 export type QuestCompletionStatus = "submitted" | "approved" | "rejected" | "completed";
 
@@ -24,15 +24,21 @@ export interface Quest {
   myCompletionId: string | null;
 }
 
-export interface QuestStreak {
-  currentDay: number;
-  claimedToday: boolean;
-  canClaim: boolean;
-  /** The day claimStreak will actually pay next (1..7), accounting for a missed-day reset; null if already claimed today. */
-  nextDay: number | null;
-  longestStreak: number;
-  /** Day 1..7 reward schedule in VETD. */
-  schedule: number[];
+/**
+ * Two-milestone allocation progress (VET-115), replacing the old daily-claim streak.
+ * 10 completed quests -> 500 VETD allocation; 5 approved shared answers -> +300 VETD bonus.
+ * Both are ALLOCATED (not paid) until the expert joins a real Guild.
+ */
+export interface StreakProgress {
+  completedQuestsCount: number;
+  approvedSharedAnswersCount: number;
+  streak1Required: number;
+  streak2Required: number;
+  streak1Eligible: boolean;
+  streak2Eligible: boolean;
+  streak1Vetd: number;
+  streak2Vetd: number;
+  totalAllocation: number;
 }
 
 export interface QuestGuildRef {
@@ -42,11 +48,11 @@ export interface QuestGuildRef {
 }
 
 export interface QuestsResponse {
-  general: Quest[];
   specific: Quest[];
+  bonus: Quest[];
   guilds: QuestGuildRef[];
-  streak: QuestStreak;
-  summary: { completedGeneral: number; totalGeneral: number };
+  streak: StreakProgress;
+  summary: { completedBonus: number; totalBonus: number };
   /** True when the expert is an officer/master and can review submissions. */
   isReviewer: boolean;
 }
@@ -74,11 +80,24 @@ export interface PendingSubmission extends QuestCompletion {
   expertName: string;
 }
 
-export interface StreakClaimResult {
-  day: number;
-  reward: number;
-  currentDay: number;
-  longestStreak: number;
+export type QuestFeedApprovalStatus = "pending" | "approved" | "rejected";
+
+/**
+ * A quest answer shared to the public expert feed (VET-115 part 2). Experts share a
+ * completed answer tagged with their expertise field; the Vetted team approves before
+ * it becomes public; other experts upvote the best answers.
+ */
+export interface QuestFeedPost {
+  id: string;
+  questId: string;
+  /** Mirrors backend EXPERTISE_FIELDS (e.g. "Engineering", "Product"). */
+  expertiseField: string;
+  answerText: string;
+  upvoteCount: number;
+  hasUpvoted: boolean;
+  author: { id: string; name: string | null } | null;
+  createdAt: string;
+  approvalStatus: QuestFeedApprovalStatus;
 }
 
 export interface QuestReferralItem {

@@ -5,16 +5,14 @@ import { Check, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { questsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { StreakTracker } from "@/components/expert/quests/StreakTracker";
-import { SegmentedProgress } from "@/components/expert/quests/SegmentedProgress";
-import { QUEST_DASHBOARD_TAGLINE } from "@/config/quests";
+import { StreakProgressCard } from "@/components/expert/quests/StreakProgressCard";
 import type { QuestsResponse } from "@/types";
 
 interface QuestsWidgetProps {
   wallet?: string;
 }
 
-/** Compact Quests preview for the expert dashboard (VET-112). */
+/** Compact Quests preview for the expert dashboard (VET-112, reworked VET-115). */
 export function QuestsWidget({ wallet }: QuestsWidgetProps) {
   const router = useRouter();
   const { data } = useFetch<QuestsResponse>(
@@ -25,7 +23,7 @@ export function QuestsWidget({ wallet }: QuestsWidgetProps) {
   // No wallet yet (e.g. brief wagmi reconnect) — render nothing rather than a stuck "Loading…".
   if (!wallet) return null;
 
-  const quests = data?.general.slice(0, 3) ?? [];
+  const quests = data?.specific.slice(0, 3) ?? [];
 
   return (
     <div className="bg-card border border-border rounded-xl p-6 h-full">
@@ -35,8 +33,8 @@ export function QuestsWidget({ wallet }: QuestsWidgetProps) {
 
       {data ? (
         <>
-          <StreakTracker streak={data.streak} compact maxDays={3} />
-          <p className="mt-3 text-xs text-primary">{QUEST_DASHBOARD_TAGLINE}</p>
+          {/* Two-milestone allocation progress (replaces the daily streak). */}
+          <StreakProgressCard streak={data.streak} compact />
 
           <div className="mt-4 flex flex-col gap-2">
             {quests.map((quest) => {
@@ -54,19 +52,9 @@ export function QuestsWidget({ wallet }: QuestsWidgetProps) {
                     )}
                     <span className="truncate text-xs text-foreground">{quest.title}</span>
                   </span>
-                  <span className="shrink-0 text-xs font-semibold text-primary tabular-nums">
-                    +{quest.rewardAmount} VETD
-                  </span>
                 </div>
               );
             })}
-          </div>
-
-          <div className="mt-4">
-            <SegmentedProgress
-              completed={data.summary.completedGeneral}
-              total={data.summary.totalGeneral}
-            />
           </div>
 
           <Button

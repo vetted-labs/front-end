@@ -40,7 +40,7 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
     });
   });
 
-  test("expert sees the quests page with streak, general quests and progress", async ({ page }) => {
+  test("expert sees the quests page with allocation progress, specific quests and the bonus section", async ({ page }) => {
     await test.step("expert session + quest mocks are set up", async () => {
       await page.goto("/", { waitUntil: "networkidle" });
       await setExpertSession(page);
@@ -52,31 +52,19 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
       await expect(page.getByRole("heading", { name: "Quests" }).first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the daily streak, general quests, progress and referral link render", async () => {
-      await expect(page.getByText("Daily streak").first()).toBeVisible();
-      await expect(page.getByText("Follow Vetted Protocol on X").first()).toBeVisible();
-      await expect(page.getByText("+5 VETD").first()).toBeVisible();
-      await expect(page.getByText("1/4 Completed").first()).toBeVisible();
-      await expect(page.getByText("Refer an expert").first()).toBeVisible();
-      await expect(page.getByText(/referral link/i).first()).toBeVisible();
-    });
-  });
-
-  test("expert claims the daily streak reward", async ({ page }) => {
-    let calls: QuestMockCalls;
-    await test.step("expert session + quest mocks are set up", async () => {
-      await page.goto("/", { waitUntil: "networkidle" });
-      await setExpertSession(page);
-      calls = await setupQuestsPage(page);
-    });
-
-    await test.step("expert opens quests and claims the daily reward", async () => {
-      await page.goto("/expert/quests", { waitUntil: "networkidle" });
-      await page.getByRole("button", { name: /Claim daily reward/i }).click();
-    });
-
-    await test.step("the streak claim endpoint is called", async () => {
-      await expect.poll(() => calls.claim, { timeout: 10000 }).toBe(1);
+    await test.step("the allocation milestones, specific quests and bonus section render", async () => {
+      // Two-milestone allocation progress (replaces the daily streak).
+      await expect(page.getByText("Complete 10 Quests").first()).toBeVisible();
+      await expect(page.getByText("Share 5 approved answers").first()).toBeVisible();
+      await expect(page.getByText(/500 \+ 300 bonus, allocated once you join a Guild/i)).toBeVisible();
+      // Specific quests show allocation copy instead of a per-quest reward.
+      await expect(page.getByText("Review a candidate application").first()).toBeVisible();
+      await expect(page.getByText(/Counts toward your 500 VETD allocation/i).first()).toBeVisible();
+      // Bonus section pinned to the bottom with fixed rewards.
+      await expect(page.getByRole("heading", { name: "Bonus" })).toBeVisible();
+      await expect(page.getByText("To support the team")).toBeVisible();
+      await expect(page.getByText("+10 VETD").first()).toBeVisible();
+      await expect(page.getByText("+30 VETD").first()).toBeVisible();
     });
   });
 
@@ -110,8 +98,13 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
     await test.step("expert opens the bug report submission modal", async () => {
       await page.goto("/expert/quests", { waitUntil: "networkidle" });
       await expect(page.getByText("Report a bug").first()).toBeVisible({ timeout: 15000 });
-      // "Report a bug" is the only verifiable, not-yet-done quest, so it owns the single card "Submit" button.
-      await page.getByRole("button", { name: "Submit", exact: true }).first().click();
+      // Scope to the "Report a bug" QuestCard (the card root carries bg-muted/20;
+      // the wrapping Bonus section does not) so we hit that card's own Submit
+      // button rather than another verifiable quest's.
+      const bugCard = page
+        .locator('div.bg-muted\\/20')
+        .filter({ hasText: "Report a bug" });
+      await bugCard.getByRole("button", { name: "Submit", exact: true }).click();
     });
 
     await test.step("expert fills the description, attaches a screenshot and submits", async () => {
@@ -130,20 +123,23 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
     });
   });
 
-  test("specific tab shows the guild gate when the expert has no guild", async ({ page }) => {
-    await test.step("expert session + quest mocks (no guilds) are set up", async () => {
+  test("specific quests render as the primary list with no category tags (VET-115)", async ({ page }) => {
+    await test.step("expert session + quest mocks are set up", async () => {
       await page.goto("/", { waitUntil: "networkidle" });
       await setExpertSession(page);
       await setupQuestsPage(page);
     });
 
-    await test.step("expert opens the Specific tab", async () => {
+    await test.step("expert opens the quests page", async () => {
       await page.goto("/expert/quests", { waitUntil: "networkidle" });
-      await page.getByRole("tab", { name: "Specific" }).click();
+      await expect(page.getByRole("heading", { name: "Quests" }).first()).toBeVisible({ timeout: 15000 });
     });
 
-    await test.step("the locked-quests gate is shown", async () => {
-      await expect(page.getByText(/Specific quests are locked/i)).toBeVisible();
+    await test.step("there are no General/Specific tabs and the specific list is shown directly", async () => {
+      await expect(page.getByRole("tab", { name: "General" })).toHaveCount(0);
+      await expect(page.getByRole("tab", { name: "Specific" })).toHaveCount(0);
+      await expect(page.getByText("Review a candidate application").first()).toBeVisible();
+      await expect(page.getByText("Answer an expertise question").first()).toBeVisible();
     });
   });
 
@@ -159,8 +155,8 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
 
     await test.step("expert opens the Review tab", async () => {
       await page.goto("/expert/quests", { waitUntil: "networkidle" });
-      await expect(page.getByRole("tab", { name: "Review" })).toBeVisible({ timeout: 15000 });
-      await page.getByRole("tab", { name: "Review" }).click();
+      await expect(page.getByRole("tab", { name: "Review", exact: true })).toBeVisible({ timeout: 15000 });
+      await page.getByRole("tab", { name: "Review", exact: true }).click();
     });
 
     await test.step("the review panel renders its empty state", async () => {
@@ -168,7 +164,7 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
     });
   });
 
-  test("a wallet-verified PENDING expert can reach Quests and see General quests (VET-114)", async ({ page }) => {
+  test("a wallet-verified PENDING expert can reach Quests and see quests (VET-114)", async ({ page }) => {
     await test.step("a pending (not-yet-approved) expert session + mocks are set up", async () => {
       await page.goto("/", { waitUntil: "networkidle" });
       await setExpertSession(page);
@@ -185,10 +181,83 @@ test.describe("Expert quests — full flows (VET-111..114)", () => {
       await page.goto("/expert/quests", { waitUntil: "networkidle" });
     });
 
-    await test.step("they are NOT redirected to the application-pending page and see General quests", async () => {
+    await test.step("they are NOT redirected to the application-pending page and see quests", async () => {
       await expect(page).toHaveURL(/\/expert\/quests/);
       await expect(page.getByRole("heading", { name: "Quests" }).first()).toBeVisible({ timeout: 15000 });
-      await expect(page.getByText("Follow Vetted Protocol on X").first()).toBeVisible();
+      await expect(page.getByText("Review a candidate application").first()).toBeVisible();
+    });
+  });
+
+  test("expert shares an approved answer to the feed and sees the pending state (VET-115)", async ({ page }) => {
+    let calls: QuestMockCalls;
+    await test.step("expert session + quest mocks are set up", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page);
+      calls = await setupQuestsPage(page);
+    });
+
+    await test.step("expert opens the quests page and finds the approved answer quest", async () => {
+      await page.goto("/expert/quests", { waitUntil: "networkidle" });
+      await expect(page.getByText("Answer an expertise question").first()).toBeVisible({ timeout: 15000 });
+    });
+
+    await test.step("expert shares the approved answer to the feed", async () => {
+      await page.getByTestId("quest-share-button").first().click();
+      await expect(page.getByText(/Share answer to the feed/i)).toBeVisible();
+      await page.getByRole("button", { name: /Share for review/i }).click();
+    });
+
+    await test.step("the share endpoint is hit and the card shows pending team review", async () => {
+      await expect.poll(() => calls.share, { timeout: 10000 }).toBe(1);
+      await expect(page.getByText(/Pending team review/i).first()).toBeVisible();
+    });
+  });
+
+  test("expert browses the feed tab and upvotes an answer (VET-115)", async ({ page }) => {
+    let calls: QuestMockCalls;
+    await test.step("expert session + quest mocks are set up", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page);
+      calls = await setupQuestsPage(page);
+    });
+
+    await test.step("expert opens the Feed tab", async () => {
+      await page.goto("/expert/quests", { waitUntil: "networkidle" });
+      await expect(page.getByRole("tab", { name: "Feed" })).toBeVisible({ timeout: 15000 });
+      await page.getByRole("tab", { name: "Feed" }).click();
+    });
+
+    await test.step("approved answers render with their expertise field", async () => {
+      await expect(
+        page.getByText(/Use a circuit breaker to fail fast/i),
+      ).toBeVisible();
+      await expect(page.getByText("Engineering").first()).toBeVisible();
+    });
+
+    await test.step("upvoting an answer calls the votes endpoint", async () => {
+      await page.getByTestId("feed-upvote-button").first().click();
+      await expect.poll(() => calls.upvote, { timeout: 10000 }).toBe(1);
+    });
+  });
+
+  test("an officer/master sees a Feed review tab for shared answers (VET-115)", async ({ page }) => {
+    await test.step("expert session + reviewer quest mocks are set up", async () => {
+      await page.goto("/", { waitUntil: "networkidle" });
+      await setExpertSession(page);
+      await setupQuestsPage(page, {
+        fixture: { ...MOCK_QUESTS_RESPONSE, isReviewer: true },
+        pendingFeedPosts: [],
+      });
+    });
+
+    await test.step("expert opens the Feed review tab", async () => {
+      await page.goto("/expert/quests", { waitUntil: "networkidle" });
+      await expect(page.getByRole("tab", { name: "Feed review" })).toBeVisible({ timeout: 15000 });
+      await page.getByRole("tab", { name: "Feed review" }).click();
+    });
+
+    await test.step("the feed review queue renders its empty state", async () => {
+      await expect(page.getByText(/Nothing to review/i)).toBeVisible();
     });
   });
 

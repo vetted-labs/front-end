@@ -1,7 +1,6 @@
 import {
   Building2,
   Settings,
-  Clock,
   Swords,
   type LucideIcon,
 } from "lucide-react";
@@ -79,9 +78,9 @@ export const expertSidebarConfig: SidebarConfig = {
 
 /**
  * Sidebar shown to experts whose status is NOT "approved" yet — i.e.
- * pending / rejected. Only the routes the auth guard actually allows
- * (/expert/application-pending, /guilds) are rendered so the user can't
- * click into a disabled dashboard and bounce back.
+ * pending / rejected. VET-115: onboarding is non-blocking, so there is no
+ * pending "status" gate anymore — Quests is the landing surface and the rest
+ * of the allowed routes (/expert/apply, /guilds) are reachable directly.
  */
 export const restrictedExpertSidebarConfig: SidebarConfig = {
   variant: "expert",
@@ -89,14 +88,8 @@ export const restrictedExpertSidebarConfig: SidebarConfig = {
     {
       label: "Home",
       items: [
-        // Pending experts can earn via General quests + daily streak before approval (VET-114).
+        // Any registered expert can do quests immediately (VET-115).
         { label: "Quests", href: "/expert/quests", icon: Swords },
-      ],
-    },
-    {
-      label: "Application",
-      items: [
-        { label: "My Status", href: "/expert/application-pending", icon: Clock, exact: true },
       ],
     },
     {

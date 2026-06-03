@@ -75,7 +75,7 @@ function LoginForm() {
   // Dev-mode Next.js can take seconds (or longer on cold-compile) to switch
   // pages, during which the login form would otherwise sit visible — making
   // users think the click did nothing.
-  const [redirectingTo, setRedirectingTo] = useState<null | "expert/apply" | "expert/dashboard" | "expert/application-pending">(null);
+  const [redirectingTo, setRedirectingTo] = useState<null | "expert/apply" | "expert/dashboard" | "expert/quests">(null);
 
   const autoLoginAttempted = useRef(false);
   const pendingModalOpen = useRef(false);
@@ -101,14 +101,14 @@ function LoginForm() {
         setRedirectingTo("expert/dashboard");
         router.push(redirectUrl || "/expert/dashboard");
       } else if (profile.status === "pending" || profile.status === "rejected") {
-        // Both in-progress ("pending") and terminal rejection share the same
-        // status page — ApplicationPendingPage renders a different variant
-        // based on profile.status. Log the user in so the page can fetch
-        // their profile via expertApi.getProfile.
+        // VET-115: onboarding is non-blocking. Pending/rejected experts are no
+        // longer parked on a status gate — they go straight to Quests, which
+        // they can use immediately. Log them in so the page can fetch their
+        // profile via expertApi.getProfile.
         auth.login("", "expert", profile.id, profile.email, walletAddress);
         localStorage.setItem("expertStatus", profile.status);
-        setRedirectingTo("expert/application-pending");
-        router.push("/expert/application-pending");
+        setRedirectingTo("expert/quests");
+        router.push("/expert/quests");
       } else {
         setRedirectingTo("expert/apply");
         router.push("/expert/apply");
@@ -321,7 +321,7 @@ function LoginForm() {
         ? "Setting up your application…"
         : redirectingTo === "expert/dashboard"
         ? "Loading your dashboard…"
-        : "Loading your application status…";
+        : "Loading your quests…";
     return (
       <div className="flex min-h-screen bg-background items-center justify-center p-6">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">

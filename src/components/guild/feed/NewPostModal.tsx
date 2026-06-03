@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Alert } from "@/components/ui";
-import { guildFeedApi } from "@/lib/api";
+import { guildFeedApi, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useExpertSession } from "@/lib/hooks/useExpertSession";
@@ -52,6 +52,10 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
   const [signGateError, setSignGateError] = useState<string | null>(null);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  // Set when the most recent createPost attempt failed with a 401 (dead
+  // session after apiRequest's silent refresh already failed) — drives the
+  // one-time wallet re-sign fallback without re-prompting connected experts.
+  const lastErrorWas401Ref = useRef(false);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -76,7 +80,14 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
     return Object.keys(errors).length === 0;
   };
 
-  const submitPost = async () => {
+  // Posts to the guild feed using the existing expert session Bearer JWT —
+  // `apiRequest` attaches `Authorization: Bearer <authToken>` for
+  // `requiresAuth` calls and transparently refreshes on a 401. The backend
+  // authenticates the post off this SIWE JWT and IGNORES wallet headers
+  // (VET-116 #5), so a connected expert must never be blocked on a fresh wallet
+  // signature here. Returns "auth" when the post failed specifically because the
+  // session is dead, so the caller can fall back to a one-time re-sign.
+  const submitPost = async (): Promise<"ok" | "auth" | "error"> => {
     // Clean poll options before submission
     const cleanPoll = poll
       ? {
@@ -85,24 +96,36 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
         }
       : undefined;
 
-    await execute(
-      () =>
-        guildFeedApi.createPost(guildId, {
-          title: title.trim(),
-          body: body.trim(),
-          tag,
-          poll: cleanPoll,
-          // Only send `jobId` when the post is actually tagged job-related to
-          // avoid bleeding stale selections from the picker if the user
-          // switched tags mid-compose.
-          jobId: tag === "job_related" && jobId ? jobId : undefined,
-          // Only send `isPrivate` when the toggle is on AND the user can
-          // actually create internal posts (experts only). The backend schema
-          // is `.strict()`, so omit the field entirely otherwise.
-          ...(canCreateInternalPost && isPrivate ? { isPrivate: true } : {}),
-        }),
+    lastErrorWas401Ref.current = false;
+    const post = await execute(
+      async () => {
+        try {
+          return await guildFeedApi.createPost(guildId, {
+            title: title.trim(),
+            body: body.trim(),
+            tag,
+            poll: cleanPoll,
+            // Only send `jobId` when the post is actually tagged job-related to
+            // avoid bleeding stale selections from the picker if the user
+            // switched tags mid-compose.
+            jobId: tag === "job_related" && jobId ? jobId : undefined,
+            // Only send `isPrivate` when the toggle is on AND the user can
+            // actually create internal posts (experts only). The backend schema
+            // is `.strict()`, so omit the field entirely otherwise.
+            ...(canCreateInternalPost && isPrivate ? { isPrivate: true } : {}),
+          });
+        } catch (err) {
+          // Flag a genuinely-dead session so the caller can re-sign once.
+          // apiRequest has already attempted a silent refresh before surfacing
+          // a 401 here.
+          if (err instanceof ApiError && err.status === 401) {
+            lastErrorWas401Ref.current = true;
+          }
+          throw err;
+        }
+      },
       {
-        onSuccess: async (post) => {
+        onSuccess: async (created) => {
           // Persist each uploaded image as a `guild_post_attachments` row.
           // Failures here don't roll back the post — the post is already
           // public — but we surface a non-blocking toast so the author
@@ -112,7 +135,7 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
             await Promise.all(
               attachments.map(async (att) => {
                 try {
-                  await guildFeedApi.addAttachment(guildId, post.id, att);
+                  await guildFeedApi.addAttachment(guildId, created.id, att);
                 } catch (err) {
                   logger.warn("[NewPostModal] addAttachment failed", err);
                   failed.push(att.url);
@@ -128,9 +151,18 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
           toast.success("Post created!");
           onCreated();
         },
-        onError: (err) => toast.error(err),
+        // 401 means the session JWT is genuinely dead (and the silent refresh
+        // already failed inside apiRequest) — signal the caller to re-sign once.
+        // Any other failure is surfaced as a normal error toast.
+        onError: (msg) => {
+          if (lastErrorWas401Ref.current) return;
+          toast.error(msg);
+        },
       }
     );
+
+    if (post) return "ok";
+    return lastErrorWas401Ref.current ? "auth" : "error";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,9 +170,20 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
     if (!validate()) return;
 
     setSignGateError(null);
+    lastErrorWas401Ref.current = false;
 
-    // Gate: ensure the expert has a fresh signed-session JWT before posting.
-    // The flag-off branch falls through to the legacy behavior.
+    // Already-connected experts post with their existing session JWT — no
+    // up-front wallet re-prompt (VET-116 #5). We only fall back to a wallet
+    // signature if the post fails because the session is dead.
+    const result = await submitPost();
+    if (result === "auth") {
+      await reSignThenSubmit();
+    }
+  };
+
+  // Fallback used only when the post fails with a dead session: establish a
+  // fresh SIWE session via wallet signature, then retry the post once.
+  const reSignThenSubmit = async () => {
     const session = await ensureSession();
     if (!session.ok && session.reason !== "flag-off") {
       if (session.reason === "user-rejected") {
@@ -150,22 +193,13 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
       toast.error(session.error ?? "Could not authenticate. Please try again.");
       return;
     }
-
+    lastErrorWas401Ref.current = false;
     await submitPost();
   };
 
   const handleRetrySign = async () => {
     setSignGateError(null);
-    const session = await ensureSession();
-    if (!session.ok && session.reason !== "flag-off") {
-      if (session.reason === "user-rejected") {
-        setSignGateError("Sign with your wallet to publish posts.");
-        return;
-      }
-      toast.error(session.error ?? "Could not authenticate. Please try again.");
-      return;
-    }
-    await submitPost();
+    await reSignThenSubmit();
   };
 
   return (

@@ -65,8 +65,8 @@ export function HeroSection({
           </div>
         </div>
 
-        {/* Headline */}
-        <h1 className="font-display font-bold text-3xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-12">
+        {/* Headline — sized to fit on one line at common desktop widths */}
+        <h1 className="font-display font-bold text-2xl sm:text-3xl lg:text-[2rem] xl:text-[2.5rem] leading-[1.1] tracking-tight text-foreground text-balance mb-12">
           Turning Expert Judgment into Accountable Signal for Hiring
         </h1>
 

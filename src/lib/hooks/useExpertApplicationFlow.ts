@@ -246,11 +246,13 @@ export function useExpertApplicationFlow(
             }));
             return; // Don't redirect — let them apply to the new guild
           }
-          // No explicit intent to apply to a new guild — redirect to appropriate page
+          // No explicit intent to apply to a new guild — redirect to appropriate page.
+          // VET-115: onboarding is non-blocking, so pending/rejected experts go
+          // straight to Quests (no pending gate) instead of a status page.
           if (result.status === "approved") {
             router.replace("/expert/dashboard");
           } else {
-            router.replace("/expert/application-pending");
+            router.replace("/expert/quests");
           }
         }
       } catch {
@@ -933,7 +935,9 @@ export function useExpertApplicationFlow(
       setSuccess(true);
       setTimeout(() => {
         onSuccess?.();
-        router.push("/expert/application-pending");
+        // VET-115: non-blocking onboarding — land the expert on Quests they can
+        // start immediately, not a pending status gate.
+        router.push("/expert/quests");
       }, 4000);
     } catch (err: unknown) {
       const apiError = err instanceof ApiError ? err : null;

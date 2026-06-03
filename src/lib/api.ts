@@ -2707,16 +2707,86 @@ export const questsApi = {
       requiresAuth: false,
     }),
 
+  /** Two-milestone allocation progress (VET-115). Replaces the old daily streak/claim. */
   getStreak: (wallet: string) =>
-    apiRequest<import("@/types").QuestStreak>(`/api/quests/streak?wallet=${wallet}`, {
+    apiRequest<import("@/types").StreakProgress>(`/api/quests/streak?wallet=${wallet}`, {
       requiresAuth: false,
     }),
 
-  claimStreak: (wallet: string) =>
-    apiRequest<import("@/types").StreakClaimResult>(`/api/quests/streak/claim?wallet=${wallet}`, {
-      method: "POST",
-      requiresAuth: false,
-    }),
+  // NOTE: POST /api/quests/streak/claim was REMOVED in VET-115 (daily-claim model retired).
+
+  // ── Expert feed (VET-115 part 2) ──────────────────────────────────────
+  // Share a completed quest answer to the public expert feed. Body is the
+  // expertise field (mirrors backend EXPERTISE_FIELDS). Backend returns 409
+  // when the completion was already shared. Same wallet-auth pattern as the
+  // rest of the expert quest surface (?wallet= + X-Wallet-Address).
+  shareToFeed: (questId: string, wallet: string, expertiseField: string) =>
+    apiRequest<import("@/types").QuestFeedPost>(
+      `/api/quests/${questId}/share-to-feed?wallet=${wallet}`,
+      {
+        method: "POST",
+        requiresAuth: false,
+        headers: { "X-Wallet-Address": wallet },
+        body: JSON.stringify({ expertiseField }),
+      },
+    ),
+
+  // Public approved feed, optionally filtered by expertise field + sorted.
+  // The backend returns rows with upvote_count + hasUpvoted + expertise_field +
+  // answer_text + author; we normalize them to the camelCase QuestFeedPost shape
+  // so feed components don't have to know the wire casing.
+  getFeed: async (
+    wallet: string,
+    params?: { field?: string; sort?: "top" | "new" },
+  ): Promise<import("@/types").QuestFeedPost[]> => {
+    const q = new URLSearchParams({ wallet });
+    if (params?.field) q.append("field", params.field);
+    if (params?.sort) q.append("sort", params.sort);
+    interface BackendFeedPost {
+      id: string;
+      questId?: string;
+      quest_id?: string;
+      expertiseField?: string;
+      expertise_field?: string;
+      answerText?: string;
+      answer_text?: string;
+      upvoteCount?: number;
+      upvote_count?: number;
+      hasUpvoted?: boolean;
+      has_upvoted?: boolean;
+      author?: { id: string; name: string | null } | null;
+      createdAt?: string;
+      created_at?: string;
+      approvalStatus?: import("@/types").QuestFeedApprovalStatus;
+      approval_status?: import("@/types").QuestFeedApprovalStatus;
+    }
+    const raw = await apiRequest<BackendFeedPost[]>(
+      `/api/quests/feed-posts?${q.toString()}`,
+      { requiresAuth: false },
+    );
+    return (raw ?? []).map((p) => ({
+      id: p.id,
+      questId: p.questId ?? p.quest_id ?? "",
+      expertiseField: p.expertiseField ?? p.expertise_field ?? "",
+      answerText: p.answerText ?? p.answer_text ?? "",
+      upvoteCount: p.upvoteCount ?? p.upvote_count ?? 0,
+      hasUpvoted: p.hasUpvoted ?? p.has_upvoted ?? false,
+      author: p.author ?? null,
+      createdAt: p.createdAt ?? p.created_at ?? "",
+      approvalStatus: p.approvalStatus ?? p.approval_status ?? "approved",
+    }));
+  },
+
+  // Toggle an upvote on a feed post. Backend returns the new count + voted flag.
+  toggleUpvote: (postId: string, wallet: string) =>
+    apiRequest<{ upvoteCount: number; voted: boolean }>(
+      `/api/quests/feed-posts/${postId}/votes?wallet=${wallet}`,
+      {
+        method: "POST",
+        requiresAuth: false,
+        headers: { "X-Wallet-Address": wallet },
+      },
+    ),
 
   completeQuest: (questId: string, wallet: string) =>
     apiRequest<import("@/types").QuestCompletion>(
@@ -2779,4 +2849,50 @@ export const questsApi = {
   /** Authenticated screenshot URL for the review panel (served by the backend, wallet-gated). */
   screenshotUrl: (completionId: string, wallet: string) =>
     `${API_BASE_URL}/api/quests/submissions/${completionId}/screenshot?wallet=${wallet}`,
+};
+
+/**
+ * TEAM-ONLY quest surfaces (VET-115 part 2). Unlike the expert quest surface
+ * (wallet-auth), these endpoints are gated server-side on the SIWE Bearer JWT +
+ * platform-admin role, so they use `requiresAuth: true` (the same pattern every
+ * other authenticated mutation uses — `apiRequest` injects `Authorization:
+ * Bearer <authToken>` and handles 401 → refresh). Callers must already hold a
+ * platform-admin session; a non-admin caller gets a 403 surfaced via ApiError.
+ */
+export const questsTeamApi = {
+  // Pending (unreviewed) shared answers awaiting team approval.
+  getPendingFeedPosts: () =>
+    apiRequest<import("@/types").QuestFeedPost[]>(
+      "/api/quests/feed-posts/pending",
+      { requiresAuth: true },
+    ),
+
+  // Approve or reject a shared answer (optional review note). Approval flips the
+  // post public and lifts the author's streak-2 allocation server-side.
+  reviewFeedPost: (
+    postId: string,
+    decision: "approve" | "reject",
+    note?: string,
+  ) =>
+    apiRequest<import("@/types").QuestFeedPost>(
+      `/api/quests/feed-posts/${postId}/review`,
+      {
+        method: "POST",
+        requiresAuth: true,
+        body: JSON.stringify({ decision, ...(note ? { note } : {}) }),
+      },
+    ),
+
+  // Batch-1: designate the selected experts as founders of `guildId`. Server-side
+  // this approves them into the real guild and flips their allocated earnings to
+  // paid (§9). Platform-admin only.
+  designateFounders: (expertIds: string[], guildId: string) =>
+    apiRequest<{ designated: number }>(
+      "/api/experts/admin/batch1",
+      {
+        method: "POST",
+        requiresAuth: true,
+        body: JSON.stringify({ expertIds, guildId }),
+      },
+    ),
 };

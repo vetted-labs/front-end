@@ -6,10 +6,20 @@ interface SegmentedProgressProps {
   completed: number;
   total: number;
   className?: string;
+  /** Overrides the default "{completed}/{total} Completed" caption. */
+  label?: string;
+  /** Hides the caption entirely (caller renders its own). */
+  hideCaption?: boolean;
 }
 
 /** Segmented "{completed}/{total} Completed" bar (VET-112). */
-export function SegmentedProgress({ completed, total, className }: SegmentedProgressProps) {
+export function SegmentedProgress({
+  completed,
+  total,
+  className,
+  label,
+  hideCaption = false,
+}: SegmentedProgressProps) {
   const segments = Math.max(total, 1);
   return (
     <div className={className}>
@@ -24,9 +34,11 @@ export function SegmentedProgress({ completed, total, className }: SegmentedProg
           />
         ))}
       </div>
-      <p className="mt-1.5 text-xs font-medium text-muted-foreground tabular-nums">
-        {completed}/{total} Completed
-      </p>
+      {!hideCaption && (
+        <p className="mt-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+          {label ?? `${completed}/${total} Completed`}
+        </p>
+      )}
     </div>
   );
 }
