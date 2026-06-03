@@ -199,7 +199,12 @@ export default function EarningsPage() {
   const { tier } = getRewardTierProgress(reputation);
   const tierColors = REWARD_TIER_COLORS[tier.name] ?? REWARD_TIER_COLORS.Foundation;
 
+  // Gross total drives the by-guild percentage bars. The claimable headline,
+  // however, must exclude locked ("allocated") VETD — fall back to the gross
+  // figure only when the backend hasn't split it out yet (back-compat).
   const totalVetd = summary?.totalVetd ?? 0;
+  const claimableVetd = summary?.paidTotal ?? totalVetd;
+  const allocatedVetd = summary?.allocatedTotal ?? 0;
 
   const thisMonthEarnings = useMemo(() => {
     const now = new Date();
@@ -250,7 +255,7 @@ export default function EarningsPage() {
               </p>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-4xl sm:text-5xl font-bold font-display text-foreground tabular-nums leading-none">
-                  {totalVetd.toFixed(2)}
+                  {claimableVetd.toFixed(2)}
                 </span>
                 <span className="text-sm font-semibold text-muted-foreground">VETD</span>
               </div>
@@ -259,6 +264,16 @@ export default function EarningsPage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-3 mt-5">
+                {allocatedVetd > 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em]",
+                      STATUS_COLORS.neutral.badge,
+                    )}
+                  >
+                    {allocatedVetd.toFixed(2)} VETD allocated · paid when you join a Guild
+                  </span>
+                )}
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",

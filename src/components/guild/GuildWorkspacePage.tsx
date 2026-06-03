@@ -232,7 +232,8 @@ const ROLE_LABEL: Record<string, string> = {
  * Container for the private member workspace at `/expert/guild/[id]`.
  *
  * IA differs from the public guild page (Surface 1):
- * - Slim header (no banner — they're already in the guild)
+ * - Header mirrors the public guild hero (banner + signature gradient + icon
+ *   tile) per VET-116 #4, with workspace affordances layered on top
  * - 5 KPI tiles (queue / commits / stake / payouts / reputation)
  * - 7 tabs anchored on the daily review queue
  *
@@ -534,74 +535,110 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
       </div>
 
       <div className="mx-auto max-w-[1400px] px-4 pb-20 pt-5 sm:px-6 lg:px-8">
-        {/* Slim header */}
-        <section className="relative mb-5 flex items-center gap-4 overflow-hidden rounded-2xl border border-border bg-card px-5 py-5">
-          <span
-            aria-hidden
-            className="absolute bottom-0 left-0 top-0 w-[3px]"
-            style={{ background: identity.hex }}
-          />
+        {/* Header — mirrors the public guild hero (VET-116 #4). Intentionally
+            reverses the prior slim/no-banner workspace treatment so members see
+            the same banner + signature gradient + overlapping icon tile as the
+            public page, while keeping all workspace affordances. */}
+        <section className="relative mb-5 overflow-hidden rounded-[20px] border border-surface-border bg-surface-1">
+          {/* 3px guild signature line at top */}
           <div
-            className={cn(
-              "flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border",
-              identity.classes.bg,
-              identity.classes.border
-            )}
+            aria-hidden
+            className="absolute left-0 right-0 top-0 z-[2] h-[3px]"
+            style={{
+              background: `linear-gradient(90deg, ${identity.hex} 0%, ${identity.hex} 30%, transparent 100%)`,
+            }}
+          />
+
+          {/* Banner — diagonal pattern + radial guild-color gradient */}
+          <div
+            className="relative h-[140px]"
+            style={{
+              backgroundImage: `radial-gradient(ellipse 500px 180px at 80% 0%, ${identity.hex}33, transparent 70%), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M0 0L40 40M40 0L0 40' stroke='${encodeURIComponent(
+                identity.hex,
+              )}' stroke-opacity='0.08' stroke-width='0.5'/></svg>")`,
+            }}
           >
-            <VettedIcon
-              name={guildIconName}
-              className={cn("h-7 w-7", identity.classes.text)}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(180deg, transparent 50%, hsl(var(--surface-1)) 100%)",
+              }}
             />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="mb-1 flex flex-wrap items-center gap-2.5">
-              <h1 className="font-display text-xl font-bold leading-none text-foreground sm:text-[22px]">
-                {identity.displayName}
-              </h1>
-              <span className="inline-flex items-center gap-1 rounded border border-warning/25 bg-warning/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-warning">
-                <Star className="h-3 w-3" />
-                {roleLabel}
-              </span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {guild.memberCount || 0} members · {guild.openPositions || 0} open roles
-              {(kpiBundle?.periodStats?.reviews ?? 0) > 0 && (
-                <>
-                  {" · "}
-                  <span>
-                    you reviewed{" "}
-                    <strong className="text-foreground">
-                      {kpiBundle?.periodStats?.reviews ?? 0} candidates
-                    </strong>{" "}
-                    this period
+
+          {/* Body — icon tile overlaps the banner */}
+          <div className="relative z-10 -mt-12 px-7 pb-6">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="min-w-0">
+                <div className="mb-4">
+                  <span
+                    className={cn(
+                      "inline-flex h-24 w-24 items-center justify-center rounded-[20px] border",
+                      identity.classes.bg,
+                      identity.classes.border
+                    )}
+                    style={{
+                      boxShadow: `0 8px 24px ${identity.hex}33, 0 0 0 4px hsl(var(--surface-1))`,
+                    }}
+                  >
+                    <VettedIcon
+                      name={guildIconName}
+                      className={cn("h-12 w-12", identity.classes.text)}
+                    />
                   </span>
-                </>
-              )}
-              {(kpiBundle?.periodStats?.consensusRate ?? 0) > 0 && (
-                <>
-                  {" · "}
-                  <strong className="text-positive">
-                    {Math.round(kpiBundle!.periodStats.consensusRate)}% consensus rate
-                  </strong>
-                </>
-              )}
+                </div>
+
+                <div className="mb-1 flex flex-wrap items-center gap-2.5">
+                  <h1 className="font-display text-[32px] font-bold leading-[1.1] tracking-[-0.01em] text-foreground sm:text-[36px]">
+                    {identity.displayName}
+                  </h1>
+                  <span className="inline-flex items-center gap-1 rounded border border-warning/25 bg-warning/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-warning">
+                    <Star className="h-3 w-3" />
+                    {roleLabel}
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {guild.memberCount || 0} members · {guild.openPositions || 0} open roles
+                  {(kpiBundle?.periodStats?.reviews ?? 0) > 0 && (
+                    <>
+                      {" · "}
+                      <span>
+                        you reviewed{" "}
+                        <strong className="text-foreground">
+                          {kpiBundle?.periodStats?.reviews ?? 0} candidates
+                        </strong>{" "}
+                        this period
+                      </span>
+                    </>
+                  )}
+                  {(kpiBundle?.periodStats?.consensusRate ?? 0) > 0 && (
+                    <>
+                      {" · "}
+                      <strong className="text-positive">
+                        {Math.round(kpiBundle!.periodStats.consensusRate)}% consensus rate
+                      </strong>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-shrink-0 items-center gap-2 pb-1">
+                <Link
+                  href={`/guilds/${encodeURIComponent(guildId)}`}
+                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  View public page
+                </Link>
+                <Link
+                  href="/expert/profile"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Settings
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-2">
-            <Link
-              href={`/guilds/${encodeURIComponent(guildId)}`}
-              className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              View public page
-            </Link>
-            <Link
-              href="/expert/profile"
-              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted"
-            >
-              <Settings className="h-3.5 w-3.5" />
-              Settings
-            </Link>
           </div>
         </section>
 

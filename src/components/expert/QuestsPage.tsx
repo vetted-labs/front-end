@@ -123,9 +123,13 @@ export default function QuestsPage() {
                   setSharedQuestIds((prev) => new Set(prev).add(quest.id));
                 },
                 // Most common: the submission isn't approved yet → the BE
-                // declines. Keep it quiet; the expert can re-share from the card
-                // once approved.
-                onError: () => {},
+                // declines (pre-approval 403 for verifiable answers). Give the
+                // expert honest, neutral feedback instead of swallowing it; they
+                // can re-share from the card once approved.
+                onError: () =>
+                  toast.info(
+                    "Submitted — you can share to the feed once your answer is approved.",
+                  ),
               },
             );
           }
