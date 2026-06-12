@@ -52,4 +52,12 @@ describe("job guild routing helpers", () => {
   it("does not redirect when the job belongs to the route guild", () => {
     expect(getGuildApplicationJobRedirect("route-guild", "job-1", "route-guild")).toBeNull();
   });
+
+  it("normalizes guild ids before comparing or building redirect URLs", () => {
+    expect(getGuildApplicationJobRedirect(" route-guild ", "job-1", "route-guild")).toBeNull();
+
+    expect(getGuildApplicationJobRedirect("route-guild", "job-1", " job-guild ")).toBe(
+      "/guilds/job-guild/apply?jobId=job-1"
+    );
+  });
 });

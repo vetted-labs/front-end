@@ -43,6 +43,8 @@ export function getGuildApplicationJobRedirect(
   jobId: string,
   jobGuildId?: string,
 ): string | null {
-  if (!jobGuildId || jobGuildId === routeGuildId) return null;
-  return `/guilds/${encodeURIComponent(jobGuildId)}/apply?jobId=${encodeURIComponent(jobId)}`;
+  const normalizedRouteGuildId = routeGuildId.trim();
+  const normalizedJobGuildId = jobGuildId?.trim();
+  if (!normalizedJobGuildId || normalizedJobGuildId === normalizedRouteGuildId) return null;
+  return `/guilds/${encodeURIComponent(normalizedJobGuildId)}/apply?jobId=${encodeURIComponent(jobId)}`;
 }
