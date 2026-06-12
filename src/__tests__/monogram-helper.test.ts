@@ -9,6 +9,9 @@ describe("getMonogram", () => {
     expect(getMonogram("Jean Paul Sartre")).toBe("JS");
     expect(getMonogram("Mary Jane Watson")).toBe("MW");
   });
+  it("trims repeated whitespace before deriving initials", () => {
+    expect(getMonogram("   Ada    Lovelace   ")).toBe("AL");
+  });
   it("doubles up single-letter or single-word names", () => {
     expect(getMonogram("Cher")).toBe("CH");
     expect(getMonogram("A")).toBe("AA");
