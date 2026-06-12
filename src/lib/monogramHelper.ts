@@ -17,5 +17,5 @@ export function getMonogram(fullName: string | undefined | null): string {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   const single = parts[0];
-  return (single[0] + (single[1] ?? single[0])).toUpperCase();
+  return (single[0] + single[0]).toUpperCase();
 }
