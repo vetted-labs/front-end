@@ -110,7 +110,7 @@ export function JobPreviewPanel({
     : "";
 
   const detailHref = `/browse/jobs/${job.id}`;
-  const applyHref = detailHref;
+  const applyHref = "/browse/jobs";
 
   return (
     <article className="rounded-xl border border-border bg-card overflow-hidden">
